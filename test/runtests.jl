@@ -23,3 +23,16 @@ using TimeStructures
     @test iterate(first(strategic_periods(uniform_year)))[2] == OperationalPeriod(1, 2, 1)
     @test previous(next(first(strategic_periods(uniform_year)))) ==  StrategicPeriod(1, 365, 24, 1, UniformTimes(1, 24, 1))
 end
+
+@testset "Time Profiles" begin
+    
+    fp = FixedProfile(12.0)
+    @test fp[1] == 12.0
+
+    sfp = StrategicFixedProfile([i/100 for i ∈ 1:365])
+    @test sfp[OperationalPeriod(122,1)] == 1.22
+
+    dp = DynamicProfile([i/100 + j for i ∈ 1:365, j ∈ 1:24])
+    @test dp[OperationalPeriod(365,24)] == 27.65
+
+end

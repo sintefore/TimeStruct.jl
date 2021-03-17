@@ -49,4 +49,4 @@ length(𝒯ⁱⁿᵛ) # 24
 
 ## Funding
 
-TimeStructures was funded by the Norwegian Research Council in the project Clean Export, project number ###
+TimeStructures was funded by the Norwegian Research Council in the project Clean Export, project number [308811](https://prosjektbanken.forskningsradet.no/project/FORISS/308811)
