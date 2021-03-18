@@ -7,8 +7,6 @@ using TimeStructures
     
     @test typeof(uniform_year) == UniformTwoLevel
     @test length(uniform_year) == 8760
-    @test [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
-    @test length(first(uniform_year, 10)) == 10
     
     uniform_two_years = UniformTwoLevel(1,365,2,uniform_day)
     @test length(uniform_year) == 8760
@@ -22,6 +20,15 @@ using TimeStructures
     @test iterate(uniform_two_years, OperationalPeriod(1,24))[2] == OperationalPeriod(2,1)
     @test iterate(first(strategic_periods(uniform_year)))[2] == OperationalPeriod(1, 2, 1)
     @test previous(next(first(strategic_periods(uniform_year)))) ==  StrategicPeriod(1, 365, 24, 1, UniformTimes(1, 24, 1))
+
+    if VERSION >= v"1.6-" # TODO: Remove when going for v1.6
+        @test length(first(uniform_year, 10)) == 10
+        @test [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
+    else # first N 1.6 specific
+        @test_broken length(first(uniform_year, 10)) == 10
+        @test_broken [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
+    end
+
 end
 
 @testset "Time Profiles" begin

@@ -28,6 +28,8 @@ function Base.getproperty(op::OperationalPeriod,sym::Symbol)
     end
 end
 
+Base.show(io::IO, op::OperationalPeriod) = print(io, "t$(op.sp)_$(op.op)")
+
 struct StrategicPeriod <: TimePeriod{UniformTwoLevel}
 	sp
 	sps

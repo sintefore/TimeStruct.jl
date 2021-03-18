@@ -15,12 +15,17 @@ uniform_year = UniformTwoLevel(1, 365, 1, uniform_day) # 365 days
 length(uniform_year) # 8760 (hours in one year)
 
 # Properties for easy indexing and constraints (example below)
-[t.idx for t ∈ first(uniform_year, 2)]      # [(1, 1), (1, 2)]
+[t for t ∈ first(uniform_year, 2)]
+# 2-element Vector{OperationalPeriod}:
+#  t1_1
+#  t1_2
 [t.duration for t ∈ first(uniform_year, 2)] # [1, 1]
+
+val_per_time = FixedProfile(0.2)
 
 # Create constraints with JuMP something like this:
 for t ∈ uniform_year
-    @constraint(m, my_var[t.idx] <= val_per_time * t.duration)
+    @constraint(m, my_var[t] <= val_per_time[t] * t.duration)
 end
 
 # Get operational periods by strategic periods:
