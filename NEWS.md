@@ -1,12 +1,13 @@
 TimeStructures release notes
 ===================================
 
-Version 0.1.1 (2021-03-18)
+Version 0.1.2 (2021-03-18)
 --------------------------
-* Fix file name issue for Windows
-* Add missing export
 * Allow Julia v1.5 until official release of v1.6
-
+* Add missing export
+* Pretty print OperationalPeriods
+* Fix file name issue for Windows
+* Disable failing tests on v1.5
 
 Version 0.1.0 (2021-03-17)
 --------------------------
