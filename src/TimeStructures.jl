@@ -1,6 +1,6 @@
 module TimeStructures
 
-include("timestructures.jl")
+include("structures.jl")
 include("profiles.jl")
 
 export OperationalPeriod
@@ -8,6 +8,7 @@ export StrategicPeriod
 export UniformTimes
 export UniformTwoLevel
 
+export TimeProfile
 export DynamicProfile
 export FixedProfile
 export StrategicFixedProfile
