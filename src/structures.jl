@@ -18,7 +18,6 @@ struct OperationalPeriod <: TimePeriod{UniformTwoLevel}
 	duration
 end
 OperationalPeriod(sp, op) = OperationalPeriod(sp, op, 1)
-# TODO: show 
 
 function Base.getproperty(op::OperationalPeriod,sym::Symbol)
 	if sym == :idx
@@ -37,6 +36,8 @@ struct StrategicPeriod <: TimePeriod{UniformTwoLevel}
 	duration
 	operational::TimeStructure
 end
+
+Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
 
 # Each strategic period may have different operational structure
 struct DynamicOperationalLevel <: TimeStructure
