@@ -133,3 +133,18 @@ function previous(sp::StrategicPeriod)
 	end
 end
 
+function previous(op::OperationalPeriod)
+    if op.op == 1
+        return nothing
+    else
+        return OperationalPeriod(op.sp, max(1, op.op - 1))
+    end
+end
+
+function first_operational(sp::StrategicPeriod)
+    return OperationalPeriod(sp.sp, 1)
+end
+
+function last_operational(sp::StrategicPeriod)
+    return OperationalPeriod(sp.sp, sp.len)
+end

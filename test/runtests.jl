@@ -21,14 +21,13 @@ using TimeStructures
     @test iterate(first(strategic_periods(uniform_year)))[2] == OperationalPeriod(1, 2, 1)
     @test previous(next(first(strategic_periods(uniform_year)))) ==  StrategicPeriod(1, 365, 24, 1, UniformTimes(1, 24, 1))
 
-    if VERSION >= v"1.6-" # TODO: Remove when going for v1.6
-        @test length(first(uniform_year, 10)) == 10
-        @test [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
-    else # first N 1.6 specific
-        @test_broken length(first(uniform_year, 10)) == 10
-        @test_broken [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
-    end
-
+    @test length(first(uniform_year, 10)) == 10
+    @test [t.idx for t ∈ first(uniform_year, 2)] == [(1, 1), (1, 2)]
+    
+    @test first_operational(first(strategic_periods(uniform_year))) == OperationalPeriod(1, 1)
+    @test last_operational(first(strategic_periods(uniform_year))) == OperationalPeriod(1, 24)
+    @test previous(OperationalPeriod(1, 2)) == OperationalPeriod(1, 1)
+    @test previous(OperationalPeriod(1, 1)) === nothing
 end
 
 @testset "Time Profiles" begin

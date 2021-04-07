@@ -13,8 +13,8 @@ export DynamicProfile
 export FixedProfile
 export StrategicFixedProfile
 
-export next
-export previous
+export next, previous
 export strategic_periods
+export first_operational, last_operational
 
 end # module
