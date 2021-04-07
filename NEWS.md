@@ -1,6 +1,12 @@
 TimeStructures release notes
 ===================================
 
+Version 0.1.4 (2021-04-07)
+--------------------------
+* Add previous for OperationalPeriods (#1)
+* Add first_operational, last_operational (#1)
+* Require julia v1.6 (#1)
+
 Version 0.1.3 (2021-03-19)
 --------------------------
 * Pretty print StrategicPeriods
