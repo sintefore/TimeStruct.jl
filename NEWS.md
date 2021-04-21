@@ -1,6 +1,12 @@
 TimeStructures release notes
 ===================================
 
+Version 0.1.5 (2021-04-21)
+--------------------------
+* Indexing on StrategicPeriods for StrategicFixedProfile added (#3)
+* Bugfix: Iteration on strategic periods let to wrong values in a
+strategic period > 1 (#3)
+
 Version 0.1.4 (2021-04-07)
 --------------------------
 * Add previous for OperationalPeriods (#1)
