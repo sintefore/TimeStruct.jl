@@ -28,6 +28,12 @@ using TimeStructures
     @test last_operational(first(strategic_periods(uniform_year))) == OperationalPeriod(1, 24)
     @test previous(OperationalPeriod(1, 2)) == OperationalPeriod(1, 1)
     @test previous(OperationalPeriod(1, 1)) === nothing
+
+    T = UniformTwoLevel(1, 2, 1, UniformTimes(1, 24, 1))
+    T_inv = strategic_periods(T)
+    T_ops = [collect(t_inv) for t_inv ∈ T_inv]
+    @test T_ops[1][24] == OperationalPeriod(1,24)
+    @test T_ops[2][1] == OperationalPeriod(2,1)
 end
 
 @testset "Time Profiles" begin
@@ -37,6 +43,7 @@ end
 
     sfp = StrategicFixedProfile([i/100 for i ∈ 1:365])
     @test sfp[OperationalPeriod(122,1)] == 1.22
+    @test sfp[StrategicPeriod(122, 1, 1, 1, UniformTimes(1,24,1))] == 1.22
 
     dp = DynamicProfile([i/100 + j for i ∈ 1:365, j ∈ 1:24])
     @test dp[OperationalPeriod(365,24)] == 27.65
