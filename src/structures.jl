@@ -105,11 +105,11 @@ end
 Base.length(itr::StrategicPeriod) = itr.operational.len
 Base.eltype(::Type{StrategicPeriod}) = OperationalPeriod
 
-function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(1,1))
+function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(itr.sp,1))
 	if state.op > itr.len
 		return nothing
 	else
-		return state, OperationalPeriod(state.sp, state.op + 1)
+		return state, OperationalPeriod(itr.sp, state.op + 1)
 	end
 end
 

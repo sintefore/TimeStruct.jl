@@ -11,6 +11,7 @@ struct StrategicFixedProfile{T} <: TimeProfile
 end
 
 Base.getindex(sfp::StrategicFixedProfile, i::OperationalPeriod) = sfp.vals[i.sp]
+Base.getindex(sfp::StrategicFixedProfile, i::StrategicPeriod) = sfp.vals[i.sp]
 
 struct DynamicProfile{T} <: TimeProfile
     vals::Array{T,2}
