@@ -26,7 +26,7 @@ function Base.getproperty(op::OperationalPeriod,sym::Symbol)
         return getfield(op, sym)
     end
 end
-
+isfirst(op::OperationalPeriod) = op.op == 1 
 Base.show(io::IO, op::OperationalPeriod) = print(io, "t$(op.sp)_$(op.op)")
 
 struct StrategicPeriod <: TimePeriod{UniformTwoLevel}
@@ -85,11 +85,11 @@ UniformPeriod(op) = UniformPeriod(op, 1)
 
 Base.length(itr::UniformTimes) = itr.len
 Base.eltype(::Type{UniformTimes}) = UniformPeriod
-function Base.iterate(itr::UniformTimes, state=UniformPeriod(1))
+function Base.iterate(itr::UniformTimes, state=UniformPeriod(1, itr.duration))
 	if state.op > itr.len
 		return nothing
 	else
-		return state, UniformPeriod(state.op + 1)
+		return state, UniformPeriod(state.op + 1, itr.duration)
 	end
 end
 
@@ -100,6 +100,34 @@ function Base.getproperty(up::UniformPeriod,sym::Symbol)
         return getfield(up, sym)
     end
 end
+isfirst(up::UniformPeriod) = up.op == 1
+previous(up::UniformPeriod) = (up.op == 1 ? nothing : UniformPeriod(up.op - 1, up.duration))
+Base.show(io::IO, up::UniformPeriod) = print(io, "t$(up.op)")
+
+struct DynamicPeriod 
+	op
+	duration
+end
+
+struct DynamicTimes <: TimeStructure
+	first
+	len::Integer
+	duration::Array
+end
+
+isfirst(dp::DynamicPeriod) = dp.op == 1
+Base.length(itr::DynamicTimes) = itr.len
+Base.eltype(::Type{DynamicTimes}) = DynamicPeriod
+
+function Base.iterate(itr::DynamicTimes)
+	return DynamicPeriod(1, itr.duration[1]), 1
+end
+
+function Base.iterate(itr::DynamicTimes, state)
+	state == itr.len && return nothing
+	return DynamicPeriod(state + 1, itr.duration[state + 1]), state + 1 
+end
+
 
 
 Base.length(itr::StrategicPeriod) = itr.operational.len
