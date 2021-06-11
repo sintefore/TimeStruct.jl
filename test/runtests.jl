@@ -1,5 +1,6 @@
 using Test
 using TimeStructures
+const TS = TimeStructures
 
 @testset "Uniform Times" begin
     uniform_day = UniformTimes(1,24,1)    
@@ -36,6 +37,13 @@ using TimeStructures
     @test T_ops[2][1] == OperationalPeriod(2,1)
 end
 
+@testset "Dynamic Times" begin
+    dynamic_day = DynamicTimes(1,6,[12,4,1,1,2,4])
+    @test length(dynamic_day) == 6
+    @test sum([t.duration for t in dynamic_day]) == 24
+    @test collect(dynamic_day)[2] == TS.DynamicPeriod(2,4)
+end
+
 @testset "Time Profiles" begin
     
     fp = FixedProfile(12.0)
@@ -47,5 +55,14 @@ end
 
     dp = DynamicProfile([i/100 + j for i ∈ 1:365, j ∈ 1:24])
     @test dp[OperationalPeriod(365,24)] == 27.65
+
+end
+
+@testset "Iteration Utils" begin
+    uniform_day = UniformTimes(1,24,1)    
+    uniform_week = UniformTwoLevel(1,7,1,uniform_day)
+
+    @test first(withprev(uniform_day))[1] === nothing
+    @test collect(withprev(uniform_week))[25] == (nothing, TS.OperationalPeriod(2,1))
 
 end

@@ -1,6 +1,12 @@
 TimeStructures release notes
 ===================================
 
+
+Version 0.1.6 (2021-06-11)
+--------------------------
+* Time varying duration with new DynamicTimes (experimental)(#5)
+* Iterator that includes previous time period (#5)
+
 Version 0.1.5 (2021-04-21)
 --------------------------
 * Indexing on StrategicPeriods for StrategicFixedProfile added (#3)
