@@ -1,6 +1,9 @@
 TimeStructures release notes
 ===================================
 
+Version 0.1.7 (2021-06-14)
+--------------------------
+* Add missing exports and utilities for InvestmentModels (#6)
 
 Version 0.1.6 (2021-06-11)
 --------------------------
