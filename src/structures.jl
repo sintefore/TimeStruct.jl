@@ -176,3 +176,26 @@ end
 function last_operational(sp::StrategicPeriod)
     return OperationalPeriod(sp.sp, sp.len)
 end
+
+function duration_years(ts::TimeStructure, sp::StrategicPeriod)
+    ts.duration
+end
+
+function duration_years(ts::DynamicTwoLevel, sp::StrategicPeriod)
+    ts.duration[sp.sp]
+end
+
+function startyear(ts::TimeStructure, sp::StrategicPeriod)
+    sy = ts.first
+    for s ∈ strategic_periods(ts) # Not efficient, consider memoizing or storing in sp
+        if s.sp == sp.sp
+            return sy
+        else
+            sy += duration_years(ts, s)
+        end
+    end
+end
+
+function endyear(ts::TimeStructure, sp::StrategicPeriod)
+    startyear(ts, sp) + ts.duration
+end

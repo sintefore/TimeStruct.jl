@@ -10,13 +10,14 @@ export UniformTimes
 export DynamicTimes
 export UniformTwoLevel
 
-export TimeProfile
+export TimeProfile, TimeStructure
 export DynamicProfile
 export FixedProfile
 export StrategicFixedProfile
 
 export next, previous
 export strategic_periods
+export startyear, endyear, duration_years
 export first_operational, last_operational
 export withprev
 
