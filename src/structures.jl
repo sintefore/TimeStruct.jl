@@ -37,6 +37,7 @@ struct StrategicPeriod <: TimePeriod{UniformTwoLevel}
 	operational::TimeStructure
 end
 
+isfirst(sp::StrategicPeriod) = sp.sp == 1
 Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
 
 # Each strategic period may have different operational structure
