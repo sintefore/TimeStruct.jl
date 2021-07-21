@@ -63,6 +63,8 @@ struct UniformTimes <: TimeStructure
 end
 
 Base.length(itr::UniformTwoLevel) = itr.len * itr.operational.len
+Base.length(itr::DynamicOperationalLevel) = sum(itr.operational[sp].len for sp ∈ 1:itr.len)
+Base.length(itr::DynamicTwoLevel) = sum(itr.operational[sp].len for sp ∈ 1:itr.len)
 Base.eltype(::Type{UniformTwoLevel}) = OperationalPeriod
 
 function Base.iterate(itr::UniformTwoLevel, state=OperationalPeriod(1,1))
@@ -70,6 +72,19 @@ function Base.iterate(itr::UniformTwoLevel, state=OperationalPeriod(1,1))
 		return nothing
 	end
 	if state.op >= itr.operational.len
+		return (state,
+				OperationalPeriod(state.sp + 1, 1))
+	else
+		return (state,
+				OperationalPeriod(state.sp, state.op + 1))
+	end
+end
+
+function Base.iterate(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}, state=OperationalPeriod(1,1))
+	if state.sp > itr.len
+		return nothing
+	end
+	if state.op >= itr.operational[state.sp].len
 		return (state,
 				OperationalPeriod(state.sp + 1, 1))
 	else
@@ -144,6 +159,14 @@ end
 
 function strategic_periods(ts::UniformTwoLevel)
 	return (StrategicPeriod(sp,ts.len,ts.operational.len,ts.duration,ts.operational) for sp ∈ 1:ts.len)
+end
+
+function strategic_periods(ts::DynamicOperationalLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational[sp].len,ts.duration,ts.operational[sp]) for sp ∈ 1:ts.len)
+end
+
+function strategic_periods(ts::DynamicTwoLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational[sp].len,ts.duration[sp],ts.operational[sp]) for sp ∈ 1:ts.len)
 end
 
 function next(sp::StrategicPeriod)
