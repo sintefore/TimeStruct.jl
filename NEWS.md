@@ -1,6 +1,11 @@
 TimeStructures release notes
 ===================================
 
+Version 0.1.8 (2021-08-02)
+--------------------------
+* Restructured and commented the file for improved readability (#7)
+* Inclusion of functions for DynamicTwoLevel and DynamicOperationalLevel (#7)
+
 Version 0.1.7 (2021-06-14)
 --------------------------
 * Add missing exports and utilities for InvestmentModels (#6)
