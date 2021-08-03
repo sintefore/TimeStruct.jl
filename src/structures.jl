@@ -12,6 +12,10 @@ UniformTwoLevel:
 DynamicOperationalLevel:
 	Operational periods are different in each strategic period
 	Strategic periods have the same, fixed duration
+	
+DynamicOperationalLevel:
+	Operational periods are the same for all strategic periods
+	Strategic periods can have a different duration
 
 DynamicTwoLevel:
 	Operational periods are different in each strategic period
@@ -33,6 +37,13 @@ struct DynamicOperationalLevel <: TimeStructure
 	operational::Array{TimeStructure}
 end
 
+struct DynamicStrategicLevel <: TimeStructure
+	first
+	len::Integer
+	duration::Array
+	operational::TimeStructure
+end
+
 struct DynamicTwoLevel <: TimeStructure
 	first
 	len::Integer
@@ -41,14 +52,14 @@ struct DynamicTwoLevel <: TimeStructure
 end
 
 # Calculation of the length (number of time periods)
-Base.length(itr::UniformTwoLevel) = itr.len * itr.operational.len
+Base.length(itr::Union{UniformTwoLevel,DynamicStrategicLevel}) = itr.len * itr.operational.len
 Base.length(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}) = sum(itr.operational[sp].len for sp ∈ 1:itr.len)
 
 
 Base.eltype(::Type{UniformTwoLevel}) = OperationalPeriod
 
 # Function for defining the time periods when iterating through the time structures with two levels
-function Base.iterate(itr::UniformTwoLevel, state=OperationalPeriod(1,1))
+function Base.iterate(itr::Union{UniformTwoLevel,DynamicStrategicLevel}, state=OperationalPeriod(1,1))
 	if state.sp > itr.len
 		return nothing
 	end
@@ -187,6 +198,10 @@ end
 
 function strategic_periods(ts::DynamicOperationalLevel)
 	return (StrategicPeriod(sp,ts.len,ts.operational[sp].len,ts.duration,ts.operational[sp]) for sp ∈ 1:ts.len)
+end
+
+function strategic_periods(ts::DynamicStrategicLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational.len,ts.duration[sp],ts.operational) for sp ∈ 1:ts.len)
 end
 
 function strategic_periods(ts::DynamicTwoLevel)

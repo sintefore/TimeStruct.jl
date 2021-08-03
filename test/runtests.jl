@@ -37,6 +37,22 @@ const TS = TimeStructures
     @test T_ops[2][1] == OperationalPeriod(2,1)
 end
 
+@testset "Two level time structures" begin
+    spring = UniformTimes(1,72,1)
+    summer = UniformTimes(1,144,1)
+    autumn = UniformTimes(1,72,1)
+    winter = UniformTimes(1,36,1)
+    varying_year = [spring, summer, autumn, winter]
+    varying_two_year = [spring, summer, autumn, winter, spring, summer, autumn, winter]
+
+    uniform_year = UniformTimes(1,324,1)
+
+    dynamic_strategic = DynamicStrategicLevel(1,2,[1,4],uniform_year)
+    dynamic_two_level = DynamicTwoLevel(1,8,[0.25, 0.25, 0.25, 0.25, 1, 1, 1, 1],varying_two_year)
+
+    @test length(dynamic_strategic) == length(dynamic_two_level)
+end
+
 @testset "Dynamic Times" begin
     dynamic_day = DynamicTimes(1,6,[12,4,1,1,2,4])
     @test length(dynamic_day) == 6
