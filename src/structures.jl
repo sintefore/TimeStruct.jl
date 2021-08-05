@@ -1,12 +1,113 @@
+# Defintion of the main types for the timestructures
+abstract type TimeStructure end
 abstract type TimePeriod{TimeStructure} end
 
-abstract type TimeStructure end
+" Definition of the individual time structures with two levels and corresponding
+functions.
 
+UniformTwoLevel:
+	Operational periods are the same for all strategic periods
+	Strategic periods have the same, fixed duration
+	
+DynamicOperationalLevel:
+	Operational periods are different in each strategic period
+	Strategic periods have the same, fixed duration
+	
+DynamicStrategicLevel:
+	Operational periods are the same for all strategic periods
+	Strategic periods can have a different duration
+
+DynamicTwoLevel:
+	Operational periods are different in each strategic period
+	Strategic periods can have a different duration
+"
+
+# Composite type defintion
 struct UniformTwoLevel <: TimeStructure
 	first
 	len::Integer
 	duration # or better scale?
 	operational::TimeStructure
+end
+
+struct DynamicOperationalLevel <: TimeStructure
+	first
+	len::Integer
+	duration
+	operational::Array{TimeStructure}
+end
+
+struct DynamicStrategicLevel <: TimeStructure
+	first
+	len::Integer
+	duration::Array
+	operational::TimeStructure
+end
+
+struct DynamicTwoLevel <: TimeStructure
+	first
+	len::Integer
+	duration::Array
+	operational::Array{TimeStructure}
+end
+
+# Calculation of the length (number of time periods)
+Base.length(itr::Union{UniformTwoLevel,DynamicStrategicLevel}) = itr.len * itr.operational.len
+Base.length(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}) = sum(itr.operational[sp].len for sp ∈ 1:itr.len)
+
+Base.eltype(::Type{UniformTwoLevel}) = OperationalPeriod
+
+# Function for defining the time periods when iterating through the time structures with two levels
+function Base.iterate(itr::Union{UniformTwoLevel,DynamicStrategicLevel}, state=OperationalPeriod(1,1,itr.operational.duration[1]))
+	if state.sp > itr.len
+		return nothing
+	end
+	if length(itr.operational.duration) == 1
+		if state.op >= itr.operational.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational.duration))
+		else
+			return (state,
+					OperationalPeriod(state.sp, state.op + 1, itr.operational.duration))
+		end
+	else
+		if state.op >= itr.operational.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational.duration[1]))
+		else
+			return (state,
+					OperationalPeriod(state.sp, state.op + 1, itr.operational.duration[state.op + 1]))
+		end
+	end
+end
+
+function Base.iterate(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}, state=OperationalPeriod(1,1,itr.operational[1].duration[1]))
+	if state.sp > itr.len
+		return nothing
+	end
+	if length(itr.operational[state.sp].duration) == 1
+		if state.op >= itr.operational[state.sp].len && state.sp < itr.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational[state.sp + 1].duration))
+		elseif state.op >= itr.operational[state.sp].len && state.sp == itr.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational[state.sp].duration))
+		else
+			return (state,
+					OperationalPeriod(state.sp, state.op + 1, itr.operational[state.sp].duration))
+		end
+	else
+		if state.op >= itr.operational[state.sp].len && state.sp < itr.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational[state.sp + 1].duration[1]))
+		elseif state.op >= itr.operational[state.sp].len && state.sp == itr.len
+			return (state,
+					OperationalPeriod(state.sp + 1, 1, itr.operational[state.sp].duration[state.op]))
+		else
+			return (state,
+					OperationalPeriod(state.sp, state.op + 1, itr.operational[state.sp].duration[state.op + 1]))
+		end
+	end
 end
 
 # Create time periods when iterating a time structure
@@ -40,42 +141,11 @@ end
 isfirst(sp::StrategicPeriod) = sp.sp == 1
 Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
 
-# Each strategic period may have different operational structure
-struct DynamicOperationalLevel <: TimeStructure
-	first
-	len::Integer
-	duration
-	operational::Array{TimeStructure}
-end
-
-# Each strategic period may have different duration and different operational structure
-struct DynamicTwoLevel <: TimeStructure
-	first
-	len::Integer
-	duration::Array
-	operational::Array{TimeStructure}
-end
 
 struct UniformTimes <: TimeStructure
 	first
 	len::Integer
 	duration
-end
-
-Base.length(itr::UniformTwoLevel) = itr.len * itr.operational.len
-Base.eltype(::Type{UniformTwoLevel}) = OperationalPeriod
-
-function Base.iterate(itr::UniformTwoLevel, state=OperationalPeriod(1,1))
-	if state.sp > itr.len
-		return nothing
-	end
-	if state.op >= itr.operational.len
-		return (state,
-				OperationalPeriod(state.sp + 1, 1))
-	else
-		return (state,
-				OperationalPeriod(state.sp, state.op + 1))
-	end
 end
 
 struct UniformPeriod 
@@ -119,6 +189,7 @@ end
 isfirst(dp::DynamicPeriod) = dp.op == 1
 Base.length(itr::DynamicTimes) = itr.len
 Base.eltype(::Type{DynamicTimes}) = DynamicPeriod
+Base.show(io::IO, up::DynamicPeriod) = print(io, "t$(up.op)")
 
 function Base.iterate(itr::DynamicTimes)
 	return DynamicPeriod(1, itr.duration[1]), 1
@@ -130,22 +201,52 @@ function Base.iterate(itr::DynamicTimes, state)
 end
 
 
-
 Base.length(itr::StrategicPeriod) = itr.operational.len
 Base.eltype(::Type{StrategicPeriod}) = OperationalPeriod
 
-function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(itr.sp,1))
+# Function for defining the time periods when iterating through a strategic period
+function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(itr.sp,1,itr.operational.duration[1]))
 	if state.op > itr.len
 		return nothing
 	else
-		return state, OperationalPeriod(itr.sp, state.op + 1)
+		if length(itr.operational.duration) == 1
+			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration)
+		elseif state.op == itr.len
+			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration[state.op])
+		else
+			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration[state.op + 1])
+		end
 	end
 end
 
+"""
+	strategic_periods(ts::UniformTwoLevel)
+Return the strategic periods of the provided time structure.
+"""
 function strategic_periods(ts::UniformTwoLevel)
 	return (StrategicPeriod(sp,ts.len,ts.operational.len,ts.duration,ts.operational) for sp ∈ 1:ts.len)
 end
 
+function strategic_periods(ts::DynamicOperationalLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational[sp].len,ts.duration,ts.operational[sp]) for sp ∈ 1:ts.len)
+end
+
+function strategic_periods(ts::DynamicStrategicLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational.len,ts.duration[sp],ts.operational) for sp ∈ 1:ts.len)
+end
+
+function strategic_periods(ts::DynamicTwoLevel)
+	return (StrategicPeriod(sp,ts.len,ts.operational[sp].len,ts.duration[sp],ts.operational[sp]) for sp ∈ 1:ts.len)
+end
+###########################################################################################
+###########################################################################################
+# The following code is duplicated as it does not adhere to the proposed approach regarding
+# the duration as well as the flexibility in the proposed two level timestructures
+
+"""
+	next(sp::StrategicPeriod)
+Return the following strategic period of a strategic period sp
+"""
 function next(sp::StrategicPeriod)
 	if sp.sp > sp.sps
 		return nothing
@@ -154,6 +255,10 @@ function next(sp::StrategicPeriod)
 	end
 end
 
+"""
+	previous(sp::StrategicPeriod)
+Return the previous strategic period of a strategic period sp
+"""
 function previous(sp::StrategicPeriod)
 	if sp.sp == 1
 		return nothing
@@ -162,6 +267,10 @@ function previous(sp::StrategicPeriod)
 	end
 end
 
+"""
+	previous(op::OperationalPeriod)
+Return the previous operational period of an operational period op
+"""
 function previous(op::OperationalPeriod)
     if op.op == 1
         return nothing
@@ -170,22 +279,139 @@ function previous(op::OperationalPeriod)
     end
 end
 
+###########################################################################################
+###########################################################################################
+
+"""
+next(sp::StrategicPeriod)
+Return the following strategic period of a strategic period sp
+"""
+function next(sp::StrategicPeriod, ts::UniformTwoLevel)
+	if sp.sp > sp.sps
+		return nothing
+	else
+		return StrategicPeriod(sp.sp + 1, sp.sps, sp.len, sp.duration, sp.operational)
+	end
+end
+function next(sp::StrategicPeriod, ts::DynamicOperationalLevel)
+	if sp.sp > sp.sps
+		return nothing
+	else
+		return StrategicPeriod(sp.sp + 1, sp.sps, ts.operational[sp.sp + 1].len, ts.duration, ts.operational[sp.sp + 1])
+	end
+end
+function next(sp::StrategicPeriod, ts::DynamicStrategicLevel)
+	if sp.sp > sp.sps
+		return nothing
+	else
+		return StrategicPeriod(sp.sp + 1, sp.sps, ts.operational.len, ts.duration[sp.sp + 1], ts.operational)
+	end
+end
+function next(sp::StrategicPeriod, ts::DynamicTwoLevel)
+	if sp.sp > sp.sps
+		return nothing
+	else
+		return StrategicPeriod(sp.sp + 1, sp.sps, ts.operational[sp].len, ts.duration[sp.sp + 1], ts.operational[sp.sp + 1])
+	end
+end
+
+"""
+previous(sp::StrategicPeriod)
+Return the previous strategic period of a strategic period sp
+"""
+
+function previous(sp::StrategicPeriod, ts::UniformTwoLevel)
+	if sp.sp == 1
+		return nothing
+	else
+		return StrategicPeriod(sp.sp - 1, sp.sps, sp.len, sp.duration, sp.operational)
+	end
+end
+function previous(sp::StrategicPeriod, ts::DynamicOperationalLevel)
+	if sp.sp == 1
+		return nothing
+	else
+		return StrategicPeriod(sp.sp - 1, sp.sps, ts.operational[sp.sp - 1].len, ts.duration, ts.operational[sp.sp - 1])
+	end
+end
+function previous(sp::StrategicPeriod, ts::DynamicStrategicLevel)
+	if sp.sp == 1
+		return nothing
+	else
+		return StrategicPeriod(sp.sp - 1, sp.sps, ts.operational.len, ts.duration[sp.sp - 1], ts.operational)
+	end
+end
+function previous(sp::StrategicPeriod, ts::DynamicTwoLevel)
+	if sp.sp == 1
+		return nothing
+	else
+		return StrategicPeriod(sp.sp - 1, sp.sps, ts.operational[sp].len, ts.duration[sp.sp - 1], ts.operational[sp.sp - 1])
+	end
+end
+
+"""
+previous(op::OperationalPeriod)
+Return the previous operational period of an operational period op
+"""
+function previous(op::OperationalPeriod, ts::Union{UniformTwoLevel,DynamicStrategicLevel})
+	if op.op == 1
+		return nothing
+	elseif typeof(ts.operational) == UniformTimes
+		return OperationalPeriod(op.sp, op.op - 1, ts.operational.duration)
+	else
+		return OperationalPeriod(op.sp, op.op - 1, ts.operational.duration[op.op - 1])
+	end
+end
+function previous(op::OperationalPeriod, ts::Union{DynamicOperationalLevel,DynamicTwoLevel})
+	if op.op == 1
+		return nothing
+	elseif typeof(ts.operational[op.sp]) == UniformTimes
+		return OperationalPeriod(op.sp, op.op - 1, ts.operational[op.sp].duration)
+	else
+		return OperationalPeriod(op.sp, op.op - 1, ts.operational[op.sp].duration[op.op - 1])
+	end
+end
+
+###########################################################################################
+###########################################################################################
+
+"""
+	first_operational(sp::StrategicPeriod)
+Return the first operational period of a strategic period sp
+"""
 function first_operational(sp::StrategicPeriod)
-    return OperationalPeriod(sp.sp, 1)
+	if typeof(sp.operational) == UniformTimes
+    	return OperationalPeriod(sp.sp, 1, sp.operational.duration)
+	else 
+    	return OperationalPeriod(sp.sp, 1, sp.operational.duration[1])
+	end
 end
 
+"""
+	last_operational(sp::StrategicPeriod)
+Return the last operational period of a strategic period sp
+"""
 function last_operational(sp::StrategicPeriod)
-    return OperationalPeriod(sp.sp, sp.len)
+	if typeof(sp.operational) == UniformTimes
+    	return OperationalPeriod(sp.sp, sp.len, sp.operational.duration)
+	else 
+    	return OperationalPeriod(sp.sp, sp.len, sp.operational.duration[sp.len])
+	end
 end
 
+"""
+	duration_years(ts::TimeStructure, sp::StrategicPeriod)
+Return duration of a strategic period sp
+"""
 function duration_years(ts::TimeStructure, sp::StrategicPeriod)
-    ts.duration
+    sp.duration
 end
 
-function duration_years(ts::DynamicTwoLevel, sp::StrategicPeriod)
-    ts.duration[sp.sp]
-end
 
+"""
+	startyear(ts::TimeStructure, sp::StrategicPeriod)
+Return start year of a strategic period sp
+"""
 function startyear(ts::TimeStructure, sp::StrategicPeriod)
     sy = ts.first
     for s ∈ strategic_periods(ts) # Not efficient, consider memoizing or storing in sp
@@ -197,6 +423,10 @@ function startyear(ts::TimeStructure, sp::StrategicPeriod)
     end
 end
 
+"""
+	endyear(ts::TimeStructure, sp::StrategicPeriod)
+Return end year of a strategic period sp
+"""
 function endyear(ts::TimeStructure, sp::StrategicPeriod)
-    startyear(ts, sp) + ts.duration
+    startyear(ts, sp) + sp.duration
 end

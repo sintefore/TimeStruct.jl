@@ -9,10 +9,14 @@ export StrategicPeriod
 export UniformTimes
 export DynamicTimes
 export UniformTwoLevel
+export DynamicOperationalLevel
+export DynamicStrategicLevel
+export DynamicTwoLevel
 
 export TimeProfile, TimeStructure
 export DynamicProfile
 export FixedProfile
+export OperationalFixedProfile
 export StrategicFixedProfile
 
 export next, previous
