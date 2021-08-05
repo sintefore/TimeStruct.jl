@@ -1,4 +1,4 @@
-# Defintion of the main types for time profiels
+# Defintion of the main types for time profiles
 abstract type TimeProfile end
 
 " Definition of the individual time profiles
