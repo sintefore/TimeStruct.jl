@@ -1,7 +1,7 @@
 TimeStructures release notes
 ===================================
 
-Version 0.2.0 (2021-08-04)
+Version 0.1.8 (2021-08-04)
 --------------------------
 * Restructured and commented the file for improved readability (#7)
 * Inclusion of functions for DynamicTwoLevel and DynamicOperationalLevel (#7)
