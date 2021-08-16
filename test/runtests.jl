@@ -61,7 +61,7 @@ end
     @test previous(T_ops[1][2]).duration == 1
     @test previous(T_ops[2][2],T).duration == 5
 
-    T_ops = [collect(t) for t ∈ T]
+    T_ops = [collect(t) for t ∈ strategic_periods(T)]
     @test T_ops[1][10].duration == 10
     @test T_ops[2][10].duration == 5
 
