@@ -57,7 +57,50 @@ Base.length(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}) = sum(itr.opera
 
 Base.eltype(::Type{UniformTwoLevel}) = OperationalPeriod
 
+function Base.iterate(itr::Union{UniformTwoLevel,DynamicStrategicLevel})
+	sp = 1
+	next = iterate(itr.operational)
+	next === nothing && return nothing
+	return OperationalPeriod(sp, next[1].op, next[1].duration), (sp, next[2])
+end
+
+function Base.iterate(itr::Union{UniformTwoLevel,DynamicStrategicLevel}, state)
+	sp = state[1]
+	next = iterate(itr.operational, state[2])
+	if next === nothing
+		sp = sp + 1
+		if sp > itr.len
+			return nothing
+		end
+		next = iterate(itr.operational)
+	end
+	return OperationalPeriod(sp, next[1].op, next[1].duration), (sp,next[2])
+end
+
+function Base.iterate(itr::Union{DynamicOperationalLevel,DynamicTwoLevel})
+	sp = 1
+	next = iterate(itr.operational[sp])
+	next === nothing && return nothing
+	return OperationalPeriod(sp, next[1].op, next[1].duration), (sp, next[2])
+end
+
+function Base.iterate(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}, state)
+	sp = state[1]
+	next = iterate(itr.operational[sp], state[2])
+	if next === nothing
+		sp = sp + 1
+		if sp > itr.len
+			return nothing
+		end
+		next = iterate(itr.operational[sp])
+	end
+	
+	return OperationalPeriod(sp, next[1].op, next[1].duration), (sp,next[2])
+end
+
+
 # Function for defining the time periods when iterating through the time structures with two levels
+#=
 function Base.iterate(itr::Union{UniformTwoLevel,DynamicStrategicLevel}, state=OperationalPeriod(1,1,itr.operational.duration[1]))
 	if state.sp > itr.len
 		return nothing
@@ -110,6 +153,8 @@ function Base.iterate(itr::Union{DynamicOperationalLevel,DynamicTwoLevel}, state
 	end
 end
 
+=#
+
 # Create time periods when iterating a time structure
 # Use to identify time period (e.g. in variables and constraints)
 # Use to look up input values (price, demand etc)
@@ -148,7 +193,7 @@ struct UniformTimes <: TimeStructure
 	duration
 end
 
-struct UniformPeriod 
+struct UniformPeriod <: TimePeriod{UniformTimes}
 	op
 	duration
 end

@@ -33,10 +33,11 @@ Base.getindex(sfp::StrategicFixedProfile, i::TimePeriod{UniformTwoLevel}) = sfp.
 # Base.getindex(sfp::StrategicFixedProfile, i::OperationalPeriod) = sfp.vals[i.sp]
 # Base.getindex(sfp::StrategicFixedProfile, i::StrategicPeriod) = sfp.vals[i.sp]
 
-struct DynamicProfile{T} <: TimeProfile{T}
-    vals::Array{T,2}
+struct DynamicProfile{T,N} <: TimeProfile{T}
+    vals::Array{T,N}
 end
-Base.getindex(dp::DynamicProfile, i::TimePeriod{UniformTwoLevel}) = dp.vals[i.sp, i.op]
+Base.getindex(dp::DynamicProfile{T,2}, i::TimePeriod{UniformTwoLevel}) where {T} = dp.vals[i.sp, mod(i.op - 1, length(dp.vals)) + 1] 
+Base.getindex(dp::DynamicProfile{T,1}, i::TimePeriod) where {T} = dp.vals[mod(i.op - 1, length(dp.vals)) + 1] 
 
 import Base:+,-,*,/
 +(a::FixedProfile, b::Number) = FixedProfile(a.vals .+ b)
