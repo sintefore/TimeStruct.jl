@@ -6,55 +6,61 @@ abstract type TimeProfile{T} end
 FixedProfile:
 	Fixed profile independent of strategic and operational period
 
-OperationalFixedProfile:
-    Fixed strategic profile with varying operational profiles
+OperationalProfile:
+    Profile varying with operational period
 	
-StrategicFixedProfile:
-	Fixed operational profile with varying strategic profiles
+StrategicProfile:
+	Profile varying with strategic period
 
 DynamicProfile:
     Variations in both strategic and operational horizons
+
+ScenarioProfile:
+    Profile with multiple scnarios
 "
 
 struct FixedProfile{T} <: TimeProfile{T}
     vals::T
 end
-Base.getindex(fp::FixedProfile, i) = fp.vals
+Base.getindex(fp::FixedProfile, i::TimePeriod) = fp.vals
 
-struct OperationalFixedProfile{T} <: TimeProfile{T}
+struct OperationalProfile{T} <: TimeProfile{T}
     vals::Array{T}
 end
-Base.getindex(ofp::OperationalFixedProfile, i::TimePeriod{UniformTwoLevel}) = ofp.vals[i.op]
+Base.getindex(ofp::OperationalProfile, i::TimePeriod) = ofp.vals[mod(i.op - 1, length(ofp.vals)) + 1]
 
-struct StrategicFixedProfile{T} <: TimeProfile{T}
+struct StrategicProfile{T} <: TimeProfile{T}
     vals::Array{T}
 end
-Base.getindex(sfp::StrategicFixedProfile, i::TimePeriod{UniformTwoLevel}) = sfp.vals[i.sp]
-# Base.getindex(sfp::StrategicFixedProfile, i::OperationalPeriod) = sfp.vals[i.sp]
-# Base.getindex(sfp::StrategicFixedProfile, i::StrategicPeriod) = sfp.vals[i.sp]
+Base.getindex(sfp::StrategicProfile, i::TimePeriod) = sfp.vals[i.sp]
 
-struct DynamicProfile{T,N} <: TimeProfile{T}
-    vals::Array{T,N}
+struct DynamicProfile{T} <: TimeProfile{T}
+    vals::Vector{<:TimeProfile{T}}
 end
-Base.getindex(dp::DynamicProfile{T,2}, i::TimePeriod{UniformTwoLevel}) where {T} = dp.vals[i.sp, mod(i.op - 1, length(dp.vals)) + 1] 
-Base.getindex(dp::DynamicProfile{T,1}, i::TimePeriod) where {T} = dp.vals[mod(i.op - 1, length(dp.vals)) + 1] 
+Base.getindex(dp::DynamicProfile, i::TimePeriod) = dp.vals[i.sp][i]
+
+struct ScenarioProfile{T} <: TimeProfile{T}
+    vals::Vector{<:TimeProfile{T}}
+end
+Base.getindex(sfp::ScenarioProfile, i::TimePeriod) = sfp.vals[opscen(i)][i]
+
 
 import Base:+,-,*,/
 +(a::FixedProfile, b::Number) = FixedProfile(a.vals .+ b)
-+(a::OperationalFixedProfile, b::Number) = OperationalFixedProfile(a.vals .+ b)
++(a::OperationalProfile, b::Number) = OperationalProfile(a.vals .+ b)
 +(a::DynamicProfile, b::Number) = DynamicProfile(a.vals .+ b)
-+(a::StrategicFixedProfile, b::Number) = StrategicFixedProfile(a.vals .+ b)
++(a::StrategicProfile, b::Number) = StrategicProfile(a.vals .+ b)
 +(a::Number, b::TimeProfile) = b + a
 -(a::FixedProfile, b::Number) = FixedProfile(a.vals .- b)
--(a::OperationalFixedProfile, b::Number) = OperationalFixedProfile(a.vals .- b)
+-(a::OperationalProfile, b::Number) = OperationalProfile(a.vals .- b)
 -(a::DynamicProfile, b::Number) = DynamicProfile(a.vals .- b)
--(a::StrategicFixedProfile, b::Number) = StrategicFixedProfile(a.vals .- b)
+-(a::StrategicProfile, b::Number) = StrategicProfile(a.vals .- b)
 *(a::FixedProfile, b::Number) = FixedProfile(a.vals .* b)
-*(a::OperationalFixedProfile, b::Number) = OperationalFixedProfile(a.vals .* b)
+*(a::OperationalProfile, b::Number) = OperationalProfile(a.vals .* b)
 *(a::DynamicProfile, b::Number) = DynamicProfile(a.vals .* b)
-*(a::StrategicFixedProfile, b::Number) = StrategicFixedProfile(a.vals .* b)
+*(a::StrategicProfile, b::Number) = StrategicProfile(a.vals .* b)
 *(a::Number, b::TimeProfile) = b * a
 /(a::FixedProfile, b::Number) = FixedProfile(a.vals ./ b)
-/(a::OperationalFixedProfile, b::Number) = OperationalFixedProfile(a.vals ./ b)
+/(a::OperationalProfile, b::Number) = OperationalProfile(a.vals ./ b)
 /(a::DynamicProfile, b::Number) = DynamicProfile(a.vals ./ b)
-/(a::StrategicFixedProfile, b::Number) = StrategicFixedProfile(a.vals ./ b)
+/(a::StrategicProfile, b::Number) = StrategicProfile(a.vals ./ b)

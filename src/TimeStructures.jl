@@ -6,18 +6,20 @@ include("utils.jl")
 
 export OperationalPeriod
 export StrategicPeriod
-export UniformTimes
-export DynamicTimes
-export UniformTwoLevel
-export DynamicOperationalLevel
-export DynamicStrategicLevel
-export DynamicTwoLevel
+export SimplePeriod
+export SimpleTimes
+export TwoLevel
+
 
 export TimeProfile, TimeStructure
-export DynamicProfile
 export FixedProfile
-export OperationalFixedProfile
-export StrategicFixedProfile
+export OperationalProfile
+export StrategicProfile
+export DynamicProfile
+
+export ScenarioPeriod
+export ScenarioOperational
+export ScenarioProfile
 
 export next, previous
 export strategic_periods
