@@ -3,6 +3,7 @@ module TimeStructures
 include("structures.jl")
 include("profiles.jl")
 include("utils.jl")
+include("discount.jl")
 
 export OperationalPeriod
 export StrategicPeriod
@@ -21,10 +22,13 @@ export ScenarioPeriod
 export ScenarioOperational
 export ScenarioProfile
 
-export next, previous
+export strat_periods, strat_per
 export strategic_periods
-export startyear, endyear, duration_years
-export first_operational, last_operational
 export withprev
+
+export isfirst, duration, multiple
+
+export Discounter
+export discount
 
 end # module
