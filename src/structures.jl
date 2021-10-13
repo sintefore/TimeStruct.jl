@@ -20,7 +20,8 @@ function Base.iterate(itr::TwoLevel)
 	sp = 1
 	next = iterate(itr.operational[sp])
 	next === nothing && return nothing
-	return OperationalPeriod(sp, opscen(next[1]), next[1].op, next[1].duration), (sp, next[2])
+	per = next[1]
+	return OperationalPeriod(sp, opscen(per), per.op, per.duration, prob(per)), (sp, next[2])
 end
 
 function Base.iterate(itr::TwoLevel, state)
@@ -33,7 +34,8 @@ function Base.iterate(itr::TwoLevel, state)
 		end
 		next = iterate(itr.operational[sp])
 	end
-	return OperationalPeriod(sp, opscen(next[1]), next[1].op, next[1].duration), (sp,next[2])
+	per = next[1]
+	return OperationalPeriod(sp, opscen(per), per.op, per.duration , prob(per)), (sp,next[2])
 end
 
 Base.length(itr::TwoLevel) = sum(length(itr.operational[sp]) for sp ∈ 1:itr.len)
@@ -47,13 +49,15 @@ struct OperationalPeriod <: TimePeriod{TwoLevel}
 	sc
 	op
 	duration
+	prob
 end
-OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1)
-OperationalPeriod(sp, op, dur) = OperationalPeriod(sp, nothing, op, dur)
+OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1, 1.0)
+OperationalPeriod(sp, op, dur) = OperationalPeriod(sp, nothing, op, dur, 1.0)
 
 isfirst(op::OperationalPeriod) = op.op == 1 
 duration(op::OperationalPeriod) = op.duration
 strat_per(op::OperationalPeriod) = op.sp
+prob(op::OperationalPeriod) = op.prob
 Base.show(io::IO, op::OperationalPeriod) = isnothing(op.sc) ? print(io, "t$(op.sp)_$(op.op)") : print(io, "t$(op.sp)-$(op.sc)_$(op.op)") 
 Base.isless(t1::OperationalPeriod, t2::OperationalPeriod) = t1.sp < t2.sp || (t1.sp == t2.sp &&t1.op < t2.op)
 
@@ -80,7 +84,7 @@ function Base.iterate(itr::ScenarioOperational)
 	sc = 1
 	next = iterate(itr.scenarios[sc])
 	next === nothing && return nothing
-	return ScenarioPeriod(sc, next[1].op, next[1].duration), (sc, next[2])
+	return ScenarioPeriod(sc, next[1].op, next[1].duration, itr.probability[sc]), (sc, next[2])
 end
 
 function Base.iterate(itr::ScenarioOperational, state)
@@ -93,7 +97,7 @@ function Base.iterate(itr::ScenarioOperational, state)
 		end
 		next = iterate(itr.scenarios[sc])
 	end
-	return ScenarioPeriod(sc, next[1].op, next[1].duration), (sc,next[2])
+	return ScenarioPeriod(sc, next[1].op, next[1].duration, itr.probability[sc]), (sc,next[2])
 end
 Base.length(itr::ScenarioOperational) = sum(length(itr.scenarios[sc]) for sc ∈ 1:itr.len)
 Base.eltype(::Type{ScenarioOperational}) = ScenarioPerid
@@ -102,8 +106,14 @@ struct ScenarioPeriod <: TimePeriod{ScenarioOperational}
 	sc
 	op
 	duration
+	prob
 end
 Base.show(io::IO, up::ScenarioPeriod) = print(io, "t-$(up.sc)_$(up.op)")
+
+prob(::TimePeriod) = 1.0
+prob(t::ScenarioPeriod) = t.prob 
+prob(t::OperationalPeriod) = t.prob 
+
 
 opscen(::TimePeriod) = nothing
 opscen(t::ScenarioPeriod) = t.sc

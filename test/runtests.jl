@@ -32,15 +32,24 @@ end
 
 @testset "Operational scenarios" begin
     week = SimpleTimes(168,1)
-    # 3 operational scenarios, two single day and one for a week
+    # 3 operational scenarios, two single day and one for a week with hourly resolution
     opscen = ScenarioOperational(3, [day, day, week], [0.1, 0.2, 0.7])
-    @test first(opscen) == ScenarioPeriod(1,1,1.0)
-
+    
+    @test first(opscen) == ScenarioPeriod(1, 1, 1.0, 0.1)
     @test length(opscen) == 216
 
+    # One year with a strategic period per quarter and 3 operational scenarios
     seasonal_year = TwoLevel(4, 24 .* [91, 91, 91, 92], opscen)
+    @test length(seasonal_year) == 864
+    
+    ops = collect(seasonal_year)
+    @test ops[1] == OperationalPeriod(1, 1, 1, 1.0, 0.1)
 
-    @test first(seasonal_year) == OperationalPeriod(1, 1, 1, 1.0)
+    @test TS.prob(ops[34]) == 0.2
+    @test TS.multiple(ops[34], seasonal_year) == 91 
+    
+    @test TS.prob(ops[100]) == 0.7
+    @test TS.multiple(ops[100], seasonal_year) == 13 
 end
 
 

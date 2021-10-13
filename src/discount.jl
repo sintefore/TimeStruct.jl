@@ -55,4 +55,7 @@ function discount_start(discount_rate, start_year)
     return start_year^δ
 end
 
+function objective_weight(op::OperationalPeriod, disc::Discounter)
+    return prob(op) * discount(disc, op) * multiple(op, disc.ts)
+end
 

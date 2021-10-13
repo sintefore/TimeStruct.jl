@@ -30,5 +30,6 @@ export isfirst, duration, multiple
 
 export Discounter
 export discount
+export objective_weight
 
 end # module
