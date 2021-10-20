@@ -15,12 +15,20 @@ end
 
 function start(t::OperationalPeriod, ts::TwoLevel)
     sp = t.sp
-    if isfirst(sp)
+    if sp == 1
+        return 0.0
+    end
+    
+    return sum(duration(spp) for spp in strat_periods(ts) if spp.sp < sp)
+end
+
+function start(sp::StrategicPeriod, ts::TwoLevel)
+    if sp.sp == 1
         return 0.0
     end
     
     return sum(duration(spp) for spp in strat_periods(ts) if spp < sp)
-end
+end    
 
 
 function discount(disc::Discounter, t::TimePeriod; type = "start")
@@ -52,10 +60,14 @@ end
 
 function discount_start(discount_rate, start_year)
     δ = 1 / (1 + discount_rate)
-    return start_year^δ
+    return δ^start_year
 end
 
 function objective_weight(op::OperationalPeriod, disc::Discounter)
-    return prob(op) * discount(disc, op) * multiple(op, disc.ts)
+    return probability(op) * discount(disc, op) * multiple(op, disc.ts)
+end
+
+function objective_weight(sp::StrategicPeriod, disc::Discounter)
+    return discount(disc, sp)
 end
 

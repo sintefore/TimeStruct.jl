@@ -16,7 +16,7 @@ DynamicProfile:
     Variations in both strategic and operational horizons
 
 ScenarioProfile:
-    Profile with multiple scnarios
+    Profile with multiple scenarios
 "
 
 struct FixedProfile{T} <: TimeProfile{T}

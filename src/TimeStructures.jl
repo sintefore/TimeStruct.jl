@@ -1,6 +1,8 @@
 module TimeStructures
 
 include("structures.jl")
+include("stochastic.jl")
+include("twolevel.jl")
 include("profiles.jl")
 include("utils.jl")
 include("discount.jl")
@@ -19,11 +21,14 @@ export StrategicProfile
 export DynamicProfile
 
 export ScenarioPeriod
-export ScenarioOperational
+export OperationalScenarios
+export OperationalScenario
 export ScenarioProfile
+export scenarios
+export probability
 
-export strat_periods, strat_per
-export strategic_periods
+export strat_periods, strat_periods_index, strat_per
+
 export withprev
 
 export isfirst, duration, multiple
