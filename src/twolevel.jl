@@ -127,4 +127,5 @@ end
 
 # Let SimpleTimes behave as a TwoLevel time structure
 strat_periods(ts::SimpleTimes) = [StrategicPeriod(1, duration(ts), ts)]
+strat_periods_index(::SimpleTimes) = [1]
 strat_per(p::SimplePeriod) = 1

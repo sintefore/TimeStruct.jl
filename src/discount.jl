@@ -63,6 +63,10 @@ function discount_start(discount_rate, start_year)
     return δ^start_year
 end
 
+function objective_weight(p::SimplePeriod, disc::Discounter)
+    return discount(disc, p) 
+end
+
 function objective_weight(op::OperationalPeriod, disc::Discounter)
     return probability(op) * discount(disc, op) * multiple(op, disc.ts)
 end
