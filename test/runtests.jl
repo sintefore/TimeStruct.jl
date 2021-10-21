@@ -97,6 +97,12 @@ end
     dp = DynamicProfile([OperationalProfile([i/100 + j for j ∈ 1:24]) for i ∈ 1:365])
     @test dp[OperationalPeriod(365,24)] == 27.65
 
+    scp = ScenarioProfile([OperationalProfile([i/100 + j for j ∈ 1:24]) for i ∈ 1:5])
+    @test scp[ScenarioPeriod(1,12)] == 12.01
+
+    scp2 = ScenarioProfile([[i/100 + j for j ∈ 1:24] for i ∈ 1:5])
+    
+    
 end
 
 @testset "Iteration Utils" begin

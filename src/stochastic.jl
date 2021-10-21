@@ -36,6 +36,9 @@ struct ScenarioPeriod <: TimePeriod{OperationalScenarios}
 	duration
 	prob
 end
+
+ScenarioPeriod(sc, op) = ScenarioPeriod(sc, op, 1.0, 1.0)
+
 Base.show(io::IO, up::ScenarioPeriod) = print(io, "t-$(up.sc)_$(up.op)")
 
 probability(::TimePeriod) = 1.0

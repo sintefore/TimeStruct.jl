@@ -44,6 +44,14 @@ struct ScenarioProfile{T} <: TimeProfile{T}
 end
 Base.getindex(sfp::ScenarioProfile, i::TimePeriod) = sfp.vals[opscen(i)][i]
 
+function ScenarioProfile(vals::Vector{Vector{T}}) where T <: Number
+    v = Vector{OperationalProfile{T}}()
+    for scv in vals
+        push!(v, OperationalProfile{T}(scv))
+    end
+    return ScenarioProfile(v)
+end
+
 
 import Base:+,-,*,/
 +(a::FixedProfile, b::Number) = FixedProfile(a.vals .+ b)
