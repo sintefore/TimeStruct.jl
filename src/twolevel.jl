@@ -48,7 +48,7 @@ struct OperationalPeriod <: TimePeriod{TwoLevel}
 	prob
 end
 OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1, 1.0)
-OperationalPeriod(sp, sc, op,) = OperationalPeriod(sp, sc, op, 1, 1.0)
+OperationalPeriod(sp, sc, op) = OperationalPeriod(sp, sc, op, 1, 1.0)
 
 op(scp::ScenarioPeriod, sp) = OperationalPeriod(sp, scp.sc, scp.op, scp.duration, scp.prob)
 
@@ -74,9 +74,7 @@ opscen(t::ScenarioPeriod) = t.sc
 opscen(t::OperationalPeriod) = t.sc
 
 
-strat_periods_index(ts::TwoLevel) = 1:ts.len
-
-struct StrategicPeriod <: TimePeriod{TwoLevel}
+struct StrategicPeriod{T} <: TimePeriod{TwoLevel} where T <: TimeStructure
 	sp
 	duration
 	operational::TimeStructure
@@ -101,35 +99,33 @@ strat_periods(ts::TwoLevel) = StratPeriods(ts)
 Base.length(sps::StratPeriods) = sps.ts.len
 
 
-function Base.iterate(sps::StratPeriods)
-	return StrategicPeriod(1, sps.ts.duration[1], sps.ts.operational[1]), 1
+function Base.iterate(sps::StratPeriods) 
+	return StrategicPeriod{TwoLevel}(1, sps.ts.duration[1], sps.ts.operational[1]), 1
 end
 
-function Base.iterate(sps::StratPeriods, state)
+function Base.iterate(sps::StratPeriods, state) 
 	state == sps.ts.len && return nothing
-	return StrategicPeriod(state + 1, sps.ts.duration[state + 1], sps.ts.operational[state+1]), state + 1 
+	return StrategicPeriod{TwoLevel}(state + 1, sps.ts.duration[state + 1], sps.ts.operational[state+1]), state + 1 
 end
 
-
-Base.length(itr::StrategicPeriod) = itr.operational.len
-Base.eltype(::Type{StrategicPeriod}) = OperationalPeriod
+Base.length(itr::StrategicPeriod{T}) where {T} = itr.operational.len
+Base.eltype(::Type{StrategicPeriod{TwoLevel}}) = OperationalPeriod
 
 # Function for defining the time periods when iterating through a strategic period
-function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(itr.sp,1,itr.operational.duration[1]))
-	if state.op > itr.len
-		return nothing
-	else
-		if length(itr.operational.duration) == 1
-			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration)
-		elseif state.op == itr.len
-			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration[state.op])
-		else
-			return state, OperationalPeriod(itr.sp, state.op + 1, itr.operational.duration[state.op + 1])
-		end
-	end
+function Base.iterate(itr::StrategicPeriod{TwoLevel}, state=nothing) 
+	next = isnothing(state) ? iterate(itr.operational) : iterate(itr.operational, state)
+	next === nothing && return nothing
+	per = next[1]
+	return OperationalPeriod(itr.sp, opscen(per), per.op, per.duration, probability(per)), next[2]
 end
 
+
 # Let SimpleTimes behave as a TwoLevel time structure with one strategic period
-strat_periods(ts::SimpleTimes) = [StrategicPeriod(1, duration(ts), ts)]
-strat_periods_index(::SimpleTimes) = [1]
-strat_per(p::SimplePeriod) = 1
+strat_periods(ts::SimpleTimes) = [StrategicPeriod{SimpleTimes}(1, duration(ts), ts)]
+Base.eltype(::Type{StrategicPeriod{SimpleTimes}}) = SimplePeriod
+function Base.iterate(itr::StrategicPeriod{SimpleTimes}, state=nothing) 
+	next = isnothing(state) ? iterate(itr.operational) : iterate(itr.operational, state)
+	next === nothing && return nothing
+	per = next[1]
+	return per, next[2]
+end

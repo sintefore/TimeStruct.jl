@@ -62,6 +62,11 @@ end
     @test sum(sp.duration for sp in strat_periods(uniform_year)) == 8760
     @test multiple(first(uniform_year), uniform_year) == 31
 
+    ops1 = collect(uniform_year)
+    ops2 = [t for n ∈ strat_periods(uniform_year) for t ∈ n]
+
+    @test ops1 == ops2
+
 end
 
 @testset "Two level with operational scenarios" begin
@@ -81,6 +86,15 @@ end
     @test TS.multiple(ops[100], seasonal_year) == 13 
 end
 
+@testset "SimpleTimes as TwoLevel structure" begin
+    
+    simple = SimpleTimes(10,1)
+    ops1 = collect(simple)
+    @test length(strat_periods(simple)) == 1
+    ops2 = [t for n ∈ strat_periods(simple) for t ∈ n]
+    @test ops1 == ops2
+end
+
 
 @testset "Time Profiles" begin
 
@@ -90,7 +104,7 @@ end
 
     sfp = StrategicProfile([i/100 for i ∈ 1:365])
     @test sfp[OperationalPeriod(122,1)] == 1.22
-    @test sfp[StrategicPeriod(122, 1, SimpleTimes(24,1))] == 1.22
+    @test sfp[StrategicPeriod{TwoLevel}(122, 1, SimpleTimes(24,1))] == 1.22
     @test sfp[SimplePeriod(10,1)] == 0.01 
 
 
