@@ -62,8 +62,6 @@ end
     @test sum(sp.duration for sp in strat_periods(uniform_year)) == 8760
     @test multiple(first(uniform_year), uniform_year) == 31
 
-    
-
 end
 
 @testset "Two level with operational scenarios" begin
@@ -93,15 +91,23 @@ end
     sfp = StrategicProfile([i/100 for i ∈ 1:365])
     @test sfp[OperationalPeriod(122,1)] == 1.22
     @test sfp[StrategicPeriod(122, 1, SimpleTimes(24,1))] == 1.22
+    @test sfp[SimplePeriod(10,1)] == 0.01 
+
 
     dp = DynamicProfile([OperationalProfile([i/100 + j for j ∈ 1:24]) for i ∈ 1:365])
     @test dp[OperationalPeriod(365,24)] == 27.65
+    
 
     scp = ScenarioProfile([OperationalProfile([i/100 + j for j ∈ 1:24]) for i ∈ 1:5])
     @test scp[ScenarioPeriod(1,12)] == 12.01
-
-    scp2 = ScenarioProfile([[i/100 + j for j ∈ 1:24] for i ∈ 1:5])
     
+    scp2 = ScenarioProfile([[i/100 + j for j ∈ 1:24] for i ∈ 1:5])
+    @test scp2[ScenarioPeriod(1,20)] == scp[ScenarioPeriod(1,20)]
+    
+    dps = DynamicProfile([ScenarioProfile([OperationalProfile([(i + j / 10 + k / 100) for i ∈ 1:24]) for j ∈ 1:10]) for k ∈ 1:5])
+    ts = TwoLevel(5,24, OperationalScenarios(10, SimpleTimes(24,1)))
+    @test sum(dps[t] for t ∈ ts) ≈ 15696.0
+    @test dps[OperationalPeriod(2,2,2)] == 2.22
     
 end
 
@@ -110,7 +116,7 @@ end
     uniform_week = TwoLevel(7,24,uniform_day)
 
     @test first(withprev(uniform_day))[1] === nothing
-    @test collect(withprev(uniform_week))[25] == (nothing, OperationalPeriod(2,1,1.0))
+    @test collect(withprev(uniform_week))[25] == (nothing, OperationalPeriod(2,nothing,1,1.0,1.0))
 
 end
 

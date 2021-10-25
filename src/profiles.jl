@@ -32,17 +32,17 @@ Base.getindex(ofp::OperationalProfile, i::TimePeriod) = ofp.vals[mod(i.op - 1, l
 struct StrategicProfile{T} <: TimeProfile{T}
     vals::Array{T}
 end
-Base.getindex(sfp::StrategicProfile, i::TimePeriod) = sfp.vals[i.sp]
+Base.getindex(sfp::StrategicProfile, i::TimePeriod) = sfp.vals[isnothing(strat_per(i)) ? 1 : strat_per(i)]
 
 struct DynamicProfile{T} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
 end
-Base.getindex(dp::DynamicProfile, i::TimePeriod) = dp.vals[i.sp][i]
+Base.getindex(dp::DynamicProfile, i::TimePeriod) = dp.vals[isnothing(strat_per(i)) ? 1 : strat_per(i)][i]
 
 struct ScenarioProfile{T} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
 end
-Base.getindex(sfp::ScenarioProfile, i::TimePeriod) = sfp.vals[opscen(i)][i]
+Base.getindex(sfp::ScenarioProfile, i::TimePeriod) = sfp.vals[isnothing(opscen(i)) ? 1 : opscen(i)][i]
 
 function ScenarioProfile(vals::Vector{Vector{T}}) where T <: Number
     v = Vector{OperationalProfile{T}}()

@@ -48,20 +48,19 @@ struct OperationalPeriod <: TimePeriod{TwoLevel}
 	prob
 end
 OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1, 1.0)
-OperationalPeriod(sp, op, dur) = OperationalPeriod(sp, nothing, op, dur, 1.0)
+OperationalPeriod(sp, sc, op,) = OperationalPeriod(sp, sc, op, 1, 1.0)
 
 op(scp::ScenarioPeriod, sp) = OperationalPeriod(sp, scp.sc, scp.op, scp.duration, scp.prob)
 
 isfirst(op::OperationalPeriod) = op.op == 1 
 duration(op::OperationalPeriod) = op.duration
-strat_per(op::OperationalPeriod) = op.sp
 probability(op::OperationalPeriod) = op.prob
 Base.show(io::IO, op::OperationalPeriod) = isnothing(op.sc) ? print(io, "t$(op.sp)_$(op.op)") : print(io, "t$(op.sp)-$(op.sc)_$(op.op)") 
 Base.isless(t1::OperationalPeriod, t2::OperationalPeriod) = t1.sp < t2.sp || (t1.sp == t2.sp &&t1.op < t2.op)
 
 function multiple(op::OperationalPeriod, ts::TwoLevel) 
 	
-	if op.sc !== nothing
+	if isa(ts.operational[op.sp], OperationalScenarios)
 		dur = duration(ts.operational[op.sp].scenarios[op.sc])
 	else
 		dur = duration(ts.operational[op.sp])
@@ -88,6 +87,11 @@ Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
 Base.isless(sp1::StrategicPeriod, sp2::StrategicPeriod) = sp1.sp < sp2.sp 
 
 duration(sp::StrategicPeriod) = sp.duration
+
+strat_per(::TimePeriod) = nothing
+strat_per(sp::StrategicPeriod) = sp.sp
+strat_per(op::OperationalPeriod) = op.sp
+
 
 struct StratPeriods
 	ts::TwoLevel
@@ -125,7 +129,7 @@ function Base.iterate(itr::StrategicPeriod, state=OperationalPeriod(itr.sp,1,itr
 	end
 end
 
-# Let SimpleTimes behave as a TwoLevel time structure
+# Let SimpleTimes behave as a TwoLevel time structure with one strategic period
 strat_periods(ts::SimpleTimes) = [StrategicPeriod(1, duration(ts), ts)]
 strat_periods_index(::SimpleTimes) = [1]
 strat_per(p::SimplePeriod) = 1
