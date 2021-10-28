@@ -97,7 +97,6 @@ end
 
 
 @testset "Time Profiles" begin
-
     
     fp = FixedProfile(12.0)
     @test fp[first(day)] == 12.0
@@ -122,7 +121,34 @@ end
     ts = TwoLevel(5,24, OperationalScenarios(10, SimpleTimes(24,1)))
     @test sum(dps[t] for t ∈ ts) ≈ 15696.0
     @test dps[OperationalPeriod(2,2,2)] == 2.22
+
     
+end
+
+@testset "Two level tree time structure" begin
+    
+    regtree = TS.regular_tree(5, [3,2], SimpleTimes(5,1))
+    ops = [t for n ∈ TS.strat_nodes(regtree) for t ∈ n]
+    @test length(ops) == 5 * 10
+    ops2 = collect(regtree)
+    @test ops == ops2
+
+    nodes = TS.strat_nodes(regtree)
+    for sp in 1:3
+        @test sum(TS.probability(n) for n in nodes if n.sp == sp) ≈ 1.0
+    end
+
+    ssp = TS.StrategicStochasticProfile([[10], [11,12,13], [20,21,22,23,30,40]])
+  
+    @test ssp[nodes[3]] == 20
+    @test ssp[nodes[8]] == 13
+
+    price1 = OperationalProfile([1, 2, 2, 5, 6])
+    price2 = FixedProfile(4)
+
+    dsp = TS.DynamicStochasticProfile([[price1], [price1, price2, price2], [price1, price2, price2, price1, price2, price2]])
+    @test dsp[ops[4]] == 5
+
 end
 
 @testset "Iteration Utils" begin

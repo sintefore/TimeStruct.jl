@@ -52,6 +52,17 @@ function ScenarioProfile(vals::Vector{Vector{T}}) where T <: Number
     return ScenarioProfile(v)
 end
 
+struct StrategicStochasticProfile{T} <: TimeProfile{T}
+    vals::Vector{Vector{T}}
+end
+Base.getindex(ssp::StrategicStochasticProfile, i::TimePeriod) = ssp.vals[strat_per(i)][branch(i)]
+
+struct DynamicStochasticProfile{T} <: TimeProfile{T}
+    vals::Vector{ <:Vector{ <:TimeProfile{T}}}
+end
+Base.getindex(ssp::DynamicStochasticProfile, i::TimePeriod) = ssp.vals[strat_per(i)][branch(i)][i]
+
+
 
 import Base:+,-,*,/
 +(a::FixedProfile, b::Number) = FixedProfile(a.vals .+ b)

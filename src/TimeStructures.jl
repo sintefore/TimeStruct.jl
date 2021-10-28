@@ -3,6 +3,7 @@ module TimeStructures
 include("structures.jl")
 include("stochastic.jl")
 include("twolevel.jl")
+include("twoleveltree.jl")
 include("profiles.jl")
 include("utils.jl")
 include("discount.jl")
