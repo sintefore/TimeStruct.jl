@@ -138,6 +138,14 @@ end
         @test sum(TS.probability(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
 
+    leaves = TS.leaves(regtree)
+    @test length(leaves) == TS.nleaves(regtree)
+
+    scens = collect(TS.scenarios(regtree))
+    @test length(scens[2].nodes) == regtree.len 
+    @test scens[3].nodes[1] == regtree.nodes[1] 
+    
+
     ssp = TS.StrategicStochasticProfile([[10], [11,12,13], [20,21,22,23,30,40]])
   
     @test ssp[nodes[3]] == 20

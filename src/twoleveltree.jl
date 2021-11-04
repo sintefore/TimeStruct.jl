@@ -69,6 +69,8 @@ branch(n::TreeNode) = n.branch
 strat_per(n::TreeNode) = n.sp
 probability(n::TreeNode) = n.probability
 
+children(n::TreeNode, ts::TwoLevelTree) = [c for c in ts.nodes if c.parent == n]
+nchildren(n::TreeNode, ts::TwoLevelTree) = count(c -> c.parent == n, ts.nodes)
 strat_nodes(ts::TwoLevelTree) = ts.nodes
 
 # Iterate through time periods of a tree node
@@ -91,12 +93,26 @@ struct Scenarios
 end
 
 scenarios(ts::TwoLevelTree) = Scenarios(ts)
-function Base.iterate(scs::Scenarios)
-    # TODO
-end
 
-function Base.iterate(scs::Scenarios, state) 
-    # TODO
+nleaves(ts::TwoLevelTree) = count(n -> nchildren(n,ts) == 0, ts.nodes)
+leaves(ts::TwoLevelTree) = [n for n in ts.nodes if nchildren(n,ts) == 0]
+getleaf(ts::TwoLevelTree, leaf) = leaves(ts)[leaf]  
+
+Base.length(scens::Scenarios) = nleaves(scens.ts)
+function Base.iterate(scs::Scenarios, state=1)
+    if state > nleaves(scs.ts)
+        return nothing
+    end
+
+    node = getleaf(scs.ts, state)
+    prob = probability(node)
+    nodes = [node]
+    while !isnothing(node.parent)
+        node = node.parent
+        pushfirst!(nodes, node) 
+    end
+    
+    return Scenario(prob, nodes), state+1
 end
 
 branches(tree::TwoLevelTree, sp) = count(n-> n.sp == sp, tree.nodes)
