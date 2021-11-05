@@ -6,6 +6,8 @@ struct OperationalScenarios <: TimeStructure
 end
 OperationalScenarios(len, oper::TimeStructure) = OperationalScenarios(len, fill(oper, len), fill(1.0 / len, len))
 
+duration(os::OperationalScenarios) = duration(first(os.scenarios))
+
 # Iteration through all time periods for the operational scenarios
 function Base.iterate(itr::OperationalScenarios)
 	sc = 1
