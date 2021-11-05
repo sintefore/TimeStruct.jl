@@ -11,8 +11,11 @@ include("discount.jl")
 export OperationalPeriod
 export StrategicPeriod
 export SimplePeriod
+export TreeNode
+export OperPeriod
 export SimpleTimes
 export TwoLevel
+export TwoLevelTree
 
 
 export TimeProfile, TimeStructure
@@ -25,14 +28,12 @@ export ScenarioPeriod
 export OperationalScenarios
 export OperationalScenario
 export ScenarioProfile
-export scenarios
-export probability
 
+export opscenarios
 export strat_periods, strat_periods_index, strat_per
-
+export regular_tree, strat_nodes, scenarios
 export withprev
-
-export isfirst, duration, multiple
+export isfirst, duration, multiple, probability
 
 export Discounter
 export discount

@@ -72,7 +72,7 @@ Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 struct OpScens
 	ts::OperationalScenarios
 end
-scenarios(ts) = OpScens(ts)
+opscenarios(ts) = OpScens(ts)
 
 Base.length(ops::OpScens) = ops.ts.len
 

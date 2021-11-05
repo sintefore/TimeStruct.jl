@@ -122,6 +122,7 @@ end
 
 # Let SimpleTimes behave as a TwoLevel time structure with one strategic period
 strat_periods(ts::SimpleTimes) = [StrategicPeriod{SimpleTimes}(1, duration(ts), ts)]
+strat_per(t::SimplePeriod) = 1
 Base.eltype(::Type{StrategicPeriod{SimpleTimes}}) = SimplePeriod
 function Base.iterate(itr::StrategicPeriod{SimpleTimes}, state=nothing) 
 	next = isnothing(state) ? iterate(itr.operational) : iterate(itr.operational, state)

@@ -22,8 +22,8 @@ end
     ts =  OperationalScenarios(5, SimpleTimes(10,1))
     @test length(ts) == 50
 
-    # Iterating through scenarios
-    scens = scenarios(ts)
+    # Iterating through operational scenarios
+    scens = opscenarios(ts)
     @test length(scens) == 5
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
@@ -42,7 +42,7 @@ end
     @test first(ts) == ScenarioPeriod(1, 1, 1.0, 0.1)
     @test length(ts) == 216
 
-    @test sum(probability(s) for s in scenarios(ts)) == 1.0
+    @test sum(probability(s) for s in opscenarios(ts)) == 1.0
 
 end
 
