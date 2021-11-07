@@ -42,6 +42,8 @@ end
 ScenarioPeriod(sc, op) = ScenarioPeriod(sc, op, 1.0, 1.0)
 
 Base.show(io::IO, up::ScenarioPeriod) = print(io, "t-$(up.sc)_$(up.op)")
+Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod) = t1.sc < t2.sc || (t1.sc == t2.sc && t1.op < t2.op)
+
 
 probability(::TimePeriod) = 1.0
 probability(t::ScenarioPeriod) = t.prob 
