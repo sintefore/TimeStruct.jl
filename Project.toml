@@ -1,7 +1,7 @@
-name = "TimeStructures"
-uuid = "260f4295-b40d-47c0-843b-64f3de373d90"
-authors = ["Lars Hellemo <Lars.Hellemo@sintef.no> "]
-version = "0.1.9"
+name = "TimeStruct"
+uuid = "f9ed5ce0-9f41-4eaa-96da-f38ab8df101c"
+authors = ["Lars Hellemo <Lars.Hellemo@sintef.no>, Truls.Flatberg <Truls.Flatberg@sintef.no>"]
+version = "0.2"
 
 [deps]
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"

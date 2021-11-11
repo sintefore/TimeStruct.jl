@@ -1,8 +1,8 @@
-# TimeStructures.jl
+# TimeStruct.jl
 
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
-Time Structures to facilitate modelling with different (multilevel and stochastic) time structures. Note that this package is experimental/proof-of-concept. Expect breaking changes.
+Time structures to facilitate modelling with different (multilevel and stochastic) time structures. Note that this package is experimental/proof-of-concept. Expect breaking changes.
 
 The main motivation for the package is to use it in setting up optimization models in e.g. JuMP.
 
@@ -19,7 +19,7 @@ All time structures can be iterated as a sequence of TimePeriods that can be use
 ## Usage
 
 ```julia
-using TimeStructures
+using TimeStruct
 
 uniform_day = SimpleTimes(24, 1) # 24 hours/day
 uniform_year = TwoLevel(365, 8760, uniform_day) # 365 days
@@ -58,7 +58,7 @@ simple two stage stochastic optimization problem.
 ```julia
 
 using JuMP
-using TimeStructures
+using TimeStruct
 
 𝒯 = OperationalScenarios(5, SimpleTimes(10,1))
 𝒮 = scenarios(T)
@@ -82,21 +82,3 @@ for scen ∈ S
 end
 @constraint(model, npv == sum(probability(s) * μ[s] for s ∈ 𝒮))
 ```
-
-## TODO
-
-* Discuss default duration of period, unit?
-* Naming/API improvements
-* get total duration, start/end time of a given time period"
-* last period(?)
-* More examples
-  * 'three-level': year, season, week
-  * Two-stage equiprobable stochastic
-  * Two-stage stochastic with probabilities
-  * Multi-stage, uniform branching, etc..
-  * Multi-horizon
-
-
-## Funding
-
-TimeStructures was partially funded by the Norwegian Research Council in the project Clean Export, project number [308811](https://prosjektbanken.forskningsradet.no/project/FORISS/308811)

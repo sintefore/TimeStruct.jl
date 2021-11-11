@@ -1,4 +1,4 @@
-module TimeStructures
+module TimeStruct
 
 using Requires
 

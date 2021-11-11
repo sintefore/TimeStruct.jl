@@ -1,6 +1,6 @@
 using Test
-using TimeStructures
-const TS = TimeStructures
+using TimeStruct
+const TS = TimeStruct
 
 day = SimpleTimes(24,1)             # One day with hourly resolution  
 week = SimpleTimes(168,1)           # One week with hourly resolution
