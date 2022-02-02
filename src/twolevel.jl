@@ -1,7 +1,16 @@
-" Definition of a time structures with two levels and corresponding functions.
-	len - number of strategic periods
-	duration - the duration of each strategic period
-	operational - the operational time structure for each strategic period"
+"""
+    struct TwoLevel <: TimeStructure
+A time structure with two levels of time periods. 
+
+On the top level it has a sequence of strategic periods of varying duration. 
+For each strategic period a separate time structure is used for 
+operational decisions. Iterating the structure will go through all operational periods.
+
+Example
+```julia
+periods = TwoLevel(10, 24, SimpleTimes(24,1)) # 10 days with 24 hours of operations
+```
+"""
 struct TwoLevel <: TimeStructure
 	len::Integer
 	duration::Vector{Float64} 
@@ -37,9 +46,10 @@ end
 Base.length(itr::TwoLevel) = sum(length(itr.operational[sp]) for sp ∈ 1:itr.len)
 Base.eltype(::Type{TwoLevel}) = OperationalPeriod
 
-# Create time periods when iterating a time structure
-# Use to identify time period (e.g. in variables and constraints)
-# Use to look up input values (price, demand etc)
+"""
+	struct OperationalPeriod <: TimePeriod{TwoLevel}    
+Time period for iteration of a TwoLevel time structure. 
+"""
 struct OperationalPeriod <: TimePeriod{TwoLevel}
 	sp
 	sc
@@ -73,7 +83,10 @@ opscen(::TimePeriod) = nothing
 opscen(t::ScenarioPeriod) = t.sc
 opscen(t::OperationalPeriod) = t.sc
 
-
+"""
+    struct StrategicPeriod{T} <: TimePeriod{TwoLevel} where T <: TimeStructure
+Time period for iteration of strategic periods.
+"""
 struct StrategicPeriod{T} <: TimePeriod{TwoLevel} where T <: TimeStructure
 	sp
 	duration

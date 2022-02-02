@@ -1,23 +1,5 @@
-# Defintion of the main types for time profiles
 abstract type TimeProfile{T} end
 
-" Definition of the individual time profiles
-
-FixedProfile:
-	Fixed profile independent of strategic and operational period
-
-OperationalProfile:
-    Profile varying with operational period
-	
-StrategicProfile:
-	Profile varying with strategic period
-
-DynamicProfile:
-    Variations in both strategic and operational horizons
-
-ScenarioProfile:
-    Profile with multiple operational scenarios
-"
 
 struct FixedProfile{T} <: TimeProfile{T}
     vals::T
