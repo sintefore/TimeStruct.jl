@@ -1,7 +1,5 @@
 # TimeStruct.jl
 
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
-
 Time structures to facilitate modelling with different (multilevel and stochastic) time structures. Note that this package is experimental/proof-of-concept. Expect breaking changes.
 
 The main motivation for the package is to use it in setting up optimization models in e.g. JuMP.
@@ -10,9 +8,13 @@ The main motivation for the package is to use it in setting up optimization mode
 
 The following time structures are available in this package:
 - _SimpleTimes_: a simple time structure with one level consisting of multiple periods that can have varying duration
+![simple times](doc/figs/simple_times.png)
 - _OperationalScenarios_: combine multiple time structures with a probability for each time structure
+![oeprational scenarios](doc/figs/opscen.png)
 - _TwoLevel_: time structure with two levels - a strategic level and an operational level that is given by a separate time structure
-- _TwoLevelTree_: time structure with a tree for the strategic level to support 
+![two level](doc/figs/twolevel.png)
+- _TwoLevelTree_: time structure with a tree for the strategic level to support strategic uncertainty
+![tree](doc/figs/regtree.png)
 
 All time structures can be iterated as a sequence of TimePeriods that can be used as indices in an optimization model and for lookups in associated TimeProfiles to get relevant parameter values. 
 
