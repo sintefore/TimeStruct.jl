@@ -2,7 +2,10 @@ module TimeStruct
 
 using Requires
 
+import Unitful
+
 include("structures.jl")
+include("simple.jl")
 include("stochastic.jl")
 include("twolevel.jl")
 include("twoleveltree.jl")
@@ -41,7 +44,7 @@ export OperationalScenario
 export ScenarioProfile
 
 export opscenarios
-export strat_periods, strat_periods_index, strat_per
+export strat_periods, strat_per
 export regular_tree, strat_nodes, scenarios
 export withprev
 export isfirst, duration, multiple, probability

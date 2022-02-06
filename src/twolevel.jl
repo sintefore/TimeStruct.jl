@@ -8,18 +8,18 @@ operational decisions. Iterating the structure will go through all operational p
 
 Example
 ```julia
-periods = TwoLevel(10, 24, SimpleTimes(24,1)) # 10 days with 24 hours of operations
+periods = TwoLevel(5, 1u"yr", SimpleTimes(24,1u"hr")) # 5 years with 24 hours of operations for each year
 ```
 """
-struct TwoLevel <: TimeStructure
+struct TwoLevel{T <: Number} <: TimeStructure
 	len::Integer
-	duration::Vector{Float64} 
+	duration::Vector{T} 
 	operational::Vector{TimeStructure}
 end
 
-TwoLevel(len, duration::Number, oper::TimeStructure) = TwoLevel(len, fill(duration, len), fill(oper, len))
-TwoLevel(len, duration::Number, oper::Vector{T}) where T<:TimeStructure = TwoLevel(len, fill(duration, len), oper)
-TwoLevel(len, duration::Vector, oper::TimeStructure) = TwoLevel(len, duration, fill(oper,len))
+TwoLevel(len, duration::T, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), fill(oper, len))
+TwoLevel(len, duration::T, oper::Vector{TimeStructure}) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), oper)
+TwoLevel(duration::Vector{T}, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(length(duration), duration, fill(oper,length(duration)))
 
 function Base.iterate(itr::TwoLevel)
 	sp = 1
@@ -29,7 +29,7 @@ function Base.iterate(itr::TwoLevel)
 	return OperationalPeriod(sp, opscen(per), per.op, per.duration, probability(per)), (sp, next[2])
 end
 
-function Base.iterate(itr::TwoLevel, state)
+function Base.iterate(itr::TwoLevel, state) 
 	sp = state[1]
 	next = iterate(itr.operational[sp], state[2])
 	if next === nothing
@@ -50,12 +50,12 @@ Base.eltype(::Type{TwoLevel}) = OperationalPeriod
 	struct OperationalPeriod <: TimePeriod{TwoLevel}    
 Time period for iteration of a TwoLevel time structure. 
 """
-struct OperationalPeriod <: TimePeriod{TwoLevel}
-	sp
-	sc
-	op
-	duration
-	prob
+struct OperationalPeriod{T <: Number} <: TimePeriod{TwoLevel}
+	sp::Int64
+	sc::Union{Nothing,Int64}
+	op::Int64
+	duration::T
+	prob::Float64
 end
 OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1, 1.0)
 OperationalPeriod(sp, sc, op) = OperationalPeriod(sp, sc, op, 1, 1.0)
@@ -68,6 +68,10 @@ probability(op::OperationalPeriod) = op.prob
 Base.show(io::IO, op::OperationalPeriod) = isnothing(op.sc) ? print(io, "t$(op.sp)_$(op.op)") : print(io, "t$(op.sp)-$(op.sc)_$(op.op)") 
 Base.isless(t1::OperationalPeriod, t2::OperationalPeriod) = t1.sp < t2.sp || (t1.sp == t2.sp &&t1.op < t2.op)
 
+
+stripunit(val) = val
+stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
+
 function multiple(op::OperationalPeriod, ts::TwoLevel) 
 	
 	if isa(ts.operational[op.sp], OperationalScenarios)
@@ -75,7 +79,7 @@ function multiple(op::OperationalPeriod, ts::TwoLevel)
 	else
 		dur = duration(ts.operational[op.sp])
 	end	
-	return ts.duration[op.sp] / dur
+	return stripunit(ts.duration[op.sp] / dur)
 end
 
 
@@ -84,10 +88,10 @@ opscen(t::ScenarioPeriod) = t.sc
 opscen(t::OperationalPeriod) = t.sc
 
 """
-    struct StrategicPeriod{T} <: TimePeriod{TwoLevel} where T <: TimeStructure
+    struct StrategicPeriod <: TimePeriod{TwoLevel} 
 Time period for iteration of strategic periods.
 """
-struct StrategicPeriod{T} <: TimePeriod{TwoLevel} where T <: TimeStructure
+struct StrategicPeriod{T} <: TimePeriod{TwoLevel} 
 	sp
 	duration
 	operational::TimeStructure
@@ -108,6 +112,10 @@ struct StratPeriods
 	ts::TwoLevel
 end
 
+"""
+    strat_periods(ts::TwoLevel)
+Iteration through the strategic periods of a 'TwoLevel' structure.
+"""
 strat_periods(ts::TwoLevel) = StratPeriods(ts)
 Base.length(sps::StratPeriods) = sps.ts.len
 

@@ -39,7 +39,7 @@ end
     # 3 operational scenarios, two single day and one for a week with hourly resolution
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
     
-    @test first(ts) == ScenarioPeriod(1, 1, 1.0, 0.1)
+    @test first(ts) == ScenarioPeriod(1, 1, 1, 0.1)
     @test length(ts) == 216
 
     @test sum(probability(s) for s in opscenarios(ts)) == 1.0
@@ -51,12 +51,12 @@ end
 @testset "Two level structure" begin
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
     
-    @test typeof(uniform_week) == TwoLevel
+    @test typeof(uniform_week) == TwoLevel{Int64}
     @test length(uniform_week) == 168
 
     # One year with monthly strategic periods and one day of operations for each month
     monthly_hours = 24 .* [31,28,31,30,31,30,31,31,30,31,30,31]
-    uniform_year = TwoLevel(12, monthly_hours, day)
+    uniform_year = TwoLevel(monthly_hours, day)
 
     @test length(uniform_year) == 12 * 24
     @test sum(sp.duration for sp in strat_periods(uniform_year)) == 8760
@@ -73,11 +73,11 @@ end
     
     # One year with a strategic period per quarter and 3 operational scenarios
     opscen = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
-    seasonal_year = TwoLevel(4, 24 .* [91, 91, 91, 92], opscen)
+    seasonal_year = TwoLevel(24 .* [91, 91, 91, 92], opscen)
     @test length(seasonal_year) == 864
     
     ops = collect(seasonal_year)
-    @test ops[1] == OperationalPeriod(1, 1, 1, 1.0, 0.1)
+    @test ops[1] == OperationalPeriod(1, 1, 1, 1, 0.1)
 
     @test probability(ops[34]) == 0.2
     @test TS.multiple(ops[34], seasonal_year) == 91 
@@ -164,7 +164,7 @@ end
     uniform_week = TwoLevel(7,24,uniform_day)
 
     @test first(withprev(uniform_day))[1] === nothing
-    @test collect(withprev(uniform_week))[25] == (nothing, OperationalPeriod(2,nothing,1,1.0,1.0))
+    @test collect(withprev(uniform_week))[25] == (nothing, OperationalPeriod(2,nothing,1,1,1.0))
 
 end
 
