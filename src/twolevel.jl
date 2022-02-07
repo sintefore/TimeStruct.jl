@@ -20,6 +20,7 @@ end
 TwoLevel(len, duration::T, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), fill(oper, len))
 TwoLevel(len, duration::T, oper::Vector{TimeStructure}) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), oper)
 TwoLevel(duration::Vector{T}, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(length(duration), duration, fill(oper,length(duration)))
+TwoLevel(duration::Vector{T}, u::Unitful.Units, oper::TimeStructure) where {T <: Number} = TwoLevel(Unitful.Quantity.(duration, u), oper)
 
 function Base.iterate(itr::TwoLevel)
 	sp = 1

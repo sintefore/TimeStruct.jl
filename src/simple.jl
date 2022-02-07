@@ -14,6 +14,7 @@ struct SimpleTimes{T <: Number} <: TimeStructure
 end
 SimpleTimes(len, duration::Number) = SimpleTimes(len, fill(duration, len))
 SimpleTimes(dur::Vector{T}) where {T <: Number} = SimpleTimes(length(dur), dur)
+SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T <: Number} = SimpleTimes(length(dur), Unitful.Quantity.(dur,u))
 
 Base.eltype(::Type{SimpleTimes}) = SimplePeriod
 Base.length(st::SimpleTimes) = st.len
