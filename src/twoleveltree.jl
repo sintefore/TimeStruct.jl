@@ -1,15 +1,14 @@
 
-abstract type AbstractTreeNode end
+abstract type AbstractTreeNode{T} end
 
-mutable struct TwoLevelTree <: TimeStructure
+mutable struct TwoLevelTree{T} <: TimeStructure{T}
 	len::Integer        
 	root
-    nodes::Vector
+    nodes::Vector{<:AbstractTreeNode{T}}
 end
 
-# Create empty tree
-function TwoLevelTree() 
-    return TwoLevelTree(0, nothing, Vector())
+function TwoLevelTree{T}(nodes::Vector{<:AbstractTreeNode}) where {T}
+    return TwoLevelTree{T}(0, nothing, nodes)
 end
 
 struct OperPeriod <: TimePeriod{TwoLevel}
@@ -25,12 +24,12 @@ opscen(t::OperPeriod) = t.sc
 strat_per(t::OperPeriod) = t.sp
 branch(t::OperPeriod) = t.branch
 
-Base.length(itr::TwoLevelTree) = sum(length(n.operational) for n in itr.nodes)
+Base.length(itr::TwoLevelTree) = sum(length(n.strat_node.operational) for n in itr.nodes)
 Base.eltype(::Type{TwoLevelTree}) = OperPeriod
 
 # Iterate through all time periods as OperationalPeriods
 function Base.iterate(itr::TwoLevelTree)
-	spn = itr.nodes[1]
+	spn = itr.nodes[1].strat_node
 	next = iterate(spn.operational)
 	next === nothing && return nothing
 	per = next[1]
@@ -39,42 +38,47 @@ end
 
 function Base.iterate(itr::TwoLevelTree, state)
 	i = state[1]
-    spn = itr.nodes[i]
+    spn = itr.nodes[i].strat_node
 	next = iterate(spn.operational, state[2])
 	if next === nothing
 		i = i + 1
 		if i > length(itr.nodes)
 			return nothing
 		end
-        spn = itr.nodes[i]
+        spn = itr.nodes[i].strat_node
 		next = iterate(spn.operational)
 	end
 	per = next[1]
 	return OperPeriod(spn.sp, spn.branch, opscen(per), per.op, per.duration , probability(spn) * probability(per)), (i,next[2])
 end
 
-
-struct TreeNode <: TimePeriod{TwoLevelTree}
-    node
-    sp 
-    parent::Union{Nothing,TreeNode}
-    branch
-    duration
+struct StratNode{T} <: TimePeriod{TwoLevelTree}
+    sp::Integer
+    branch::Integer
+    duration::Duration
     probability::Float64
-    operational::TimeStructure
+    operational::TimeStructure{T}
 end
 
-Base.show(io::IO, n::TreeNode) = print(io, "n$(n.node)-sp$(n.sp)")
-branch(n::TreeNode) = n.branch
-strat_per(n::TreeNode) = n.sp
-probability(n::TreeNode) = n.probability
+Base.show(io::IO, n::StratNode) = print(io, "sp$(n.sp)-br$(n.branch)")
+branch(n::StratNode) = n.branch
+strat_per(n::StratNode) = n.sp
+probability(n::StratNode) = n.probability
+duration(n::StratNode) = n.duration
+
+
+struct TreeNode{T} <: AbstractTreeNode{T}
+    node::Integer
+    parent::Union{Nothing,TreeNode}
+    strat_node::StratNode{T}
+end
 
 children(n::TreeNode, ts::TwoLevelTree) = [c for c in ts.nodes if c.parent == n]
 nchildren(n::TreeNode, ts::TwoLevelTree) = count(c -> c.parent == n, ts.nodes)
-strat_nodes(ts::TwoLevelTree) = ts.nodes
+strat_nodes(ts::TwoLevelTree) = [n.strat_node for n in ts.nodes]
 
-# Iterate through time periods of a tree node
-function Base.iterate(itr::TreeNode, state=nothing) 
+# Iterate through time periods of a strategic node
+function Base.iterate(itr::StratNode, state=nothing) 
 	next = isnothing(state) ? iterate(itr.operational) : iterate(itr.operational, state)
 	next === nothing && return nothing
 	per = next[1]
@@ -105,7 +109,7 @@ function Base.iterate(scs::Scenarios, state=1)
     end
 
     node = getleaf(scs.ts, state)
-    prob = probability(node)
+    prob = probability(node.strat_node)
     nodes = [node]
     while !isnothing(node.parent)
         node = node.parent
@@ -115,12 +119,12 @@ function Base.iterate(scs::Scenarios, state=1)
     return Scenario(prob, nodes), state+1
 end
 
-branches(tree::TwoLevelTree, sp) = count(n-> n.sp == sp, tree.nodes)
+branches(tree::TwoLevelTree, sp) = count(n-> n.strat_node.sp == sp, tree.nodes)
 
 # Add nodes iteratively in a depth first manner
-function add_node(tree::TwoLevelTree, parent, index, sp, duration, branch_prob, branching, ts::TimeStructure)
-    prob = branch_prob * (isnothing(parent) ? 1.0 : parent.probability)
-    node = TreeNode(index, sp, parent, branches(tree, sp) + 1, duration, prob, ts)
+function add_node(tree::TwoLevelTree{T}, parent, index, sp, duration, branch_prob, branching, ts::TimeStructure{T}) where {T}
+    prob = branch_prob * (isnothing(parent) ? 1.0 : parent.strat_node.probability)
+    node = TreeNode{T}(index, parent, StratNode{T}(sp, branches(tree, sp) + 1, duration, prob, ts))
     push!(tree.nodes, node)
     if isnothing(parent)
         tree.root = node
@@ -135,8 +139,8 @@ function add_node(tree::TwoLevelTree, parent, index, sp, duration, branch_prob, 
 end
 
 # Create a regular tree with the given branching structure and the same time structure in each node 
-function regular_tree(duration, branching::Vector, ts::TimeStructure)
-    tree = TwoLevelTree()
+function regular_tree(duration, branching::Vector, ts::TimeStructure{T}) where {T}
+    tree = TwoLevelTree{T}(Vector{TreeNode{T}}())
     tree.len = length(branching) + 1
     add_node(tree, nothing, 1, 1, duration, 1.0, branching, ts)
 

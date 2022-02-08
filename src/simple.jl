@@ -4,19 +4,19 @@ A simple time structure conisisting of consecutive time periods of varying durat
 
 Example
 ```julia
-uniform = SimpleTimes(5, 1) # 5 periods of equal length
+uniform = SimpleTimes(5, 1.0) # 5 periods of equal length
 varying = SimpleTimes([2, 2, 2, 4, 10]) 
 ```
 """
-struct SimpleTimes{T <: Number} <: TimeStructure
+struct SimpleTimes{T} <: TimeStructure{T}
 	len::Integer
 	duration::Vector{T}
 end
 SimpleTimes(len, duration::Number) = SimpleTimes(len, fill(duration, len))
 SimpleTimes(dur::Vector{T}) where {T <: Number} = SimpleTimes(length(dur), dur)
-SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T <: Number} = SimpleTimes(length(dur), Unitful.Quantity.(dur,u))
+SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T <: Real} = SimpleTimes(length(dur), Unitful.Quantity.(dur,u))
 
-Base.eltype(::Type{SimpleTimes}) = SimplePeriod
+Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 Base.length(st::SimpleTimes) = st.len
 
 duration(st::SimpleTimes) = sum(st.duration)

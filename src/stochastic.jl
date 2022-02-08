@@ -1,10 +1,16 @@
-" Time structure that have multiple scenarios where each scenario has its own time structure"
-struct OperationalScenarios <: TimeStructure
-	len
-	scenarios::Vector{TimeStructure}
+"""
+    struct OperationalScenarios <: TimeStructure
+Time structure that have multiple scenarios where each scenario has its own time structure
+and an associated probability. Note that all scenarios must use the same type for the duration.
+"""
+struct OperationalScenarios{T} <: TimeStructure{T}
+	len::Integer
+	scenarios::Vector{<:TimeStructure{T}}
 	probability::Vector{Float64}
 end
-OperationalScenarios(len, oper::TimeStructure) = OperationalScenarios(len, fill(oper, len), fill(1.0 / len, len))
+OperationalScenarios(len, oper::TimeStructure{T}) where {T} = OperationalScenarios{T}(len, fill(oper, len), fill(1.0 / len, len))
+OperationalScenarios(oper::Vector{<:TimeStructure{T}}, prob::Vector) where {T} = OperationalScenarios{T}(length(oper), oper, prob)
+
 
 duration(os::OperationalScenarios) = maximum(duration(sc) for sc in os.scenarios)
 
@@ -29,14 +35,14 @@ function Base.iterate(itr::OperationalScenarios, state)
 	return ScenarioPeriod(sc, next[1].op, next[1].duration, itr.probability[sc]), (sc,next[2])
 end
 Base.length(itr::OperationalScenarios) = sum(length(itr.scenarios[sc]) for sc ∈ 1:itr.len)
-Base.eltype(::Type{OperationalScenarios}) = ScenarioPeriod
+Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod{T}
 
 # A time period with scenario number and probability
-struct ScenarioPeriod <: TimePeriod{OperationalScenarios}
-	sc
-	op
-	duration
-	prob
+struct ScenarioPeriod{T} <: TimePeriod{OperationalScenarios}
+	sc::Int64
+	op::Int64
+	duration::T
+	prob::Float64
 end
 
 ScenarioPeriod(sc, op) = ScenarioPeriod(sc, op, 1.0, 1.0)
@@ -48,11 +54,15 @@ Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod) = t1.sc < t2.sc || (t1.sc ==
 probability(::TimePeriod) = 1.0
 probability(t::ScenarioPeriod) = t.prob 
 
-# A single operational scenario
-struct OperationalScenario
-	scen
-	probability
-	operational::TimeStructure
+"""
+    struct OperationalScenario 
+A structure representing a single operational scenario supporting
+iteration over its time periods.
+"""
+struct OperationalScenario{T} 
+	scen::Int64
+	probability::Float64
+	operational::TimeStructure{T}
 end
 Base.show(io::IO, os::OperationalScenario) = print(io, "sc-$(os.scen)")
 probability(os::OperationalScenario) = os.probability
@@ -73,9 +83,13 @@ Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 
 # Iteration through scenarios 
-struct OpScens
-	ts::OperationalScenarios
+struct OpScens{T}
+	ts::OperationalScenarios{T}
 end
+"""
+    opscenarios(ts)
+Iterator that iterates over operational scnenarios in an `OperationalScenarios` time structure.
+"""
 opscenarios(ts) = OpScens(ts)
 
 Base.length(ops::OpScens) = ops.ts.len

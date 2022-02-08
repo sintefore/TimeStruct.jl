@@ -11,16 +11,16 @@ Example
 periods = TwoLevel(5, 1u"yr", SimpleTimes(24,1u"hr")) # 5 years with 24 hours of operations for each year
 ```
 """
-struct TwoLevel{T <: Number} <: TimeStructure
+struct TwoLevel{S <: Duration,T} <: TimeStructure{T}
 	len::Integer
-	duration::Vector{T} 
-	operational::Vector{TimeStructure}
+	duration::Vector{S} 
+	operational::Vector{<:TimeStructure{T}}
 end
 
-TwoLevel(len, duration::T, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), fill(oper, len))
-TwoLevel(len, duration::T, oper::Vector{TimeStructure}) where {T <: Number} = TwoLevel{T}(len, fill(duration, len), oper)
-TwoLevel(duration::Vector{T}, oper::TimeStructure) where {T <: Number} = TwoLevel{T}(length(duration), duration, fill(oper,length(duration)))
-TwoLevel(duration::Vector{T}, u::Unitful.Units, oper::TimeStructure) where {T <: Number} = TwoLevel(Unitful.Quantity.(duration, u), oper)
+TwoLevel(len, duration::S, oper::TimeStructure{T}) where {S,T} = TwoLevel{S,T}(len, fill(duration, len), fill(oper, len))
+TwoLevel(len, duration::S, oper::Vector{<:TimeStructure{T}}) where {S,T} = TwoLevel{S,T}(len, fill(duration, len), oper)
+TwoLevel(duration::Vector{S}, oper::TimeStructure{T}) where {S,T} = TwoLevel{S,T}(length(duration), duration, fill(oper,length(duration)))
+TwoLevel(duration::Vector{<:Number}, u::Unitful.Units, oper::TimeStructure{T}) where {T} = TwoLevel(Unitful.Quantity.(duration, u), oper)
 
 function Base.iterate(itr::TwoLevel)
 	sp = 1
@@ -45,13 +45,13 @@ function Base.iterate(itr::TwoLevel, state)
 end
 
 Base.length(itr::TwoLevel) = sum(length(itr.operational[sp]) for sp ∈ 1:itr.len)
-Base.eltype(::Type{TwoLevel}) = OperationalPeriod
+Base.eltype(::Type{TwoLevel{S,T}}) where {S,T} = OperationalPeriod{T}
 
 """
 	struct OperationalPeriod <: TimePeriod{TwoLevel}    
 Time period for iteration of a TwoLevel time structure. 
 """
-struct OperationalPeriod{T <: Number} <: TimePeriod{TwoLevel}
+struct OperationalPeriod{T} <: TimePeriod{TwoLevel}
 	sp::Int64
 	sc::Union{Nothing,Int64}
 	op::Int64
@@ -93,7 +93,7 @@ opscen(t::OperationalPeriod) = t.sc
 Time period for iteration of strategic periods.
 """
 struct StrategicPeriod{T} <: TimePeriod{TwoLevel} 
-	sp
+	sp::Int64
 	duration
 	operational::TimeStructure
 end
