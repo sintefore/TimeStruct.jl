@@ -22,33 +22,24 @@ All time structures can be iterated as a sequence of TimePeriods that can be use
 
 ```julia
 using TimeStruct
+using Unitful
+using JuMP
 
 uniform_day = SimpleTimes(24, 1) # 24 hours/day
-uniform_year = TwoLevel(365, 8760, uniform_day) # 365 days
+uniform_year = TwoLevel(365, 24, uniform_day) # 365 days
 
-length(uniform_year) # 8760 (hours in one year)
+m = Model() 
 
-# Properties for easy indexing and constraints (example below)
-[t for t ∈ first(uniform_year, 2)]
-# 2-element Vector{OperationalPeriod}:
-#  t1_1
-#  t1_2
-[t.duration for t ∈ first(uniform_year, 2)] # [1, 1]
+# Create variables for all time periods
+@variable(m, my_var[uniform_year])
+
 
 val_per_time = FixedProfile(0.2)
 
 # Create constraints with JuMP something like this:
-for t ∈ uniform_year
-    @constraint(m, my_var[t] <= val_per_time[t] * t.duration)
+for t in uniform_year
+    @constraint(m, my_var[t] <= val_per_time[t] * duration(t))
 end
-
-# Get operational periods by strategic periods:
-for 𝒯ⁱⁿᵛ ∈ strategic_periods(uniform_year)
-    define(m, Node(), 𝒯ⁱⁿᵛ)
-end
-
-𝒯ⁱⁿᵛ = first(strategic_periods(uniform_year))
-length(𝒯ⁱⁿᵛ) # 24
 
 ```
 
@@ -62,25 +53,25 @@ simple two stage stochastic optimization problem.
 using JuMP
 using TimeStruct
 
-𝒯 = OperationalScenarios(5, SimpleTimes(10,1))
-𝒮 = scenarios(T)
+periods = OperationalScenarios(5, SimpleTimes(10,1))
+scenarios = opscenarios(periods)
 
 model = Model()
 
-ℐ = 1:5
-@variable(model, x[ℐ, 𝒯])
-@variable(model, y[ℐ], Bin)
+I = 1:5
+@variable(model, x[I, periods])
+@variable(model, y[I], Bin)
 @variable(model, npv)
-@variable(model, μ[𝒮])
+@variable(model, mu[scenarios])
 
-for i ∈ ℐ, t ∈ 𝒯 
+for i ∈ I, t ∈ periods 
     @constraint(model, x[i,t] <= y[i])
 end
 
-@constraint(model, sum(y[i] for i ∈ ℐ) <= 2)
+@constraint(model, sum(y[i] for i in I) <= 2)
 
-for scen ∈ S
-    @constraint(model,  μ[scen] == sum(rand() * x[i,t] for i ∈ ℐ for t ∈ scen))
+for sc ∈ scenarios
+    @constraint(model,  mu[sc] == sum(rand() * x[i,t] for i in I for t ∈ periods))
 end
-@constraint(model, npv == sum(probability(s) * μ[s] for s ∈ 𝒮))
+@constraint(model, npv == sum(probability(sc) * mu[sc] for sc ∈ scenarios))
 ```
