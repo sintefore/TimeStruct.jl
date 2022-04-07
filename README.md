@@ -1,5 +1,8 @@
 # TimeStruct.jl
 
+[![Build Status](https://github.com/trulsf/TimeStruct.jl/workflows/CI/badge.svg?branch=master)](https://github.com/trulsf/TimeStruct.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/trulsf/TimeStruct.jl/branch/master/graph/badge.svg?token=n4qH6HCH0r)](https://codecov.io/gh/trulsf/TimeStruct.jl)
+
 Time structures to facilitate modelling with different (multilevel and stochastic) time structures. Note that this package is experimental/proof-of-concept. Expect breaking changes.
 
 The main motivation for the package is to use it in setting up optimization models in e.g. JuMP.
