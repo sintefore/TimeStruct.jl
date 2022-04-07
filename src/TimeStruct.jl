@@ -13,12 +13,11 @@ include("profiles.jl")
 include("utils.jl")
 include("discount.jl")
 
-
 function __init__()
-    @require DataFrames="a93c6f00-e57d-5684-b7b6-d8193f3e46c0" include("dataframes.jl")
+    @require DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0" include(
+        "dataframes.jl",
+    )
 end
-
-
 
 export OperationalPeriod
 export StrategicPeriod
@@ -28,7 +27,6 @@ export OperPeriod
 export SimpleTimes
 export TwoLevel
 export TwoLevelTree
-
 
 export TimeProfile, TimeStructure
 export FixedProfile

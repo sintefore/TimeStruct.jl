@@ -9,12 +9,14 @@ varying = SimpleTimes([2, 2, 2, 4, 10])
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
-	len::Integer
-	duration::Vector{T}
+    len::Integer
+    duration::Vector{T}
 end
 SimpleTimes(len, duration::Number) = SimpleTimes(len, fill(duration, len))
-SimpleTimes(dur::Vector{T}) where {T <: Number} = SimpleTimes(length(dur), dur)
-SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T <: Real} = SimpleTimes(length(dur), Unitful.Quantity.(dur,u))
+SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
+function SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T<:Real}
+    return SimpleTimes(length(dur), Unitful.Quantity.(dur, u))
+end
 
 Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 Base.length(st::SimpleTimes) = st.len
@@ -25,9 +27,9 @@ duration(st::SimpleTimes) = sum(st.duration)
     struct SimplePeriod <: TimePeriod{SimpleTimes} 
 A single time period returned when iterating through a SimpleTimes structure
 """
-struct SimplePeriod{T <: Number} <: TimePeriod{SimpleTimes}
-	op::Integer
-	duration::T
+struct SimplePeriod{T<:Number} <: TimePeriod{SimpleTimes}
+    op::Integer
+    duration::T
 end
 
 duration(p::SimplePeriod) = p.duration
@@ -38,10 +40,10 @@ Base.length(itr::SimplePeriod) = itr.len
 Base.show(io::IO, up::SimplePeriod) = print(io, "t$(up.op)")
 
 function Base.iterate(itr::SimpleTimes{T}) where {T}
-	return SimplePeriod{T}(1, itr.duration[1]), 1
+    return SimplePeriod{T}(1, itr.duration[1]), 1
 end
 
 function Base.iterate(itr::SimpleTimes{T}, state) where {T}
-	state == itr.len && return nothing
-	return SimplePeriod{T}(state + 1, itr.duration[state + 1]), state + 1 
+    state == itr.len && return nothing
+    return SimplePeriod{T}(state + 1, itr.duration[state+1]), state + 1
 end
