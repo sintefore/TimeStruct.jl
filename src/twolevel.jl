@@ -78,7 +78,9 @@ function Base.iterate(itr::TwoLevel, state)
     (sp, next[2])
 end
 
-Base.length(itr::TwoLevel) = sum(length(itr.operational[sp]) for sp in 1:itr.len)
+function Base.length(itr::TwoLevel)
+    return sum(length(itr.operational[sp]) for sp in 1:itr.len)
+end
 Base.eltype(::Type{TwoLevel{S,T}}) where {S,T} = OperationalPeriod{T}
 
 """
