@@ -2,7 +2,7 @@
 abstract type AbstractTreeNode{T} end
 
 mutable struct TwoLevelTree{T} <: TimeStructure{T}
-    len::Int64
+    len::Int
     root::Any
     nodes::Vector{<:AbstractTreeNode{T}}
 end
@@ -71,8 +71,8 @@ function Base.iterate(itr::TwoLevelTree, state)
 end
 
 struct StratNode{T} <: TimePeriod{TwoLevelTree}
-    sp::Int64
-    branch::Int64
+    sp::Int
+    branch::Int
     duration::Duration
     probability::Float64
     operational::TimeStructure{T}
@@ -85,7 +85,7 @@ probability(n::StratNode) = n.probability
 duration(n::StratNode) = n.duration
 
 struct TreeNode{T} <: AbstractTreeNode{T}
-    node::Int64
+    node::Int
     parent::Union{Nothing,TreeNode}
     strat_node::StratNode{T}
 end

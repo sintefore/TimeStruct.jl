@@ -12,16 +12,16 @@ periods = TwoLevel(5, 1u"yr", SimpleTimes(24,1u"hr")) # 5 years with 24 hours of
 ```
 """
 struct TwoLevel{S<:Duration,T} <: TimeStructure{T}
-    len::Int64
+    len::Int
     duration::Vector{S}
     operational::Vector{<:TimeStructure{T}}
 end
 
-function TwoLevel(len, duration::S, oper::TimeStructure{T}) where {S,T}
+function TwoLevel(len::Integer, duration::S, oper::TimeStructure{T}) where {S,T}
     return TwoLevel{S,T}(len, fill(duration, len), fill(oper, len))
 end
 function TwoLevel(
-    len,
+    len::Integer,
     duration::S,
     oper::Vector{<:TimeStructure{T}},
 ) where {S,T}
@@ -88,16 +88,20 @@ Base.eltype(::Type{TwoLevel{S,T}}) where {S,T} = OperationalPeriod{T}
 Time period for iteration of a TwoLevel time structure. 
 """
 struct OperationalPeriod{T} <: TimePeriod{TwoLevel}
-    sp::Int64
-    sc::Union{Nothing,Int64}
-    op::Int64
+    sp::Int
+    sc::Union{Nothing,Int}
+    op::Int
     duration::T
     prob::Float64
 end
-OperationalPeriod(sp, op) = OperationalPeriod(sp, nothing, op, 1, 1.0)
-OperationalPeriod(sp, sc, op) = OperationalPeriod(sp, sc, op, 1, 1.0)
+function OperationalPeriod(sp::Integer, op::Integer)
+    return OperationalPeriod(sp, nothing, op, 1, 1.0)
+end
+function OperationalPeriod(sp::Integer, sc::Integer, op::Integer)
+    return OperationalPeriod(sp, sc, op, 1, 1.0)
+end
 
-function op(scp::ScenarioPeriod, sp)
+function op(scp::ScenarioPeriod, sp::Integer)
     return OperationalPeriod(sp, scp.sc, scp.op, scp.duration, scp.prob)
 end
 
@@ -133,7 +137,7 @@ opscen(t::OperationalPeriod) = t.sc
 Time period for iteration of strategic periods.
 """
 struct StrategicPeriod{T} <: TimePeriod{TwoLevel}
-    sp::Int64
+    sp::Int
     duration::Any
     operational::TimeStructure
 end

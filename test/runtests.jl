@@ -27,7 +27,7 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == OperationalScenario{Int64}
+    @test typeof(scen_coll[3]) == OperationalScenario{Int}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -46,7 +46,7 @@ end
 @testset "Two level structure" begin
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
 
-    @test typeof(uniform_week) == TwoLevel{Int64,Int64}
+    @test typeof(uniform_week) == TwoLevel{Int,Int}
     @test length(uniform_week) == 168
 
     # One year with monthly strategic periods and one day of operations for each month

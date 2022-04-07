@@ -9,10 +9,12 @@ varying = SimpleTimes([2, 2, 2, 4, 10])
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
-    len::Int64
+    len::Int
     duration::Vector{T}
 end
-SimpleTimes(len, duration::Number) = SimpleTimes(len, fill(duration, len))
+function SimpleTimes(len::Integer, duration::Number)
+    return SimpleTimes(len, fill(duration, len))
+end
 SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
 function SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T<:Real}
     return SimpleTimes(length(dur), Unitful.Quantity.(dur, u))
@@ -28,7 +30,7 @@ duration(st::SimpleTimes) = sum(st.duration)
 A single time period returned when iterating through a SimpleTimes structure
 """
 struct SimplePeriod{T<:Number} <: TimePeriod{SimpleTimes}
-    op::Int64
+    op::Int
     duration::T
 end
 
