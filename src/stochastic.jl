@@ -4,7 +4,7 @@ Time structure that have multiple scenarios where each scenario has its own time
 and an associated probability. Note that all scenarios must use the same type for the duration.
 """
 struct OperationalScenarios{T} <: TimeStructure{T}
-    len::Integer
+    len::Int64
     scenarios::Vector{<:TimeStructure{T}}
     probability::Vector{Float64}
 end

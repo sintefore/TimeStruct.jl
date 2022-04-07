@@ -12,7 +12,7 @@ periods = TwoLevel(5, 1u"yr", SimpleTimes(24,1u"hr")) # 5 years with 24 hours of
 ```
 """
 struct TwoLevel{S<:Duration,T} <: TimeStructure{T}
-    len::Integer
+    len::Int64
     duration::Vector{S}
     operational::Vector{<:TimeStructure{T}}
 end

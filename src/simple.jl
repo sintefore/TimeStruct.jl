@@ -9,7 +9,7 @@ varying = SimpleTimes([2, 2, 2, 4, 10])
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
-    len::Integer
+    len::Int64
     duration::Vector{T}
 end
 SimpleTimes(len, duration::Number) = SimpleTimes(len, fill(duration, len))
@@ -28,7 +28,7 @@ duration(st::SimpleTimes) = sum(st.duration)
 A single time period returned when iterating through a SimpleTimes structure
 """
 struct SimplePeriod{T<:Number} <: TimePeriod{SimpleTimes}
-    op::Integer
+    op::Int64
     duration::T
 end
 
