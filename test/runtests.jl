@@ -1,11 +1,22 @@
+module RunTests
+
 using Test
 using TimeStruct
 const TS = TimeStruct
 
-day = SimpleTimes(24, 1)             # One day with hourly resolution  
-week = SimpleTimes(168, 1)           # One week with hourly resolution
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
 
-@testset "Simple Times" begin
+function test_simple_times()
+    day = SimpleTimes(24, 1)
     @test first(day) == TS.SimplePeriod(1, 1)
     @test length(day) == 24
     @test isfirst(TS.SimplePeriod(1, 1))
@@ -13,13 +24,19 @@ week = SimpleTimes(168, 1)           # One week with hourly resolution
 
     tops = collect(t for t in day)
     @test tops[2] == TS.SimplePeriod(2, 1)
+
+    ts = SimpleTimes([4, 4, 4, 6, 3, 3])
+    @test length(ts) == 6
+    @test first(ts) == TS.SimplePeriod(1, 4)
+    @test duration(first(ts)) == 4
+    @test duration(ts) == 24
+    return
 end
 
-@testset "Stochastic" begin
-
+function test_stochastic()
     # 5 scenarios with 10 periods
     ts = OperationalScenarios(5, SimpleTimes(10, 1))
-    @test length(ts) == 50
+    @test length(ts) == length(collect(ts))
 
     # Iterating through operational scenarios
     scens = opscenarios(ts)
@@ -35,15 +52,28 @@ end
     @test length(t_coll) == 10
 
     # 3 operational scenarios, two single day and one for a week with hourly resolution
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
     @test first(ts) == TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1))
     @test length(ts) == 216
 
     @test sum(probability(s) for s in opscenarios(ts)) == 1.0
+
+    pers = []
+    for sc in opscenarios(ts)
+        for t in sc
+            push!(pers, t)
+        end
+    end
+    @test length(pers) == length(ts)
+    @test first(pers) == first(ts)
+    return
 end
 
-@testset "Two level structure" begin
+function test_two_level()
+    day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
 
     @test typeof(uniform_week) == TwoLevel{Int,Int}
@@ -61,10 +91,12 @@ end
     ops2 = [t for n in strat_periods(uniform_year) for t in n]
 
     @test ops1 == ops2
+    return
 end
 
-@testset "Two level with operational scenarios" begin
-
+function test_two_level_scenarios()
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
     # One year with a strategic period per quarter and 3 operational scenarios
     opscen = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
     seasonal_year = TwoLevel(24 .* [91, 91, 91, 92], opscen)
@@ -81,9 +113,22 @@ end
 
     @test probability(ops[100]) == 0.7
     @test multiple(ops[100], seasonal_year) == 13
+
+    pers = []
+    for sp in strat_periods(seasonal_year)
+        for sc in opscenarios(sp, seasonal_year)
+            for t in sc
+                push!(pers, t)
+            end
+        end
+    end
+    @test length(pers) == length(seasonal_year)
+    @test first(pers) == first(seasonal_year)
+
+    return
 end
 
-@testset "SimpleTimes as TwoLevel structure" begin
+function test_simple_two_level()
     simple = SimpleTimes(10, 1)
     ops1 = collect(simple)
     @test length(strat_periods(simple)) == 1
@@ -91,7 +136,8 @@ end
     @test ops1 == ops2
 end
 
-@testset "Time Profiles" begin
+function test_profiles()
+    day = SimpleTimes(24, 1)
     fp = FixedProfile(12.0)
     @test fp[first(day)] == 12.0
 
@@ -126,9 +172,10 @@ end
         2,
         TS.ScenarioPeriod(2, 1.0, TS.SimplePeriod(2, 1)),
     )] == 2.22
+    return
 end
 
-@testset "Two level tree time structure" begin
+function test_twolevel_tree()
     regtree = TS.regular_tree(5, [3, 2], SimpleTimes(5, 1))
     ops = [t for n in TS.strat_nodes(regtree) for t in n]
     @test length(ops) == 5 * 10
@@ -165,18 +212,20 @@ end
         [price1, price2, price2, price1, price2, price2],
     ])
     @test dsp[ops[4]] == 5
+    return
 end
 
-@testset "Iteration Utils" begin
+function test_iter_utils()
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
 
     @test first(withprev(uniform_day))[1] === nothing
     @test collect(withprev(uniform_week))[25] ==
           (nothing, TS.OperationalPeriod(2, TS.SimplePeriod(1, 1)))
+    return
 end
 
-@testset "Discount" begin
+function test_discount()
     uniform_years = SimpleTimes(10, 1)  # 10 years with duration of 1 year
     disc = Discounter(0.04, 1, uniform_years)
 
@@ -184,4 +233,9 @@ end
     for (i, t) in enumerate(uniform_years)
         @test discount(disc, t) == δ^(i - 1)
     end
+    return
 end
+
+end
+
+RunTests.runtests()

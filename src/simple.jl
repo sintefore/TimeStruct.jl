@@ -39,7 +39,6 @@ isfirst(t::SimplePeriod) = t.op == 1
 _oper(t::SimplePeriod) = t.op
 
 Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
-Base.length(t::SimplePeriod) = t.len
 Base.show(io::IO, t::SimplePeriod) = print(io, "t$(t.op)")
 
 function Base.iterate(itr::SimpleTimes{T}) where {T}

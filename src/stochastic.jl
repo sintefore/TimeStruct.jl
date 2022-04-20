@@ -45,7 +45,7 @@ end
 function Base.length(itr::OperationalScenarios)
     return sum(length(itr.scenarios[sc]) for sc in 1:itr.len)
 end
-Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod{T}
+Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
 
 # A time period with scenario number and probability
 struct ScenarioPeriod{T} <:
