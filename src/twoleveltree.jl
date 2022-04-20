@@ -20,6 +20,7 @@ struct OperPeriod <: TimePeriod{TwoLevel}
     prob::Any
 end
 
+oper(t::OperPeriod) = t.op
 opscen(t::OperPeriod) = t.sc
 strat_per(t::OperPeriod) = t.sp
 branch(t::OperPeriod) = t.branch

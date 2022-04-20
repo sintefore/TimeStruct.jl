@@ -15,7 +15,7 @@ function OperationalProfile(val::T, u::Unitful.Units) where {T}
     return OperationalProfile(Unitful.Quantity.(val, u))
 end
 function Base.getindex(ofp::OperationalProfile, i::TimePeriod)
-    return ofp.vals[mod(i.op - 1, length(ofp.vals))+1]
+    return ofp.vals[mod1(oper(i),length(ofp.vals))]
 end
 
 struct StrategicProfile{T<:Number} <: TimeProfile{T}
@@ -41,6 +41,14 @@ end
 function Base.getindex(sfp::ScenarioProfile, i::TimePeriod)
     return sfp.vals[isnothing(opscen(i)) ? 1 : opscen(i)][i]
 end
+
+struct StrategicScenarioProfile{T<:Number} <: TimeProfile{T}
+    vals::Vector{Vector{<:TimeProfile{T}}}
+end
+function Base.getindex(ssp::StrategicScenarioProfile, i::TimePeriod)
+    return ssp.vals[strat_per(i)][isnothing(opscen(i)) ? 1 : opscen(i)][i]
+end
+
 
 function ScenarioProfile(vals::Vector{Vector{T}}) where {T<:Number}
     v = Vector{OperationalProfile{T}}()

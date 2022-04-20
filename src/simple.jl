@@ -36,6 +36,7 @@ end
 
 duration(p::SimplePeriod) = p.duration
 isfirst(p::SimplePeriod) = p.op == 1
+oper(p::SimplePeriod) = p.op
 
 Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
 Base.length(itr::SimplePeriod) = itr.len

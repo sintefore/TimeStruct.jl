@@ -29,9 +29,8 @@ function Base.iterate(itr::OperationalScenarios)
     next === nothing && return nothing
     return ScenarioPeriod(
         sc,
-        next[1].op,
-        next[1].duration,
         itr.probability[sc],
+        next[1]
     ),
     (sc, next[2])
 end
@@ -48,9 +47,8 @@ function Base.iterate(itr::OperationalScenarios, state)
     end
     return ScenarioPeriod(
         sc,
-        next[1].op,
-        next[1].duration,
         itr.probability[sc],
+        next[1],
     ),
     (sc, next[2])
 end
@@ -60,19 +58,22 @@ end
 Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod{T}
 
 # A time period with scenario number and probability
-struct ScenarioPeriod{T} <: TimePeriod{OperationalScenarios}
+struct ScenarioPeriod{T} <: TimePeriod{OperationalScenarios} where {T<:TimePeriod}
     sc::Int
-    op::Int
-    duration::T
     prob::Float64
+    period::T
 end
 
-ScenarioPeriod(sc::Integer, op::Integer) = ScenarioPeriod(sc, op, 1.0, 1.0)
+#ScenarioPeriod(sc::Integer, op::Integer) = ScenarioPeriod(sc, op, 1.0, 1.0)
 
-Base.show(io::IO, up::ScenarioPeriod) = print(io, "t-$(up.sc)_$(up.op)")
+Base.show(io::IO, up::ScenarioPeriod) = print(io, "sc$(up.sc)-$(up.period)")
 function Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod)
-    return t1.sc < t2.sc || (t1.sc == t2.sc && t1.op < t2.op)
+    return t1.sc < t2.sc || (t1.sc == t2.sc && t1.period < t2.period)
 end
+
+isfirst(t::ScenarioPeriod) = isfirst(t.period)
+duration(t::ScenarioPeriod) = duration(t.period)
+oper(t::ScenarioPeriod) = oper(t.period)
 
 probability(::TimePeriod) = 1.0
 probability(t::ScenarioPeriod) = t.prob
@@ -94,7 +95,7 @@ probability(os::OperationalScenario) = os.probability
 function Base.iterate(os::OperationalScenario)
     next = iterate(os.operational)
     next === nothing && return nothing
-    return ScenarioPeriod(1, next[1].op, next[1].duration, os.probability),
+    return ScenarioPeriod(1, os.probability, next[1]),
     (1, next[2])
 end
 
@@ -103,9 +104,8 @@ function Base.iterate(os::OperationalScenario, state)
     next === nothing && return nothing
     return ScenarioPeriod(
         os.scen,
-        next[1].op,
-        next[1].duration,
         os.probability,
+        next[1]
     ),
     (1, next[2])
 end
@@ -137,3 +137,4 @@ function Base.iterate(ops::OpScens, state)
     ),
     state + 1
 end
+
