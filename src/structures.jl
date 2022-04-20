@@ -27,3 +27,18 @@ duration(::TimePeriod) = error("duration() not implemented for time period")
 Returns true if the time period is the first in a sequence and has no previous time period
 """
 isfirst(::TimePeriod) = error("isfirst() not implemented for time period")
+
+"""
+    probability(t::TimePeriod)
+Returns the probability associated with the time period.
+"""
+probability(t::TimePeriod) = 1.0
+
+# Functions used for indexing into time profiles
+_oper(t::TimePeriod) = error("_oper() not implemented for $(typeof(t))")
+
+_strat_per(t::TimePeriod) = 1
+
+_opscen(t::TimePeriod) = 1
+
+_branch(t::TimePeriod) = 1

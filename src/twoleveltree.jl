@@ -20,10 +20,10 @@ struct OperPeriod <: TimePeriod{TwoLevel}
     prob::Any
 end
 
-oper(t::OperPeriod) = t.op
-opscen(t::OperPeriod) = t.sc
-strat_per(t::OperPeriod) = t.sp
-branch(t::OperPeriod) = t.branch
+_oper(t::OperPeriod) = t.op
+_opscen(t::OperPeriod) = t.sc
+_strat_per(t::OperPeriod) = t.sp
+_branch(t::OperPeriod) = t.branch
 
 function Base.length(itr::TwoLevelTree)
     return sum(length(n.strat_node.operational) for n in itr.nodes)
@@ -39,7 +39,7 @@ function Base.iterate(itr::TwoLevelTree)
     return OperPeriod(
         spn.sp,
         spn.branch,
-        opscen(per),
+        _opscen(per),
         per.op,
         per.duration,
         probability(spn) * probability(per),
@@ -63,7 +63,7 @@ function Base.iterate(itr::TwoLevelTree, state)
     return OperPeriod(
         spn.sp,
         spn.branch,
-        opscen(per),
+        _opscen(per),
         per.op,
         per.duration,
         probability(spn) * probability(per),
@@ -80,8 +80,8 @@ struct StratNode{T} <: TimePeriod{TwoLevelTree}
 end
 
 Base.show(io::IO, n::StratNode) = print(io, "sp$(n.sp)-br$(n.branch)")
-branch(n::StratNode) = n.branch
-strat_per(n::StratNode) = n.sp
+_branch(n::StratNode) = n.branch
+_strat_per(n::StratNode) = n.sp
 probability(n::StratNode) = n.probability
 duration(n::StratNode) = n.duration
 
@@ -105,7 +105,7 @@ function Base.iterate(itr::StratNode, state = nothing)
     return OperPeriod(
         itr.sp,
         itr.branch,
-        opscen(per),
+        _opscen(per),
         per.op,
         per.duration,
         itr.probability * probability(per),

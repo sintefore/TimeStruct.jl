@@ -15,7 +15,7 @@ function OperationalProfile(val::T, u::Unitful.Units) where {T}
     return OperationalProfile(Unitful.Quantity.(val, u))
 end
 function Base.getindex(ofp::OperationalProfile, i::TimePeriod)
-    return ofp.vals[mod1(oper(i), length(ofp.vals))]
+    return ofp.vals[mod1(_oper(i), length(ofp.vals))]
 end
 
 struct StrategicProfile{T<:Number} <: TimeProfile{T}
@@ -25,28 +25,28 @@ function StrategicProfile(val::T, u::Unitful.Units) where {T}
     return StrategicProfile(Unitful.Quantity.(val, u))
 end
 function Base.getindex(sfp::StrategicProfile, i::TimePeriod)
-    return sfp.vals[isnothing(strat_per(i)) ? 1 : strat_per(i)]
+    return sfp.vals[_strat_per(i)]
 end
 
 struct DynamicProfile{T<:Number} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
 end
 function Base.getindex(dp::DynamicProfile, i::TimePeriod)
-    return dp.vals[isnothing(strat_per(i)) ? 1 : strat_per(i)][i]
+    return dp.vals[_strat_per(i)][i]
 end
 
 struct ScenarioProfile{T<:Number} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
 end
 function Base.getindex(sfp::ScenarioProfile, i::TimePeriod)
-    return sfp.vals[isnothing(opscen(i)) ? 1 : opscen(i)][i]
+    return sfp.vals[_opscen(i)][i]
 end
 
 struct StrategicScenarioProfile{T<:Number} <: TimeProfile{T}
     vals::Vector{Vector{<:TimeProfile{T}}}
 end
 function Base.getindex(ssp::StrategicScenarioProfile, i::TimePeriod)
-    return ssp.vals[strat_per(i)][isnothing(opscen(i)) ? 1 : opscen(i)][i]
+    return ssp.vals[_strat_per(i)][_opscen(i)][i]
 end
 
 function ScenarioProfile(vals::Vector{Vector{T}}) where {T<:Number}
@@ -61,14 +61,14 @@ struct StrategicStochasticProfile{T<:Number} <: TimeProfile{T}
     vals::Vector{Vector{T}}
 end
 function Base.getindex(ssp::StrategicStochasticProfile, i::TimePeriod)
-    return ssp.vals[strat_per(i)][branch(i)]
+    return ssp.vals[_strat_per(i)][_branch(i)]
 end
 
 struct DynamicStochasticProfile{T<:Number} <: TimeProfile{T}
     vals::Vector{<:Vector{<:TimeProfile{T}}}
 end
 function Base.getindex(ssp::DynamicStochasticProfile, i::TimePeriod)
-    return ssp.vals[strat_per(i)][branch(i)][i]
+    return ssp.vals[_strat_per(i)][_branch(i)][i]
 end
 
 import Base: +, -, *, /

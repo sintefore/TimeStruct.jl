@@ -6,13 +6,13 @@ day = SimpleTimes(24, 1)             # One day with hourly resolution
 week = SimpleTimes(168, 1)           # One week with hourly resolution
 
 @testset "Simple Times" begin
-    @test first(day) == SimplePeriod(1, 1)
+    @test first(day) == TS.SimplePeriod(1, 1)
     @test length(day) == 24
-    @test isfirst(SimplePeriod(1, 1))
-    @test first(day) < SimplePeriod(3, 1)
+    @test isfirst(TS.SimplePeriod(1, 1))
+    @test first(day) < TS.SimplePeriod(3, 1)
 
     tops = collect(t for t in day)
-    @test tops[2] == SimplePeriod(2, 1)
+    @test tops[2] == TS.SimplePeriod(2, 1)
 end
 
 @testset "Stochastic" begin
@@ -27,7 +27,7 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == OperationalScenario{Int}
+    @test typeof(scen_coll[3]) == TS.OperationalScenario{Int}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -37,7 +37,7 @@ end
     # 3 operational scenarios, two single day and one for a week with hourly resolution
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
-    @test first(ts) == ScenarioPeriod(1, 0.1, SimplePeriod(1, 1))
+    @test first(ts) == TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1))
     @test length(ts) == 216
 
     @test sum(probability(s) for s in opscenarios(ts)) == 1.0
@@ -71,14 +71,16 @@ end
     @test length(seasonal_year) == 864
 
     ops = collect(seasonal_year)
-    @test ops[1] ==
-          OperationalPeriod(1, ScenarioPeriod(1, 0.1, SimplePeriod(1, 1)))
+    @test ops[1] == TS.OperationalPeriod(
+        1,
+        TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1)),
+    )
 
     @test probability(ops[34]) == 0.2
-    @test TS.multiple(ops[34], seasonal_year) == 91
+    @test multiple(ops[34], seasonal_year) == 91
 
     @test probability(ops[100]) == 0.7
-    @test TS.multiple(ops[100], seasonal_year) == 13
+    @test multiple(ops[100], seasonal_year) == 13
 end
 
 @testset "SimpleTimes as TwoLevel structure" begin
@@ -94,23 +96,23 @@ end
     @test fp[first(day)] == 12.0
 
     sfp = StrategicProfile([i / 100 for i in 1:365])
-    @test sfp[OperationalPeriod(122, SimplePeriod(1, 1))] == 1.22
-    @test sfp[StrategicPeriod{TwoLevel}(122, 1, SimpleTimes(24, 1))] == 1.22
-    @test sfp[SimplePeriod(10, 1)] == 0.01
+    @test sfp[TS.OperationalPeriod(122, TS.SimplePeriod(1, 1))] == 1.22
+    @test sfp[TS.StrategicPeriod{TwoLevel}(122, 1, SimpleTimes(24, 1))] == 1.22
+    @test sfp[TS.SimplePeriod(10, 1)] == 0.01
 
     dp = DynamicProfile([
         OperationalProfile([i / 100 + j for j in 1:24]) for i in 1:365
     ])
-    @test dp[OperationalPeriod(365, SimplePeriod(24, 1))] == 27.65
+    @test dp[TS.OperationalPeriod(365, TS.SimplePeriod(24, 1))] == 27.65
 
     scp = ScenarioProfile([
         OperationalProfile([i / 100 + j for j in 1:24]) for i in 1:5
     ])
-    @test scp[ScenarioPeriod(1, 1.0, SimplePeriod(12, 1))] == 12.01
+    @test scp[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(12, 1))] == 12.01
 
     scp2 = ScenarioProfile([[i / 100 + j for j in 1:24] for i in 1:5])
-    @test scp2[ScenarioPeriod(1, 1.0, SimplePeriod(20, 1))] ==
-          scp[ScenarioPeriod(1, 1.0, SimplePeriod(20, 1))]
+    @test scp2[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(20, 1))] ==
+          scp[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(20, 1))]
 
     dps = DynamicProfile([
         ScenarioProfile([
@@ -120,9 +122,9 @@ end
     ])
     ts = TwoLevel(5, 24, OperationalScenarios(10, SimpleTimes(24, 1)))
     @test sum(dps[t] for t in ts) ≈ 15696.0
-    @test dps[OperationalPeriod(
+    @test dps[TS.OperationalPeriod(
         2,
-        ScenarioPeriod(2, 1.0, SimplePeriod(2, 1)),
+        TS.ScenarioPeriod(2, 1.0, TS.SimplePeriod(2, 1)),
     )] == 2.22
 end
 
@@ -171,7 +173,7 @@ end
 
     @test first(withprev(uniform_day))[1] === nothing
     @test collect(withprev(uniform_week))[25] ==
-          (nothing, OperationalPeriod(2, SimplePeriod(1, 1)))
+          (nothing, TS.OperationalPeriod(2, TS.SimplePeriod(1, 1)))
 end
 
 @testset "Discount" begin

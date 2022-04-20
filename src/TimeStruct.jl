@@ -19,30 +19,22 @@ function __init__()
     )
 end
 
-export OperationalPeriod
-export StrategicPeriod
-export SimplePeriod
-export TreeNode
-export OperPeriod
 export SimpleTimes
+export OperationalScenarios
 export TwoLevel
 export TwoLevelTree
 
-export TimeProfile, TimeStructure
 export FixedProfile
 export OperationalProfile
+export ScenarioProfile
 export StrategicProfile
+export StrategicScenarioProfile
 export DynamicProfile
 export StrategicStochasticProfile
 export DynamicStochasticProfile
 
-export ScenarioPeriod
-export OperationalScenarios
-export OperationalScenario
-export ScenarioProfile
-
 export opscenarios
-export strat_periods, strat_per
+export strat_periods
 export regular_tree, strat_nodes, scenarios
 export withprev
 export isfirst, duration, multiple, probability

@@ -55,8 +55,6 @@ struct ScenarioPeriod{T} <:
     period::T
 end
 
-#ScenarioPeriod(sc::Integer, op::Integer) = ScenarioPeriod(sc, op, 1.0, 1.0)
-
 Base.show(io::IO, up::ScenarioPeriod) = print(io, "sc$(up.sc)-$(up.period)")
 function Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod)
     return t1.sc < t2.sc || (t1.sc == t2.sc && t1.period < t2.period)
@@ -64,10 +62,10 @@ end
 
 isfirst(t::ScenarioPeriod) = isfirst(t.period)
 duration(t::ScenarioPeriod) = duration(t.period)
-oper(t::ScenarioPeriod) = oper(t.period)
-
-probability(::TimePeriod) = 1.0
 probability(t::ScenarioPeriod) = t.prob
+
+_oper(t::ScenarioPeriod) = _oper(t.period)
+_opscen(t::ScenarioPeriod) = t.sc
 
 """
     struct OperationalScenario 

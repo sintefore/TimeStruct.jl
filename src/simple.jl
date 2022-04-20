@@ -34,13 +34,13 @@ struct SimplePeriod{T<:Number} <: TimePeriod{SimpleTimes}
     duration::T
 end
 
-duration(p::SimplePeriod) = p.duration
-isfirst(p::SimplePeriod) = p.op == 1
-oper(p::SimplePeriod) = p.op
+duration(t::SimplePeriod) = t.duration
+isfirst(t::SimplePeriod) = t.op == 1
+_oper(t::SimplePeriod) = t.op
 
 Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
-Base.length(itr::SimplePeriod) = itr.len
-Base.show(io::IO, up::SimplePeriod) = print(io, "t$(up.op)")
+Base.length(t::SimplePeriod) = t.len
+Base.show(io::IO, t::SimplePeriod) = print(io, "t$(t.op)")
 
 function Base.iterate(itr::SimpleTimes{T}) where {T}
     return SimplePeriod{T}(1, itr.duration[1]), 1

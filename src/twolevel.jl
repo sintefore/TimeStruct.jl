@@ -77,25 +77,17 @@ struct OperationalPeriod{T} <: TimePeriod{TwoLevel} where {T<:TimePeriod}
     sp::Int
     period::T
 end
-#=
-function OperationalPeriod(sp::Integer, op::Integer)
-    return OperationalPeriod(sp, nothing, op, 1, 1.0)
-end
-function OperationalPeriod(sp::Integer, sc::Integer, op::Integer)
-    return OperationalPeriod(sp, sc, op, 1, 1.0)
-end
 
-function op(scp::ScenarioPeriod, sp::Integer)
-    return OperationalPeriod(sp, scp.sc, scp.op, scp.duration, scp.prob)
-end
-=#
-oper(op::OperationalPeriod) = oper(op.period)
-isfirst(op::OperationalPeriod) = isfirst(op.period)
-duration(op::OperationalPeriod) = duration(op.period)
-probability(op::OperationalPeriod) = probability(op.period)
+isfirst(t::OperationalPeriod) = isfirst(t.period)
+duration(t::OperationalPeriod) = duration(t.period)
+probability(t::OperationalPeriod) = probability(t.period)
 
-function Base.show(io::IO, op::OperationalPeriod)
-    return print(io, "sp$(op.sp)-$(op.period)")
+_oper(t::OperationalPeriod) = _oper(t.period)
+_strat_per(t::OperationalPeriod) = t.sp
+_opscen(t::OperationalPeriod) = _opscen(t.period)
+
+function Base.show(io::IO, t::OperationalPeriod)
+    return print(io, "sp$(t.sp)-$(t.period)")
 end
 function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
     return t1.sp < t2.sp || (t1.sp == t2.sp && t1.period < t2.period)
@@ -106,16 +98,12 @@ stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
 
 function multiple(op::OperationalPeriod, ts::TwoLevel)
     if isa(ts.operational[op.sp], OperationalScenarios)
-        dur = duration(ts.operational[op.sp].scenarios[opscen(op)])
+        dur = duration(ts.operational[op.sp].scenarios[_opscen(op)])
     else
         dur = duration(ts.operational[op.sp])
     end
     return stripunit(ts.duration[op.sp] / dur)
 end
-
-opscen(::TimePeriod) = nothing
-opscen(t::ScenarioPeriod) = t.sc
-opscen(t::OperationalPeriod) = opscen(t.period)
 
 """
     struct StrategicPeriod <: TimePeriod{TwoLevel} 
@@ -133,9 +121,7 @@ Base.isless(sp1::StrategicPeriod, sp2::StrategicPeriod) = sp1.sp < sp2.sp
 
 duration(sp::StrategicPeriod) = sp.duration
 
-strat_per(::TimePeriod) = nothing
-strat_per(sp::StrategicPeriod) = sp.sp
-strat_per(op::OperationalPeriod) = op.sp
+_strat_per(sp::StrategicPeriod) = sp.sp
 
 struct StratPeriods
     ts::TwoLevel
