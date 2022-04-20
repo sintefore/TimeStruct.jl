@@ -27,12 +27,7 @@ function Base.iterate(itr::OperationalScenarios)
     sc = 1
     next = iterate(itr.scenarios[sc])
     next === nothing && return nothing
-    return ScenarioPeriod(
-        sc,
-        itr.probability[sc],
-        next[1]
-    ),
-    (sc, next[2])
+    return ScenarioPeriod(sc, itr.probability[sc], next[1]), (sc, next[2])
 end
 
 function Base.iterate(itr::OperationalScenarios, state)
@@ -45,12 +40,7 @@ function Base.iterate(itr::OperationalScenarios, state)
         end
         next = iterate(itr.scenarios[sc])
     end
-    return ScenarioPeriod(
-        sc,
-        itr.probability[sc],
-        next[1],
-    ),
-    (sc, next[2])
+    return ScenarioPeriod(sc, itr.probability[sc], next[1]), (sc, next[2])
 end
 function Base.length(itr::OperationalScenarios)
     return sum(length(itr.scenarios[sc]) for sc in 1:itr.len)
@@ -58,7 +48,8 @@ end
 Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod{T}
 
 # A time period with scenario number and probability
-struct ScenarioPeriod{T} <: TimePeriod{OperationalScenarios} where {T<:TimePeriod}
+struct ScenarioPeriod{T} <:
+       TimePeriod{OperationalScenarios} where {T<:TimePeriod}
     sc::Int
     prob::Float64
     period::T
@@ -95,19 +86,13 @@ probability(os::OperationalScenario) = os.probability
 function Base.iterate(os::OperationalScenario)
     next = iterate(os.operational)
     next === nothing && return nothing
-    return ScenarioPeriod(1, os.probability, next[1]),
-    (1, next[2])
+    return ScenarioPeriod(1, os.probability, next[1]), (1, next[2])
 end
 
 function Base.iterate(os::OperationalScenario, state)
     next = iterate(os.operational, state[2])
     next === nothing && return nothing
-    return ScenarioPeriod(
-        os.scen,
-        os.probability,
-        next[1]
-    ),
-    (1, next[2])
+    return ScenarioPeriod(os.scen, os.probability, next[1]), (1, next[2])
 end
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
@@ -137,4 +122,3 @@ function Base.iterate(ops::OpScens, state)
     ),
     state + 1
 end
-

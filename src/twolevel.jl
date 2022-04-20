@@ -47,11 +47,7 @@ function Base.iterate(itr::TwoLevel)
     next = iterate(itr.operational[sp])
     next === nothing && return nothing
     per = next[1]
-    return OperationalPeriod(
-        sp,
-        per,
-    ),
-    (sp, next[2])
+    return OperationalPeriod(sp, per), (sp, next[2])
 end
 
 function Base.iterate(itr::TwoLevel, state)
@@ -65,11 +61,7 @@ function Base.iterate(itr::TwoLevel, state)
         next = iterate(itr.operational[sp])
     end
     per = next[1]
-    return OperationalPeriod(
-        sp,
-        per,
-    ),
-    (sp, next[2])
+    return OperationalPeriod(sp, per), (sp, next[2])
 end
 
 function Base.length(itr::TwoLevel)
@@ -81,9 +73,9 @@ Base.eltype(::Type{TwoLevel{S,T}}) where {S,T} = OperationalPeriod
 	struct OperationalPeriod <: TimePeriod{TwoLevel}    
 Time period for iteration of a TwoLevel time structure. 
 """
-struct OperationalPeriod{T} <: TimePeriod{TwoLevel} where {T <: TimePeriod}
+struct OperationalPeriod{T} <: TimePeriod{TwoLevel} where {T<:TimePeriod}
     sp::Int
-    period::T 
+    period::T
 end
 #=
 function OperationalPeriod(sp::Integer, op::Integer)
@@ -118,7 +110,7 @@ function multiple(op::OperationalPeriod, ts::TwoLevel)
     else
         dur = duration(ts.operational[op.sp])
     end
-    return stripunit(ts.duration[op.sp] / dur) 
+    return stripunit(ts.duration[op.sp] / dur)
 end
 
 opscen(::TimePeriod) = nothing
@@ -185,11 +177,7 @@ function Base.iterate(itr::StrategicPeriod{TwoLevel}, state = nothing)
         iterate(itr.operational, state)
     next === nothing && return nothing
     per = next[1]
-    return OperationalPeriod(
-        itr.sp,
-        per,
-    ),
-    next[2]
+    return OperationalPeriod(itr.sp, per), next[2]
 end
 
 # Let SimpleTimes and OperationalScenarios behave as a TwoLevel time structure with one strategic period
@@ -219,14 +207,19 @@ struct StratOperationalScenario{T}
     probability::Float64
     operational::TimeStructure{T}
 end
-Base.show(io::IO, os::StratOperationalScenario) = print(io, "sp-$(os.sp)-sc-$(os.scen)")
+function Base.show(io::IO, os::StratOperationalScenario)
+    return print(io, "sp-$(os.sp)-sc-$(os.scen)")
+end
 probability(os::StratOperationalScenario) = os.probability
 
 # Iterate the time periods of an stratoperational scenario
 function Base.iterate(os::StratOperationalScenario)
     next = iterate(os.operational)
     next === nothing && return nothing
-    return OperationalPeriod(os.sp, ScenarioPeriod(os.scen, os.probability, next[1])),
+    return OperationalPeriod(
+        os.sp,
+        ScenarioPeriod(os.scen, os.probability, next[1]),
+    ),
     (1, next[2])
 end
 
@@ -235,10 +228,7 @@ function Base.iterate(os::StratOperationalScenario, state)
     next === nothing && return nothing
     return OperationalPeriod(
         os.sp,
-        ScenarioPeriod(
-            os.scen,
-            os.probability,
-            next[1]),
+        ScenarioPeriod(os.scen, os.probability, next[1]),
     ),
     (1, next[2])
 end
@@ -254,12 +244,20 @@ end
     opscenarios(sp,ts)
 Iterator that iterates over operational scenarios for a specific strategic period.
 """
-opscenarios(sper::StrategicPeriod, ts::TwoLevel) = StratOpScens(sper, ts.operational[sper.sp])
+function opscenarios(sper::StrategicPeriod, ts::TwoLevel)
+    return StratOpScens(sper, ts.operational[sper.sp])
+end
 
 Base.length(ops::StratOpScens) = ops.ts.len
 
 function Base.iterate(ops::StratOpScens)
-    return StratOperationalScenario(ops.sper.sp, 1, ops.ts.probability[1], ops.ts.scenarios[1]), 1
+    return StratOperationalScenario(
+        ops.sper.sp,
+        1,
+        ops.ts.probability[1],
+        ops.ts.scenarios[1],
+    ),
+    1
 end
 
 function Base.iterate(ops::StratOpScens, state)
