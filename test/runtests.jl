@@ -2,6 +2,7 @@ module RunTests
 
 using Test
 using TimeStruct
+using Unitful
 const TS = TimeStruct
 
 function runtests()
@@ -138,6 +139,7 @@ end
 
 function test_profiles()
     day = SimpleTimes(24, 1)
+
     fp = FixedProfile(12)
     @test fp[first(day)] == 12
     @test sum(fp[t] for t in day) == 12 * 24
@@ -149,22 +151,58 @@ function test_profiles()
     @test sum(fpmul[t] for t in day) == 24 * 24
     fpdiv = fp / 4
     @test sum(fpdiv[t] for t in day) == 3 * 24
+    fpunit = FixedProfile(12, u"kg")
+    @test fpunit[first(day)] == 12u"kg"
 
     op = OperationalProfile([2, 2, 2, 2, 1])
     @test sum(op[t] for t in day) == 4 * 2 + 20 * 1
     @test op[TS.SimplePeriod(7, 1)] == 1
+    opunit = OperationalProfile([2, 3, 4], u"m/s")
+    @test opunit[TS.SimplePeriod(6, 1)] == 4u"m/s"
+    opadd = op + 1
+    @test sum(opadd[t] for t in day) == sum(op[t] for t in day) + 24
+    opmin = op - 1
+    @test sum(opmin[t] for t in day) == sum(op[t] for t in day) - 24
+    opmul = 4 * op
+    @test opmul[first(day)] == 8
+    opdiv = op / 4.0
+    @test opdiv[first(day)] == 0.5
 
     ts = TwoLevel(5, 168, SimpleTimes(7, 24))
     @test sum(fp[t] for t in ts) == 12.0 * length(ts)
+
     sp1 = StrategicProfile([fp])
     @test sum(sp1[t] for t in ts) == 12.0 * length(ts)
     sp2 = StrategicProfile([op, op, fp])
     @test sum(sp2[t] for t in ts) == 2 * 11 + 3 * 84
+    spadd = 1 + sp2
+    @test spadd[first(ts)] == 3
+    spmin = sp2 - 3
+    @test spmin[first(ts)] == -1
+    spmul = sp2 * 2
+    @test spmul[first(ts)] == 4
+    spdiv = sp2 / 2
+    @test spdiv[first(ts)] == 1
 
-    ts = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
-    @test sum(fp[t] for t in ts) == 12.0 * length(ts)
+    tsc = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
+    @test sum(fp[t] for t in tsc) == 12.0 * length(tsc)
     scp = ScenarioProfile([op, 2 * op, 3 * op])
-    @test sum(scp[t] for t in ts) == 3 * (11 + 2 * 11 + 3 * 11)
+    @test sum(scp[t] for t in tsc) == 3 * (11 + 2 * 11 + 3 * 11)
+
+    scp2 = ScenarioProfile([[1, 1, 2], [3], [4, 5]])
+    @test sum(scp2[t] for t in tsc) == 201
+
+    ssp = StrategicProfile([scp, scp2])
+    @test sum(ssp[t] for t in tsc) == 200
+
+    sspadd = ssp + 1
+    @test sum(sspadd[t] for t in tsc) == 200 + length(tsc)
+    sspmin = ssp - 1
+    @test sum(sspmin[t] for t in tsc) == 200 - length(tsc)
+    sspmul = ssp * 2.5
+    @test sum(sspmul[t] for t in tsc) == 200 * 2.5
+    sspdiv = ssp / 0.5
+    @test sum(sspdiv[t] for t in tsc) == 200 / 0.5
 
     return
 end
