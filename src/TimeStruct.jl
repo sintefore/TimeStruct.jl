@@ -19,7 +19,7 @@ function __init__()
     )
 end
 
-export TimeStruct
+export TimeStructure
 export SimpleTimes
 export OperationalScenarios
 export TwoLevel

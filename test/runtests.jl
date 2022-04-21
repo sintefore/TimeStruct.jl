@@ -16,6 +16,21 @@ function runtests()
     return
 end
 
+struct _DummyStruct <: TimeStructure{Int} end
+struct _DummyPeriod <: TS.TimePeriod{_DummyStruct} end
+
+function test_timeperiod()
+    dummy = _DummyPeriod()
+
+    @test TS._opscen(dummy) == 1
+    @test TS._strat_per(dummy) == 1
+    @test TS._branch(dummy) == 1
+    @test_throws ErrorException TS._oper(dummy)
+    @test_throws ErrorException duration(dummy)
+    @test probability(dummy) == 1
+    @test_throws ErrorException isfirst(dummy)
+end
+
 function test_simple_times()
     day = SimpleTimes(24, 1)
     @test first(day) == TS.SimplePeriod(1, 1)
