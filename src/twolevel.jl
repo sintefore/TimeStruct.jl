@@ -170,7 +170,6 @@ end
 function strat_periods(ts::Union{SimpleTimes,OperationalScenarios})
     return [StrategicPeriod{SimpleTimes}(1, duration(ts), ts)]
 end
-strat_per(t::Union{SimplePeriod,ScenarioPeriod}) = 1
 
 Base.eltype(::Type{StrategicPeriod{SimpleTimes}}) = SimplePeriod
 function Base.iterate(itr::StrategicPeriod{SimpleTimes}, state = nothing)

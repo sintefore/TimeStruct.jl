@@ -19,17 +19,17 @@ function __init__()
     )
 end
 
+export TimeStruct
 export SimpleTimes
 export OperationalScenarios
 export TwoLevel
 export TwoLevelTree
 
+export TimeProfile
 export FixedProfile
 export OperationalProfile
 export ScenarioProfile
 export StrategicProfile
-export StrategicScenarioProfile
-export DynamicProfile
 export StrategicStochasticProfile
 export DynamicStochasticProfile
 

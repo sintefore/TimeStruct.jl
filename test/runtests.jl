@@ -138,40 +138,34 @@ end
 
 function test_profiles()
     day = SimpleTimes(24, 1)
-    fp = FixedProfile(12.0)
-    @test fp[first(day)] == 12.0
+    fp = FixedProfile(12)
+    @test fp[first(day)] == 12
+    @test sum(fp[t] for t in day) == 12 * 24
+    fpadd = fp + 4
+    @test sum(fpadd[t] for t in day) == 16 * 24
+    fpsub = fp - 3
+    @test sum(fpsub[t] for t in day) == 9 * 24
+    fpmul = 2 * fp
+    @test sum(fpmul[t] for t in day) == 24 * 24
+    fpdiv = fp / 4
+    @test sum(fpdiv[t] for t in day) == 3 * 24
 
-    sfp = StrategicProfile([i / 100 for i in 1:365])
-    @test sfp[TS.OperationalPeriod(122, TS.SimplePeriod(1, 1))] == 1.22
-    @test sfp[TS.StrategicPeriod{TwoLevel}(122, 1, SimpleTimes(24, 1))] == 1.22
-    @test sfp[TS.SimplePeriod(10, 1)] == 0.01
+    op = OperationalProfile([2, 2, 2, 2, 1])
+    @test sum(op[t] for t in day) == 4 * 2 + 20 * 1
+    @test op[TS.SimplePeriod(7, 1)] == 1
 
-    dp = DynamicProfile([
-        OperationalProfile([i / 100 + j for j in 1:24]) for i in 1:365
-    ])
-    @test dp[TS.OperationalPeriod(365, TS.SimplePeriod(24, 1))] == 27.65
+    ts = TwoLevel(5, 168, SimpleTimes(7, 24))
+    @test sum(fp[t] for t in ts) == 12.0 * length(ts)
+    sp1 = StrategicProfile([fp])
+    @test sum(sp1[t] for t in ts) == 12.0 * length(ts)
+    sp2 = StrategicProfile([op, op, fp])
+    @test sum(sp2[t] for t in ts) == 2 * 11 + 3 * 84
 
-    scp = ScenarioProfile([
-        OperationalProfile([i / 100 + j for j in 1:24]) for i in 1:5
-    ])
-    @test scp[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(12, 1))] == 12.01
+    ts = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
+    @test sum(fp[t] for t in ts) == 12.0 * length(ts)
+    scp = ScenarioProfile([op, 2 * op, 3 * op])
+    @test sum(scp[t] for t in ts) == 3 * (11 + 2 * 11 + 3 * 11)
 
-    scp2 = ScenarioProfile([[i / 100 + j for j in 1:24] for i in 1:5])
-    @test scp2[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(20, 1))] ==
-          scp[TS.ScenarioPeriod(1, 1.0, TS.SimplePeriod(20, 1))]
-
-    dps = DynamicProfile([
-        ScenarioProfile([
-            OperationalProfile([(i + j / 10 + k / 100) for i in 1:24]) for
-            j in 1:10
-        ]) for k in 1:5
-    ])
-    ts = TwoLevel(5, 24, OperationalScenarios(10, SimpleTimes(24, 1)))
-    @test sum(dps[t] for t in ts) ≈ 15696.0
-    @test dps[TS.OperationalPeriod(
-        2,
-        TS.ScenarioPeriod(2, 1.0, TS.SimplePeriod(2, 1)),
-    )] == 2.22
     return
 end
 
