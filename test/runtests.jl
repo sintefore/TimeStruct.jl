@@ -105,8 +105,30 @@ function test_two_level()
 
     ops1 = collect(uniform_year)
     ops2 = [t for n in strat_periods(uniform_year) for t in n]
-
     @test ops1 == ops2
+
+    ts = TwoLevel(3, 24, [day, day, day])
+    @test duration(first(ts)) == 1
+    @test repr(first(ts)) == "sp1-t1"
+    pers = collect(ts)
+    @test pers[1] < pers[2]
+    @test pers[24] < pers[25]
+
+    dayunit = SimpleTimes(24, 1u"hr")
+    tsunit = TwoLevel([31, 28, 31, 30], u"d", dayunit)
+    @test multiple(first(tsunit), tsunit) == 31
+    @test duration(first(tsunit)) == 1u"hr"
+
+    sps = strat_periods(tsunit)
+    @test length(sps) == 4
+    sp = first(sps)
+    @test duration(sp) == 31u"d"
+    @test length(sp) == 24
+    @test eltype(sp) <: TS.OperationalPeriod
+    @test isfirst(sp)
+    @test repr(sp) == "sp1"
+    @test TS._strat_per(sp) == 1
+
     return
 end
 
@@ -140,6 +162,12 @@ function test_two_level_scenarios()
     end
     @test length(pers) == length(seasonal_year)
     @test first(pers) == first(seasonal_year)
+    scen =
+        first(opscenarios(first(strat_periods(seasonal_year)), seasonal_year))
+    @test repr(scen) == "sp1-sc1"
+    @test probability(scen) == 0.1
+    @test TS._strat_per(scen) == 1
+    @test TS._opscen(scen) == 1
 
     return
 end
@@ -150,6 +178,8 @@ function test_simple_two_level()
     @test length(strat_periods(simple)) == 1
     ops2 = [t for n in strat_periods(simple) for t in n]
     @test ops1 == ops2
+    per = ops2[1]
+    @test typeof(per) <: TS.SimplePeriod
 end
 
 function test_profiles()

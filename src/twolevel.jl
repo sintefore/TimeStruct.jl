@@ -20,6 +20,7 @@ end
 function TwoLevel(len::Integer, duration::S, oper::TimeStructure{T}) where {S,T}
     return TwoLevel{S,T}(len, fill(duration, len), fill(oper, len))
 end
+
 function TwoLevel(
     len::Integer,
     duration::S,
@@ -27,6 +28,7 @@ function TwoLevel(
 ) where {S,T}
     return TwoLevel{S,T}(len, fill(duration, len), oper)
 end
+
 function TwoLevel(duration::Vector{S}, oper::TimeStructure{T}) where {S,T}
     return TwoLevel{S,T}(
         length(duration),
@@ -34,11 +36,12 @@ function TwoLevel(duration::Vector{S}, oper::TimeStructure{T}) where {S,T}
         fill(oper, length(duration)),
     )
 end
+
 function TwoLevel(
     duration::Vector{<:Number},
     u::Unitful.Units,
-    oper::TimeStructure{T},
-) where {T}
+    oper::TimeStructure{<:Unitful.Quantity{V,Unitful.𝐓}},
+) where {V}
     return TwoLevel(Unitful.Quantity.(duration, u), oper)
 end
 
@@ -67,6 +70,7 @@ end
 function Base.length(itr::TwoLevel)
     return sum(length(itr.operational[sp]) for sp in 1:itr.len)
 end
+
 Base.eltype(::Type{TwoLevel{S,T}}) where {S,T} = OperationalPeriod
 
 """
@@ -193,9 +197,11 @@ struct StratOperationalScenario{T}
     operational::TimeStructure{T}
 end
 function Base.show(io::IO, os::StratOperationalScenario)
-    return print(io, "sp-$(os.sp)-sc-$(os.scen)")
+    return print(io, "sp$(os.sp)-sc$(os.scen)")
 end
 probability(os::StratOperationalScenario) = os.probability
+_strat_per(os::StratOperationalScenario) = os.sp
+_opscen(os::StratOperationalScenario) = os.scen
 
 # Iterate the time periods of an stratoperational scenario
 function Base.iterate(os::StratOperationalScenario)
