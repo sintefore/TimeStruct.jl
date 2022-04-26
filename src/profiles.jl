@@ -44,6 +44,10 @@ function Base.getindex(sp::StrategicProfile, i::TimePeriod)
     return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
 end
 
+function StrategicProfile(vals::Vector{T}) where {T<:Number}
+    return StrategicProfile{T}([FixedProfile{T}(v) for v in vals])
+end
+
 """ 
     ScenarioProfile
 Time profile with a separate time profile for each scenario

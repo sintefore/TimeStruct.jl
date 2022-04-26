@@ -1,6 +1,7 @@
 module RunTests
 
 using Test
+using DataFrames
 using TimeStruct
 using Unitful
 const TS = TimeStruct
@@ -214,6 +215,7 @@ function test_profiles()
     @test opdiv[first(day)] == 0.5
 
     ts = TwoLevel(5, 168, SimpleTimes(7, 24))
+    p1 = first(ts)
     @test sum(fp[t] for t in ts) == 12.0 * length(ts)
 
     sp1 = StrategicProfile([fp])
@@ -221,13 +223,15 @@ function test_profiles()
     sp2 = StrategicProfile([op, op, fp])
     @test sum(sp2[t] for t in ts) == 2 * 11 + 3 * 84
     spadd = 1 + sp2
-    @test spadd[first(ts)] == 3
+    @test spadd[p1] == 3
     spmin = sp2 - 3
-    @test spmin[first(ts)] == -1
+    @test spmin[p1] == -1
     spmul = sp2 * 2
-    @test spmul[first(ts)] == 4
+    @test spmul[p1] == 4
     spdiv = sp2 / 2
-    @test spdiv[first(ts)] == 1
+    @test spdiv[p1] == 1
+    sp3 = StrategicProfile([1u"kg", 3u"kg", 5u"kg"])
+    @test sp3[p1] == 1u"kg"
 
     tsc = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
     @test sum(fp[t] for t in tsc) == 12.0 * length(tsc)
@@ -310,6 +314,47 @@ function test_discount()
     for (i, t) in enumerate(uniform_years)
         @test discount(disc, t) == δ^(i - 1)
     end
+    return
+end
+
+function test_dataframe()
+    ts = SimpleTimes(24, 1)
+    df1 = DataFrame(period = [t for t in ts], value = rand(24))
+    TS.expand_dataframe!(df1)
+    @test df1[!, :oper_period] == [i for i in 1:24]
+    @test hasproperty(df1, :duration)
+    @test hasproperty(df1, :start_time)
+
+    twolevel = TwoLevel(5, 24, OperationalScenarios(3, SimpleTimes(6, 4)))
+    df2 = DataFrame(
+        period = [t for t in twolevel],
+        value = rand(length(twolevel)),
+    )
+    TS.expand_dataframe!(df2)
+    @test hasproperty(df2, :strategic_period)
+    @test hasproperty(df2, :op_scenario)
+    @test hasproperty(df2, :oper_period)
+    @test hasproperty(df2, :duration)
+    @test hasproperty(df2, :start_time)
+
+    scen = OperationalScenarios(
+        5,
+        SimpleTimes(4, [2.0u"hr", 3.5u"hr", 10u"hr", 20u"hr"]),
+    )
+    df3 = DataFrame(per = [t for t in scen], value = rand(length(scen)))
+    TS.expand_dataframe!(df3)
+    @test hasproperty(df3, :op_scenario)
+    @test hasproperty(df3, :oper_period)
+    @test hasproperty(df3, :duration)
+    @test hasproperty(df3, :start_time)
+
+    sps = strat_periods(twolevel)
+    df4 = DataFrame(strat = [sp for sp in sps], val = rand(length(sps)))
+    TS.expand_dataframe!(df4)
+    @test hasproperty(df4, :strategic_period)
+    @test hasproperty(df4, :duration)
+    @test hasproperty(df4, :start_time)
+
     return
 end
 
