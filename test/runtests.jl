@@ -169,7 +169,41 @@ function test_two_level_scenarios()
     @test probability(scen) == 0.1
     @test TS._strat_per(scen) == 1
     @test TS._opscen(scen) == 1
+    per = first(scen)
+    @test repr(per) == "sp1-sc1-t1"
+    @test typeof(per) <:
+          TS.OperationalPeriod{TS.ScenarioPeriod{TS.SimplePeriod{Int}}}
 
+    # Test that operational scenarios runs without scenarios
+    ts = TwoLevel(3, 10, SimpleTimes(10, 1))
+    sp = first(strat_periods(ts))
+    scen = first(opscenarios(sp, ts))
+    @test length(scen) == 10
+    @test eltype(typeof(scen)) == TS.OperationalPeriod
+    @test repr(scen) == "sp1-sc1"
+    @test repr(scen) == "sp1-sc1"
+    @test probability(scen) == 1.0
+    @test TS._strat_per(scen) == 1
+    @test TS._opscen(scen) == 1
+    per = first(scen)
+    @test repr(per) == "sp1-t1"
+    @test typeof(per) <: TS.OperationalPeriod{TS.SimplePeriod{Int}}
+
+    simple = SimpleTimes(10, 2.0)
+    sp = first(strat_periods(simple))
+    scen = first(opscenarios(sp, simple))
+    per = first(scen)
+    @test typeof(per) <: TS.SimplePeriod{Float64}
+
+    ts = OperationalScenarios(
+        [SimpleTimes(5, 1.5), SimpleTimes(10, 1.0)],
+        [0.9, 0.1],
+    )
+    pers = [
+        t for sp in strat_periods(ts) for sc in opscenarios(sp, ts) for t in sc
+    ]
+    pers_ts = [t for t in ts]
+    @test pers == pers_ts
     return
 end
 

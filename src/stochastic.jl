@@ -72,7 +72,7 @@ _opscen(t::ScenarioPeriod) = t.sc
 A structure representing a single operational scenario supporting
 iteration over its time periods.
 """
-struct OperationalScenario{T}
+struct OperationalScenario{T} <: TimeStructure{T}
     scen::Int
     probability::Float64
     operational::TimeStructure{T}
@@ -84,7 +84,7 @@ probability(os::OperationalScenario) = os.probability
 function Base.iterate(os::OperationalScenario)
     next = iterate(os.operational)
     next === nothing && return nothing
-    return ScenarioPeriod(1, os.probability, next[1]), (1, next[2])
+    return ScenarioPeriod(os.scen, os.probability, next[1]), (1, next[2])
 end
 
 function Base.iterate(os::OperationalScenario, state)
@@ -99,9 +99,10 @@ Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 struct OpScens{T}
     ts::OperationalScenarios{T}
 end
+
 """
     opscenarios(ts)
-Iterator that iterates over operational scnenarios in an `OperationalScenarios` time structure.
+Iterator that iterates over operational scenarios in an `OperationalScenarios` time structure.
 """
 opscenarios(ts) = OpScens(ts)
 
@@ -120,3 +121,6 @@ function Base.iterate(ops::OpScens, state)
     ),
     state + 1
 end
+
+# Allow SimpleTimes to behave as one operational scenario
+opscenarios(ts::SimpleTimes) = [ts]

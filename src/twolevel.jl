@@ -190,7 +190,7 @@ end
 A structure representing a single operational scenario for a strategic period supporting
 iteration over its time periods.
 """
-struct StratOperationalScenario{T}
+struct StratOperationalScenario{T} <: TimeStructure{T}
     sp::Int
     scen::Int
     probability::Float64
@@ -207,30 +207,23 @@ _opscen(os::StratOperationalScenario) = os.scen
 function Base.iterate(os::StratOperationalScenario)
     next = iterate(os.operational)
     next === nothing && return nothing
-    return OperationalPeriod(
-        os.sp,
-        ScenarioPeriod(os.scen, os.probability, next[1]),
-    ),
-    (1, next[2])
+    return OperationalPeriod(os.sp, next[1]), (1, next[2])
 end
 
 function Base.iterate(os::StratOperationalScenario, state)
     next = iterate(os.operational, state[2])
     next === nothing && return nothing
-    return OperationalPeriod(
-        os.sp,
-        ScenarioPeriod(os.scen, os.probability, next[1]),
-    ),
-    (1, next[2])
+    return OperationalPeriod(os.sp, next[1]), (1, next[2])
 end
 Base.length(os::StratOperationalScenario) = length(os.operational)
-Base.eltype(::Type{StratOperationalScenario}) = OperationalPeriod
+Base.eltype(::Type{StratOperationalScenario{T}}) where {T} = OperationalPeriod
 
 # Iteration through scenarios 
 struct StratOpScens{T}
     sper::StrategicPeriod
-    ts::OperationalScenarios{T}
+    ts::T
 end
+
 """
     opscenarios(sp,ts)
 Iterator that iterates over operational scenarios for a specific strategic period.
@@ -239,25 +232,48 @@ function opscenarios(sper::StrategicPeriod, ts::TwoLevel)
     return StratOpScens(sper, ts.operational[sper.sp])
 end
 
+function opscenarios(
+    _::StrategicPeriod,
+    ts::Union{SimpleTimes,OperationalScenarios},
+)
+    return opscenarios(ts)
+end
+
 Base.length(ops::StratOpScens) = ops.ts.len
 
-function Base.iterate(ops::StratOpScens)
+function Base.iterate(ops::StratOpScens{OperationalScenarios{T}}) where {T}
     return StratOperationalScenario(
         ops.sper.sp,
         1,
         ops.ts.probability[1],
-        ops.ts.scenarios[1],
+        OperationalScenario(1, ops.ts.probability[1], ops.ts.scenarios[1]),
     ),
     1
 end
 
-function Base.iterate(ops::StratOpScens, state)
+function Base.iterate(
+    ops::StratOpScens{OperationalScenarios{T}},
+    state,
+) where {T}
     state == ops.ts.len && return nothing
     return StratOperationalScenario(
         ops.sper.sp,
         state + 1,
         ops.ts.probability[state+1],
-        ops.ts.scenarios[state+1],
+        OperationalScenario(
+            state + 1,
+            ops.ts.probability[state+1],
+            ops.ts.scenarios[state+1],
+        ),
     ),
     state + 1
+end
+
+# Support for one scenario as a SimpleTimes
+function Base.iterate(
+    ops::StratOpScens{SimpleTimes{T}},
+    state = nothing,
+) where {T}
+    !isnothing(state) && return nothing
+    return StratOperationalScenario(ops.sper.sp, 1, 1.0, ops.ts), 1
 end
