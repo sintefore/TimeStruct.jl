@@ -17,6 +17,13 @@ function OperationalScenarios(
 ) where {T}
     return OperationalScenarios{T}(length(oper), oper, prob)
 end
+function OperationalScenarios(oper::Vector{<:TimeStructure{T}}) where {T}
+    return OperationalScenarios{T}(
+        length(oper),
+        oper,
+        fill(1.0 / length(oper), length(oper)),
+    )
+end
 
 function duration(os::OperationalScenarios)
     return maximum(duration(sc) for sc in os.scenarios)

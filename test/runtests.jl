@@ -69,15 +69,13 @@ function test_stochastic()
     @test length(t_coll) == 10
 
     # 3 operational scenarios, two single day and one for a week with hourly resolution
+    @test sum(probability(s) for s in opscenarios(ts)) == 1.0
     day = SimpleTimes(24, 1)
     week = SimpleTimes(168, 1)
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
     @test first(ts) == TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1))
     @test length(ts) == 216
-
-    @test sum(probability(s) for s in opscenarios(ts)) == 1.0
-
     pers = []
     for sc in opscenarios(ts)
         for t in sc
@@ -86,6 +84,24 @@ function test_stochastic()
     end
     @test length(pers) == length(ts)
     @test first(pers) == first(ts)
+
+    # Two operational scenarios, one for a day and one for a week with hourly resolution and the same probability of occuring
+    ts = OperationalScenarios([day, week])
+
+    @test first(ts) == TS.ScenarioPeriod(1, 0.5, TS.SimplePeriod(1, 1))
+    @test length(ts) == 192
+
+    scens = opscenarios(ts)
+    @test length(scens) == 2
+
+    scen_coll = collect(scens)
+    @test length(scen_coll) == 2
+
+    @test typeof(scen_coll[2]) == TS.OperationalScenario{Int}
+    @test probability(scen_coll[2]) == 0.5
+
+    @test length(scen_coll[1]) == 24
+
     return
 end
 
