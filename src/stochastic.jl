@@ -88,17 +88,14 @@ Base.show(io::IO, os::OperationalScenario) = print(io, "sc-$(os.scen)")
 probability(os::OperationalScenario) = os.probability
 
 # Iterate the time periods of an operational scenario
-function Base.iterate(os::OperationalScenario)
-    next = iterate(os.operational)
+function Base.iterate(os::OperationalScenario, state = nothing)
+    next =
+        isnothing(state) ? iterate(os.operational) :
+        iterate(os.operational, state)
     next === nothing && return nothing
-    return ScenarioPeriod(os.scen, os.probability, next[1]), (1, next[2])
+    return ScenarioPeriod(os.scen, os.probability, next[1]), next[2]
 end
 
-function Base.iterate(os::OperationalScenario, state)
-    next = iterate(os.operational, state[2])
-    next === nothing && return nothing
-    return ScenarioPeriod(os.scen, os.probability, next[1]), (1, next[2])
-end
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 
