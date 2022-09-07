@@ -113,7 +113,6 @@ function multiple(op::OperationalPeriod, ts::TwoLevel)
     return stripunit(mult)
 end
 
-
 """
     struct StrategicPeriod <: TimePeriod{TwoLevel} 
 Time period for iteration of strategic periods.
@@ -133,10 +132,9 @@ duration(sp::StrategicPeriod) = sp.duration
 _strat_per(sp::StrategicPeriod) = sp.sp
 
 function multiple(op::OperationalPeriod, sp::StrategicPeriod)
-    mult = duration(sp) / _total_duration(op, sp.operational)  
-    return stripunit(mult) 
+    mult = duration(sp) / _total_duration(op, sp.operational)
+    return stripunit(mult)
 end
-
 
 struct StratPeriods
     ts::TwoLevel
