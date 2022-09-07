@@ -185,6 +185,9 @@ function Base.iterate(itr::StrategicPeriod{SimpleTimes}, state = nothing)
     return per, next[2]
 end
 
+# Allow both strategic_periods and strat_periods 
+strategic_periods(ts) = strat_periods(ts)
+
 """
     struct StratOperationalScenario 
 A structure representing a single operational scenario for a strategic period supporting

@@ -34,7 +34,7 @@ export StrategicStochasticProfile
 export DynamicStochasticProfile
 
 export opscenarios
-export strat_periods
+export strat_periods, strategic_periods
 export regular_tree, strat_nodes, scenarios
 export withprev
 export isfirst, duration, multiple, probability
