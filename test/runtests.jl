@@ -141,6 +141,7 @@ function test_two_level()
     sp = first(sps)
     @test duration(sp) == 31u"d"
     @test length(sp) == 24
+    @test multiple(first(sp), sp) == 31
     @test eltype(sp) <: TS.OperationalPeriod
     @test isfirst(sp)
     @test repr(sp) == "sp1"

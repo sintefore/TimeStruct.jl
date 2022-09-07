@@ -100,14 +100,19 @@ end
 stripunit(val) = val
 stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
 
-function multiple(op::OperationalPeriod, ts::TwoLevel)
-    if isa(ts.operational[op.sp], OperationalScenarios)
-        dur = duration(ts.operational[op.sp].scenarios[_opscen(op)])
-    else
-        dur = duration(ts.operational[op.sp])
-    end
-    return stripunit(ts.duration[op.sp] / dur)
+function _total_duration(op, ts::SimpleTimes)
+    return sum(duration(t) for t in ts)
 end
+
+function _total_duration(op, ts::OperationalScenarios)
+    return sum(duration(t) for t in ts.scenarios[_opscen(op)])
+end
+
+function multiple(op::OperationalPeriod, ts::TwoLevel)
+    mult = ts.duration[op.sp] / _total_duration(op, ts.operational[op.sp])
+    return stripunit(mult)
+end
+
 
 """
     struct StrategicPeriod <: TimePeriod{TwoLevel} 
@@ -126,6 +131,12 @@ Base.isless(sp1::StrategicPeriod, sp2::StrategicPeriod) = sp1.sp < sp2.sp
 duration(sp::StrategicPeriod) = sp.duration
 
 _strat_per(sp::StrategicPeriod) = sp.sp
+
+function multiple(op::OperationalPeriod, sp::StrategicPeriod)
+    mult = duration(sp) / _total_duration(op, sp.operational)  
+    return stripunit(mult) 
+end
+
 
 struct StratPeriods
     ts::TwoLevel
