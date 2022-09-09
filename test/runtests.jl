@@ -1,56 +1,38 @@
-module RunTests
+using TestItemRunner
 
-using Test
-using DataFrames
-using TimeStruct
-using Unitful
-const TS = TimeStruct
+@testitem "General TimePeriod" begin
+    struct _DummyStruct <: TimeStructure{Int} end
+    struct _DummyPeriod <: TimeStruct.TimePeriod{_DummyStruct} end
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
-struct _DummyStruct <: TimeStructure{Int} end
-struct _DummyPeriod <: TS.TimePeriod{_DummyStruct} end
-
-function test_timeperiod()
     dummy = _DummyPeriod()
 
-    @test TS._opscen(dummy) == 1
-    @test TS._strat_per(dummy) == 1
-    @test TS._branch(dummy) == 1
-    @test_throws ErrorException TS._oper(dummy)
+    @test TimeStruct._opscen(dummy) == 1
+    @test TimeStruct._strat_per(dummy) == 1
+    @test TimeStruct._branch(dummy) == 1
+    @test_throws ErrorException TimeStruct._oper(dummy)
     @test_throws ErrorException duration(dummy)
     @test probability(dummy) == 1
     @test_throws ErrorException isfirst(dummy)
 end
 
-function test_simple_times()
+@testitem "SimpleTimes" begin
     day = SimpleTimes(24, 1)
-    @test first(day) == TS.SimplePeriod(1, 1)
+    @test first(day) == TimeStruct.SimplePeriod(1, 1)
     @test length(day) == 24
-    @test isfirst(TS.SimplePeriod(1, 1))
-    @test first(day) < TS.SimplePeriod(3, 1)
+    @test isfirst(TimeStruct.SimplePeriod(1, 1))
+    @test first(day) < TimeStruct.SimplePeriod(3, 1)
 
     tops = collect(t for t in day)
-    @test tops[2] == TS.SimplePeriod(2, 1)
+    @test tops[2] == TimeStruct.SimplePeriod(2, 1)
 
     ts = SimpleTimes([4, 4, 4, 6, 3, 3])
     @test length(ts) == 6
-    @test first(ts) == TS.SimplePeriod(1, 4)
+    @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test duration(ts) == 24
-    return
 end
 
-function test_stochastic()
+@testitem "OperationalScenarios" begin
     # 5 scenarios with 10 periods
     ts = OperationalScenarios(5, SimpleTimes(10, 1))
     @test length(ts) == length(collect(ts))
@@ -61,7 +43,7 @@ function test_stochastic()
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == TS.OperationalScenario{Int}
+    @test typeof(scen_coll[3]) == TimeStruct.OperationalScenario{Int}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -74,7 +56,8 @@ function test_stochastic()
     week = SimpleTimes(168, 1)
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
-    @test first(ts) == TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1))
+    @test first(ts) ==
+          TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1))
     @test length(ts) == 216
     pers = []
     for sc in opscenarios(ts)
@@ -88,7 +71,8 @@ function test_stochastic()
     # Two operational scenarios, one for a day and one for a week with hourly resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
-    @test first(ts) == TS.ScenarioPeriod(1, 0.5, TS.SimplePeriod(1, 1))
+    @test first(ts) ==
+          TimeStruct.ScenarioPeriod(1, 0.5, TimeStruct.SimplePeriod(1, 1))
     @test length(ts) == 192
 
     scens = opscenarios(ts)
@@ -97,15 +81,13 @@ function test_stochastic()
     scen_coll = collect(scens)
     @test length(scen_coll) == 2
 
-    @test typeof(scen_coll[2]) == TS.OperationalScenario{Int}
+    @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int}
     @test probability(scen_coll[2]) == 0.5
 
     @test length(scen_coll[1]) == 24
-
-    return
 end
 
-function test_two_level()
+@testitem "TwoLevel" begin
     day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
 
@@ -130,6 +112,10 @@ function test_two_level()
     pers = collect(ts)
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
+end
+
+@testitem "TwoLevel with units" begin
+    using Unitful
 
     dayunit = SimpleTimes(24, 1u"hr")
     tsunit = TwoLevel([31, 28, 31, 30], u"d", dayunit)
@@ -142,15 +128,13 @@ function test_two_level()
     @test duration(sp) == 31u"d"
     @test length(sp) == 24
     @test multiple(first(sp), sp) == 31
-    @test eltype(sp) <: TS.OperationalPeriod
+    @test eltype(sp) <: TimeStruct.OperationalPeriod
     @test isfirst(sp)
     @test repr(sp) == "sp1"
-    @test TS._strat_per(sp) == 1
-
-    return
+    @test TimeStruct._strat_per(sp) == 1
 end
 
-function test_two_level_scenarios()
+@testitem "TwoLevel with op scenarios" begin
     day = SimpleTimes(24, 1)
     week = SimpleTimes(168, 1)
     # One year with a strategic period per quarter and 3 operational scenarios
@@ -159,9 +143,9 @@ function test_two_level_scenarios()
     @test length(seasonal_year) == 864
 
     ops = collect(seasonal_year)
-    @test ops[1] == TS.OperationalPeriod(
+    @test ops[1] == TimeStruct.OperationalPeriod(
         1,
-        TS.ScenarioPeriod(1, 0.1, TS.SimplePeriod(1, 1)),
+        TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1)),
     )
 
     @test probability(ops[34]) == 0.2
@@ -184,33 +168,35 @@ function test_two_level_scenarios()
         first(opscenarios(first(strat_periods(seasonal_year)), seasonal_year))
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 0.1
-    @test TS._strat_per(scen) == 1
-    @test TS._opscen(scen) == 1
+    @test TimeStruct._strat_per(scen) == 1
+    @test TimeStruct._opscen(scen) == 1
     per = first(scen)
     @test repr(per) == "sp1-sc1-t1"
-    @test typeof(per) <:
-          TS.OperationalPeriod{TS.ScenarioPeriod{TS.SimplePeriod{Int}}}
+    @test typeof(per) <: TimeStruct.OperationalPeriod{
+        TimeStruct.ScenarioPeriod{TimeStruct.SimplePeriod{Int}},
+    }
 
     # Test that operational scenarios runs without scenarios
     ts = TwoLevel(3, 10, SimpleTimes(10, 1))
     sp = first(strat_periods(ts))
     scen = first(opscenarios(sp, ts))
     @test length(scen) == 10
-    @test eltype(typeof(scen)) == TS.OperationalPeriod
+    @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod
     @test repr(scen) == "sp1-sc1"
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 1.0
-    @test TS._strat_per(scen) == 1
-    @test TS._opscen(scen) == 1
+    @test TimeStruct._strat_per(scen) == 1
+    @test TimeStruct._opscen(scen) == 1
     per = first(scen)
     @test repr(per) == "sp1-t1"
-    @test typeof(per) <: TS.OperationalPeriod{TS.SimplePeriod{Int}}
+    @test typeof(per) <:
+          TimeStruct.OperationalPeriod{TimeStruct.SimplePeriod{Int}}
 
     simple = SimpleTimes(10, 2.0)
     sp = first(strat_periods(simple))
     scen = first(opscenarios(sp, simple))
     per = first(scen)
-    @test typeof(per) <: TS.SimplePeriod{Float64}
+    @test typeof(per) <: TimeStruct.SimplePeriod{Float64}
 
     ts = OperationalScenarios(
         [SimpleTimes(5, 1.5), SimpleTimes(10, 1.0)],
@@ -221,20 +207,20 @@ function test_two_level_scenarios()
     ]
     pers_ts = [t for t in ts]
     @test pers == pers_ts
-    return
 end
 
-function test_simple_two_level()
+@testitem "SimpleTimes as TwoLevel" begin
     simple = SimpleTimes(10, 1)
     ops1 = collect(simple)
     @test length(strat_periods(simple)) == 1
     ops2 = [t for n in strat_periods(simple) for t in n]
     @test ops1 == ops2
     per = ops2[1]
-    @test typeof(per) <: TS.SimplePeriod
+    @test typeof(per) <: TimeStruct.SimplePeriod
 end
 
-function test_profiles()
+@testitem "Profiles" begin
+    using Unitful
     day = SimpleTimes(24, 1)
 
     fp = FixedProfile(12)
@@ -253,9 +239,9 @@ function test_profiles()
 
     op = OperationalProfile([2, 2, 2, 2, 1])
     @test sum(op[t] for t in day) == 4 * 2 + 20 * 1
-    @test op[TS.SimplePeriod(7, 1)] == 1
+    @test op[TimeStruct.SimplePeriod(7, 1)] == 1
     opunit = OperationalProfile([2, 3, 4], u"m/s")
-    @test opunit[TS.SimplePeriod(6, 1)] == 4u"m/s"
+    @test opunit[TimeStruct.SimplePeriod(6, 1)] == 4u"m/s"
     opadd = op + 1
     @test sum(opadd[t] for t in day) == sum(op[t] for t in day) + 24
     opmin = op - 1
@@ -303,30 +289,28 @@ function test_profiles()
     @test sum(sspmul[t] for t in tsc) == 200 * 2.5
     sspdiv = ssp / 0.5
     @test sum(sspdiv[t] for t in tsc) == 200 / 0.5
-
-    return
 end
 
-function test_twolevel_tree()
-    regtree = TS.regular_tree(5, [3, 2], SimpleTimes(5, 1))
-    ops = [t for n in TS.strat_nodes(regtree) for t in n]
+@testitem "TwoLevelTree" begin
+    regtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    ops = [t for n in TimeStruct.strat_nodes(regtree) for t in n]
     @test length(ops) == 5 * 10
     ops2 = collect(regtree)
     @test ops == ops2
 
-    nodes = TS.strat_nodes(regtree)
+    nodes = TimeStruct.strat_nodes(regtree)
     for sp in 1:3
-        @test sum(TS.probability(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(TimeStruct.probability(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
 
-    leaves = TS.leaves(regtree)
-    @test length(leaves) == TS.nleaves(regtree)
+    leaves = TimeStruct.leaves(regtree)
+    @test length(leaves) == TimeStruct.nleaves(regtree)
 
-    scens = collect(TS.scenarios(regtree))
+    scens = collect(TimeStruct.scenarios(regtree))
     @test length(scens[2].nodes) == regtree.len
     @test scens[3].nodes[1] == regtree.nodes[1]
 
-    ssp = TS.StrategicStochasticProfile([
+    ssp = TimeStruct.StrategicStochasticProfile([
         [10],
         [11, 12, 13],
         [20, 21, 22, 23, 30, 40],
@@ -338,26 +322,26 @@ function test_twolevel_tree()
     price1 = OperationalProfile([1, 2, 2, 5, 6])
     price2 = FixedProfile(4)
 
-    dsp = TS.DynamicStochasticProfile([
+    dsp = TimeStruct.DynamicStochasticProfile([
         [price1],
         [price1, price2, price2],
         [price1, price2, price2, price1, price2, price2],
     ])
     @test dsp[ops[4]] == 5
-    return
 end
 
-function test_iter_utils()
+@testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
 
     @test first(withprev(uniform_day))[1] === nothing
-    @test collect(withprev(uniform_week))[25] ==
-          (nothing, TS.OperationalPeriod(2, TS.SimplePeriod(1, 1)))
-    return
+    @test collect(withprev(uniform_week))[25] == (
+        nothing,
+        TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1)),
+    )
 end
 
-function test_discount()
+@testitem "Discounting" begin
     uniform_years = SimpleTimes(10, 1)  # 10 years with duration of 1 year
     disc = Discounter(0.04, 1, uniform_years)
 
@@ -368,10 +352,12 @@ function test_discount()
     return
 end
 
-function test_dataframe()
+@testitem "Dataframes" begin
+    using DataFrames
+    using Unitful
     ts = SimpleTimes(24, 1)
     df1 = DataFrame(period = [t for t in ts], value = rand(24))
-    TS.expand_dataframe!(df1)
+    TimeStruct.expand_dataframe!(df1)
     @test df1[!, :oper_period] == [i for i in 1:24]
     @test hasproperty(df1, :duration)
     @test hasproperty(df1, :start_time)
@@ -381,7 +367,7 @@ function test_dataframe()
         period = [t for t in twolevel],
         value = rand(length(twolevel)),
     )
-    TS.expand_dataframe!(df2)
+    TimeStruct.expand_dataframe!(df2)
     @test hasproperty(df2, :strategic_period)
     @test hasproperty(df2, :op_scenario)
     @test hasproperty(df2, :oper_period)
@@ -393,7 +379,7 @@ function test_dataframe()
         SimpleTimes(4, [2.0u"hr", 3.5u"hr", 10u"hr", 20u"hr"]),
     )
     df3 = DataFrame(per = [t for t in scen], value = rand(length(scen)))
-    TS.expand_dataframe!(df3)
+    TimeStruct.expand_dataframe!(df3)
     @test hasproperty(df3, :op_scenario)
     @test hasproperty(df3, :oper_period)
     @test hasproperty(df3, :duration)
@@ -401,14 +387,10 @@ function test_dataframe()
 
     sps = strat_periods(twolevel)
     df4 = DataFrame(strat = [sp for sp in sps], val = rand(length(sps)))
-    TS.expand_dataframe!(df4)
+    TimeStruct.expand_dataframe!(df4)
     @test hasproperty(df4, :strategic_period)
     @test hasproperty(df4, :duration)
     @test hasproperty(df4, :start_time)
-
-    return
 end
 
-end
-
-RunTests.runtests()
+@run_package_tests
