@@ -26,10 +26,10 @@ Base.length(st::SimpleTimes) = st.len
 duration(st::SimpleTimes) = sum(st.duration)
 
 """ 
-    struct SimplePeriod <: TimePeriod{SimpleTimes} 
+    struct SimplePeriod <: TimePeriod
 A single time period returned when iterating through a SimpleTimes structure
 """
-struct SimplePeriod{T<:Number} <: TimePeriod{SimpleTimes}
+struct SimplePeriod{T<:Number} <: TimePeriod
     op::Int
     duration::T
 end

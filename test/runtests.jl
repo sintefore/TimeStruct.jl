@@ -2,7 +2,7 @@ using TestItemRunner
 
 @testitem "General TimePeriod" begin
     struct _DummyStruct <: TimeStructure{Int} end
-    struct _DummyPeriod <: TimeStruct.TimePeriod{_DummyStruct} end
+    struct _DummyPeriod <: TimeStruct.TimePeriod end
 
     dummy = _DummyPeriod()
 
@@ -32,10 +32,19 @@ end
     @test duration(ts) == 24
 end
 
+@testitem "SimpleTimes with units" begin
+    using Unitful
+
+    periods = SimpleTimes([24, 24, 48, 96], u"hr")
+    @test duration(first(periods)) == 24u"hr"
+    @test duration(periods) == 192u"hr"
+end
+
 @testitem "OperationalScenarios" begin
     # 5 scenarios with 10 periods
     ts = OperationalScenarios(5, SimpleTimes(10, 1))
     @test length(ts) == length(collect(ts))
+    @test duration(ts) == 10
 
     # Iterating through operational scenarios
     scens = opscenarios(ts)
@@ -67,8 +76,11 @@ end
     end
     @test length(pers) == length(ts)
     @test first(pers) == first(ts)
+    @test pers[1] < pers[2]
+    @test isfirst(pers[25])
 
-    # Two operational scenarios, one for a day and one for a week with hourly resolution and the same probability of occuring
+    # Two operational scenarios, one for a day and one for a week with hourly 
+    # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
     @test first(ts) ==
@@ -83,8 +95,19 @@ end
 
     @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int}
     @test probability(scen_coll[2]) == 0.5
+    @test repr(scen_coll[1]) == "sc-1"
 
     @test length(scen_coll[1]) == 24
+
+    # SimpleTimes as a single operational scenario
+    ts = SimpleTimes(10, 1)
+    pers = []
+    for sc in opscenarios(ts)
+        for t in sc
+            push!(pers, t)
+        end
+    end
+    @test length(pers) == length(ts)
 end
 
 @testitem "TwoLevel" begin
@@ -99,11 +122,16 @@ end
     uniform_year = TwoLevel(monthly_hours, day)
 
     @test length(uniform_year) == 12 * 24
-    @test sum(sp.duration for sp in strat_periods(uniform_year)) == 8760
-    @test multiple(first(uniform_year), uniform_year) == 31
+    @test sum(duration(sp) for sp in strat_periods(uniform_year)) == 8760
+    @test multiple(first(uniform_year)) == 31
 
     ops1 = collect(uniform_year)
     ops2 = [t for n in strat_periods(uniform_year) for t in n]
+    @test length(ops1) == length(ops2)
+    @test first(ops1) == first(ops2)
+    for (i, op) in enumerate(ops1)
+        @test op == ops2[i]
+    end
     @test ops1 == ops2
 
     ts = TwoLevel(3, 24, [day, day, day])
@@ -119,7 +147,7 @@ end
 
     dayunit = SimpleTimes(24, 1u"hr")
     tsunit = TwoLevel([31, 28, 31, 30], u"d", dayunit)
-    @test multiple(first(tsunit), tsunit) == 31
+    @test multiple(first(tsunit)) == 31
     @test duration(first(tsunit)) == 1u"hr"
 
     sps = strat_periods(tsunit)
@@ -127,11 +155,48 @@ end
     sp = first(sps)
     @test duration(sp) == 31u"d"
     @test length(sp) == 24
-    @test multiple(first(sp), sp) == 31
+    @test multiple(first(sp)) == 31
     @test eltype(sp) <: TimeStruct.OperationalPeriod
     @test isfirst(sp)
     @test repr(sp) == "sp1"
     @test TimeStruct._strat_per(sp) == 1
+end
+
+@testitem "TwoLevel scaling" begin
+    day = SimpleTimes(24, 1)
+    years = [2, 2, 5, 5]
+    study_period = TwoLevel(years, day; op_per_strat = 8760)
+
+    t = first(study_period)
+    @test multiple(t) == 2 * 365
+
+    for (y, sp) in enumerate(strategic_periods(study_period))
+        for t in sp
+            @test multiple(t) == 365 * years[y]
+        end
+    end
+end
+
+@testitem "TwoLevel accumulated" begin
+    day = SimpleTimes(24, 1)
+    study_period = TwoLevel([2, 2, 5, 10], day)
+
+    start_t = [0, 2, 4, 9]
+    end_t = [2, 4, 9, 19]
+    for (y, sp) in enumerate(strategic_periods(study_period))
+        @test start_time(sp, study_period) == start_t[y]
+        @test end_time(sp, study_period) == end_t[y]
+        @test remaining(sp, study_period) == 19 - start_t[y]
+    end
+
+    using Unitful
+    start_t = [0, 1, 3] .* 1u"d"
+    end_t = [1, 3, 7] .* 1u"d"
+    study_period = TwoLevel([1u"d", 2u"d", 4u"d"], SimpleTimes(24, 1u"hr"))
+    for (y, sp) in enumerate(strategic_periods(study_period))
+        @test start_time(sp, study_period) == start_t[y]
+        @test end_time(sp, study_period) == end_t[y]
+    end
 end
 
 @testitem "TwoLevel with op scenarios" begin
@@ -146,55 +211,53 @@ end
     @test ops[1] == TimeStruct.OperationalPeriod(
         1,
         TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1)),
+        91.0,
     )
 
     @test probability(ops[34]) == 0.2
-    @test multiple(ops[34], seasonal_year) == 91
+    @test multiple(ops[34]) == 91
 
     @test probability(ops[100]) == 0.7
-    @test multiple(ops[100], seasonal_year) == 13
+    @test multiple(ops[100]) == 13
 
     pers = []
     for sp in strat_periods(seasonal_year)
-        for sc in opscenarios(sp, seasonal_year)
+        for sc in opscenarios(sp)
             for t in sc
                 push!(pers, t)
             end
         end
     end
+    @test sum(length(opscenarios(sp)) for sp in strat_periods(seasonal_year)) ==
+          12
     @test length(pers) == length(seasonal_year)
-    @test first(pers) == first(seasonal_year)
-    scen =
-        first(opscenarios(first(strat_periods(seasonal_year)), seasonal_year))
+    @test typeof(first(pers)) == typeof(first(seasonal_year))
+    scen = first(opscenarios(first(strat_periods(seasonal_year))))
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 0.1
     @test TimeStruct._strat_per(scen) == 1
     @test TimeStruct._opscen(scen) == 1
     per = first(scen)
     @test repr(per) == "sp1-sc1-t1"
-    @test typeof(per) <: TimeStruct.OperationalPeriod{
-        TimeStruct.ScenarioPeriod{TimeStruct.SimplePeriod{Int}},
-    }
+    @test typeof(per) <: TimeStruct.OperationalPeriod
 
     # Test that operational scenarios runs without scenarios
     ts = TwoLevel(3, 10, SimpleTimes(10, 1))
     sp = first(strat_periods(ts))
-    scen = first(opscenarios(sp, ts))
+    scen = first(opscenarios(sp))
     @test length(scen) == 10
     @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod
-    @test repr(scen) == "sp1-sc1"
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 1.0
     @test TimeStruct._strat_per(scen) == 1
     @test TimeStruct._opscen(scen) == 1
     per = first(scen)
     @test repr(per) == "sp1-t1"
-    @test typeof(per) <:
-          TimeStruct.OperationalPeriod{TimeStruct.SimplePeriod{Int}}
+    @test typeof(per) <: TimeStruct.OperationalPeriod
 
     simple = SimpleTimes(10, 2.0)
     sp = first(strat_periods(simple))
-    scen = first(opscenarios(sp, simple))
+    scen = first(opscenarios(sp))
     per = first(scen)
     @test typeof(per) <: TimeStruct.SimplePeriod{Float64}
 
@@ -202,9 +265,7 @@ end
         [SimpleTimes(5, 1.5), SimpleTimes(10, 1.0)],
         [0.9, 0.1],
     )
-    pers = [
-        t for sp in strat_periods(ts) for sc in opscenarios(sp, ts) for t in sc
-    ]
+    pers = [t for sp in strat_periods(ts) for sc in opscenarios(sp) for t in sc]
     pers_ts = [t for t in ts]
     @test pers == pers_ts
 end
@@ -217,6 +278,19 @@ end
     @test ops1 == ops2
     per = ops2[1]
     @test typeof(per) <: TimeStruct.SimplePeriod
+
+    ops3 = [t for sc in opscenarios(simple) for t in sc]
+    @test ops1 == ops3
+end
+
+@testitem "OperationalScenarios as TwoLevel" begin
+    opscens = OperationalScenarios([SimpleTimes(10, 1), SimpleTimes(5, 2)])
+    ops1 = collect(opscens)
+    @test length(strat_periods(opscens)) == 1
+    ops2 = [t for n in strat_periods(opscens) for t in n]
+    @test ops1 == ops2
+    per = ops2[1]
+    @test typeof(per) <: TimeStruct.ScenarioPeriod
 end
 
 @testitem "Profiles" begin
@@ -298,10 +372,22 @@ end
     ops2 = collect(regtree)
     @test ops == ops2
 
-    nodes = TimeStruct.strat_nodes(regtree)
+    op = ops[31]
+    @test TimeStruct._opscen(op) == 1
+    @test TimeStruct._strat_per(op) == 3
+    @test TimeStruct._branch(op) == 4
+    @test TimeStruct._oper(op) == 1
+    @test duration(op) == 1
+    @test probability(op) == 1 / 6
+    @test typeof(op) == eltype(typeof(regtree))
+
+    nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(TimeStruct.probability(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(probability(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
+    node = nodes[2]
+    @test length(node) == 5
+    @test typeof(first(node)) == eltype(typeof(node))
 
     leaves = TimeStruct.leaves(regtree)
     @test length(leaves) == TimeStruct.nleaves(regtree)
@@ -330,6 +416,72 @@ end
     @test dsp[ops[4]] == 5
 end
 
+@testitem "TwoLevelTree and opscenarios" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+
+    ops1 = collect(regtree)
+    ops2 = [
+        t for sp in strat_periods(regtree) for sc in opscenarios(sp) for t in sc
+    ]
+    @test length(ops1) == length(ops2)
+    for (i, op) in enumerate(ops1)
+        @test op == ops2[i]
+    end
+
+    @test sum(length(opscenarios(sp)) for sp in strat_periods(regtree)) == 30
+    @test sum(
+        length(sc) for sp in strat_periods(regtree) for sc in opscenarios(sp)
+    ) == 150
+
+    sregtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    ops1 = collect(sregtree)
+    ops2 = [
+        t for sp in strat_periods(sregtree) for sc in opscenarios(sp) for
+        t in sc
+    ]
+    @test length(ops1) == length(ops2)
+    @test ops1 == ops2
+
+    @test sum(length(opscenarios(sp)) for sp in strat_periods(sregtree)) == 10
+    @test sum(
+        length(sc) for sp in strat_periods(sregtree) for sc in opscenarios(sp)
+    ) == 50
+end
+
+@testitem "Strategic scenarios" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+
+    @test length(scenarios(regtree)) == 6
+
+    for sc in scenarios(regtree)
+        @test length(sc) == length(collect(sc))
+
+        for (prev_sp, sp) in withprev(sc)
+            if !isnothing(prev_sp)
+                @test TimeStruct._strat_per(prev_sp) + 1 ==
+                      TimeStruct._strat_per(sp)
+            end
+        end
+    end
+end
+
+@testitem "TwoLevel as a tree" begin
+    two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+
+    scens = scenarios(two_level)
+    @test length(scens) == 1
+    sps = collect(sp for sc in scenarios(two_level) for sp in strat_periods(sc))
+    @test length(sps) == 5
+end
+
 @testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
@@ -337,7 +489,7 @@ end
     @test first(withprev(uniform_day))[1] === nothing
     @test collect(withprev(uniform_week))[25] == (
         nothing,
-        TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1)),
+        TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1), 1.0),
     )
 end
 

@@ -55,8 +55,7 @@ end
 Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
 
 # A time period with scenario number and probability
-struct ScenarioPeriod{T} <:
-       TimePeriod{OperationalScenarios} where {T<:TimePeriod}
+struct ScenarioPeriod{T} <: TimePeriod where {T<:TimePeriod}
     sc::Int
     prob::Float64
     period::T
@@ -86,6 +85,7 @@ struct OperationalScenario{T} <: TimeStructure{T}
 end
 Base.show(io::IO, os::OperationalScenario) = print(io, "sc-$(os.scen)")
 probability(os::OperationalScenario) = os.probability
+duration(os::OperationalScenario) = duration(os.operational)
 
 # Iterate the time periods of an operational scenario
 function Base.iterate(os::OperationalScenario, state = nothing)
@@ -128,3 +128,4 @@ end
 
 # Allow SimpleTimes to behave as one operational scenario
 opscenarios(ts::SimpleTimes) = [ts]
+probability(ts::SimpleTimes) = 1.0

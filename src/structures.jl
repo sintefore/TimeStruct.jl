@@ -10,11 +10,11 @@ the data type used for the duration of the time periods.
 abstract type TimeStructure{T<:Duration} end
 
 """
-    abstract type TimePeriod{TimeStructure}
+    abstract type TimePeriod
 Abstract type used for a uniform interface for iterating through
 time structures and indexing of time profiles.
 """
-abstract type TimePeriod{TimeStructure} end
+abstract type TimePeriod end
 
 """
     duration(t::TimePeriod) 

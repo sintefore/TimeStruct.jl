@@ -38,6 +38,7 @@ export strat_periods, strategic_periods
 export regular_tree, strat_nodes, scenarios
 export withprev
 export isfirst, duration, multiple, probability
+export start_time, end_time, remaining
 
 export Discounter
 export discount
