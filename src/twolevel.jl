@@ -194,7 +194,11 @@ function _multiple(per::SimplePeriod, ts::SimpleTimes, sp::StrategicPeriod)
     return stripunit(mult)
 end
 
-function _multiple(per::ScenarioPeriod, ts::OperationalScenarios, sp::StrategicPeriod)
+function _multiple(
+    per::ScenarioPeriod,
+    ts::OperationalScenarios,
+    sp::StrategicPeriod,
+)
     mult = sp.duration * sp.op_per_strat / duration(ts.scenarios[_opscen(per)])
     return stripunit(mult)
 end
