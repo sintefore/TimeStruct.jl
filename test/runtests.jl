@@ -228,6 +228,16 @@ end
             end
         end
     end
+
+    pers_sp = []
+    for sp in strat_periods(seasonal_year)
+        for t in sp
+            push!(pers_sp, t)
+        end
+    end
+    @test issetequal(pers, pers_sp)
+
+
     @test sum(length(opscenarios(sp)) for sp in strat_periods(seasonal_year)) ==
           12
     @test length(pers) == length(seasonal_year)

@@ -194,6 +194,11 @@ function _multiple(per::SimplePeriod, ts::SimpleTimes, sp::StrategicPeriod)
     return stripunit(mult)
 end
 
+function _multiple(per::ScenarioPeriod, ts::OperationalScenarios, sp::StrategicPeriod)
+    mult = sp.duration * sp.op_per_strat / duration(ts.scenarios[_opscen(per)])
+    return stripunit(mult)
+end
+
 # Function for defining the time periods when iterating through a strategic period
 function Base.iterate(itr::StrategicPeriod{S,T}, state = nothing) where {S,T}
     next =
