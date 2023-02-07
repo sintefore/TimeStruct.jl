@@ -20,6 +20,7 @@ test_full:
   coverage: '/\(\d+.\d+\%\) covered/'
   only:
     - merge_requests
+    - main
 
 format:
   stage: formatting
@@ -41,3 +42,4 @@ format:
       exit(properly_formatted ? 0 : 1)'   
   only:
     - merge_requests
+    - main
