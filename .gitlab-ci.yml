@@ -1,0 +1,43 @@
+stages:
+  - testing
+  - formatting
+
+test_light:
+  stage: testing
+  image: julia:latest
+  script:
+    - julia --project=@. -e "import Pkg; Pkg.test(; coverage = false)"
+  except:
+    - main
+
+test_full:
+  stage: testing
+  image: julia:latest
+  script:
+    - julia --project=@. -e "import Pkg; Pkg.test(; coverage = true)"
+    - julia --project=coverage -e 'import Pkg; Pkg.instantiate()'
+    - julia --project=coverage coverage/coverage-summary.jl
+  coverage: '/\(\d+.\d+\%\) covered/'
+  only:
+    - merge_requests
+
+format:
+  stage: formatting
+  image: julia:latest
+  script:
+    - julia -e '@info "Verifying formatting"'
+    - | 
+      julia --eval '
+      import Pkg
+      Pkg.add("JuliaFormatter")
+      using JuliaFormatter
+      properly_formatted = format("./src"; verbose = true)
+
+      if properly_formatted
+        @info "Formatting verified"
+      else 
+        @info "Formatting failed - some files have not yet been formatted"
+      end
+      exit(properly_formatted ? 0 : 1)'   
+  only:
+    - merge_requests

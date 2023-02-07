@@ -83,20 +83,44 @@ end
 
 import Base: +, -, *, /
 +(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val + b)
-+(a::OperationalProfile{T}, b::Number) where {T<:Number} = OperationalProfile(a.vals .+ b)
-+(a::StrategicProfile{T}, b::Number) where {T<:Number} = StrategicProfile(a.vals .+ b)
-+(a::ScenarioProfile{T}, b::Number) where {T<:Number} = ScenarioProfile(a.vals .+ b)
+function +(a::OperationalProfile{T}, b::Number) where {T<:Number}
+    return OperationalProfile(a.vals .+ b)
+end
+function +(a::StrategicProfile{T}, b::Number) where {T<:Number}
+    return StrategicProfile(a.vals .+ b)
+end
+function +(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+    return ScenarioProfile(a.vals .+ b)
+end
 +(a::Number, b::TimeProfile{T}) where {T<:Number} = b + a
 -(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val - b)
--(a::OperationalProfile{T}, b::Number) where {T<:Number} = OperationalProfile(a.vals .- b)
--(a::StrategicProfile{T}, b::Number) where {T<:Number} = StrategicProfile(a.vals .- b)
--(a::ScenarioProfile{T}, b::Number) where {T<:Number} = ScenarioProfile(a.vals .- b)
+function -(a::OperationalProfile{T}, b::Number) where {T<:Number}
+    return OperationalProfile(a.vals .- b)
+end
+function -(a::StrategicProfile{T}, b::Number) where {T<:Number}
+    return StrategicProfile(a.vals .- b)
+end
+function -(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+    return ScenarioProfile(a.vals .- b)
+end
 *(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val .* b)
-*(a::OperationalProfile{T}, b::Number) where {T<:Number} = OperationalProfile(a.vals .* b)
-*(a::StrategicProfile{T}, b::Number) where {T<:Number} = StrategicProfile(a.vals .* b)
-*(a::ScenarioProfile{T}, b::Number) where {T<:Number} = ScenarioProfile(a.vals .* b)
+function *(a::OperationalProfile{T}, b::Number) where {T<:Number}
+    return OperationalProfile(a.vals .* b)
+end
+function *(a::StrategicProfile{T}, b::Number) where {T<:Number}
+    return StrategicProfile(a.vals .* b)
+end
+function *(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+    return ScenarioProfile(a.vals .* b)
+end
 *(a::Number, b::TimeProfile{T}) where {T<:Number} = b * a
 /(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val / b)
-/(a::OperationalProfile{T}, b::Number) where {T<:Number} = OperationalProfile(a.vals ./ b)
-/(a::StrategicProfile{T}, b::Number) where {T<:Number} = StrategicProfile(a.vals ./ b)
-/(a::ScenarioProfile{T}, b::Number) where {T<:Number} = ScenarioProfile(a.vals ./ b)
+function /(a::OperationalProfile{T}, b::Number) where {T<:Number}
+    return OperationalProfile(a.vals ./ b)
+end
+function /(a::StrategicProfile{T}, b::Number) where {T<:Number}
+    return StrategicProfile(a.vals ./ b)
+end
+function /(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+    return ScenarioProfile(a.vals ./ b)
+end
