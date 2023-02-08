@@ -2,7 +2,6 @@ using .DataFrames
 
 function expand_dataframe!(df::DataFrame, periods)
     for col in eachcol(df)
-        
         if eltype(col) <: StratNode
             df[!, :strategic_period] = [_strat_per(t) for t in col]
             df[!, :branch] = [_branch(t) for t in col]

@@ -11,7 +11,6 @@ end
 
 Discounter(rate, ts) = Discounter(rate, 1.0, ts)
 
-
 _start_strat(t::TimePeriod, ts::TimeStructure{T}) where {T} = zero(T)
 
 function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
@@ -20,7 +19,9 @@ function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
         return zero(S)
     end
 
-    return sum(duration(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp)
+    return sum(
+        duration(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp
+    )
 end
 
 function _start_strat(sp::StrategicPeriod, ts::TwoLevel{S,T}) where {S,T}

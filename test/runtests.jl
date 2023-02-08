@@ -513,21 +513,24 @@ end
         @test discount(disc, t) == δ^(i - 1)
     end
 
-    @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol=1e-3
-
+    @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol =
+        1e-3
 
     uniform_day = SimpleTimes(24, 1)
     periods = TwoLevel(10, 8760, uniform_day)
     disc_hour = Discounter(0.04, 1 / 8760, periods)
 
-    @test sum(objective_weight(sp, disc_hour) for sp in strat_periods(periods)) ≈ 8.435 atol=1e-3
+    @test sum(
+        objective_weight(sp, disc_hour) for sp in strat_periods(periods)
+    ) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
-    periods_unit =  TwoLevel(10, 365.125u"d", uniform_day)
+    periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
     disc_unit = Discounter(0.04, periods_unit)
 
-    @test sum(objective_weight(sp, disc_unit) for sp in strat_periods(periods_unit)) ≈ 8.435 atol=1e-3
-
+    @test sum(
+        objective_weight(sp, disc_unit) for sp in strat_periods(periods_unit)
+    ) ≈ 8.435 atol = 1e-3
 end
 
 @testitem "Start and end times" begin
@@ -541,19 +544,19 @@ end
     @test start_t[26] == end_t[25]
 
     uniform_day = SimpleTimes(24, 1u"hr")
-    periods_unit =  TwoLevel(10, 365.125u"d", uniform_day)
+    periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
     start_t = collect(start_oper_time(t, periods_unit) for t in periods_unit)
     end_t = collect(end_oper_time(t, periods_unit) for t in periods_unit)
     @test start_t[26] == end_t[25]
 
-    tsc = TwoLevel(3, 168u"hr", OperationalScenarios(3, SimpleTimes(7, 24u"hr")))
+    tsc =
+        TwoLevel(3, 168u"hr", OperationalScenarios(3, SimpleTimes(7, 24u"hr")))
     start_t = collect(start_oper_time(t, tsc) for t in tsc)
     end_t = collect(end_oper_time(t, tsc) for t in tsc)
 
     @test start_t[1] == 0u"hr"
     @test end_t[1] == 24u"hr"
-    @test start_t[9] == end_t[8] 
-
+    @test start_t[9] == end_t[8]
 end
 
 @testitem "Dataframes" begin
