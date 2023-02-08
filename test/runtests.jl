@@ -503,14 +503,60 @@ end
 end
 
 @testitem "Discounting" begin
-    uniform_years = SimpleTimes(10, 1)  # 10 years with duration of 1 year
+    using Unitful
+
+    uniform_years = TwoLevel(10, 1, SimpleTimes(1, 1))  # 10 years with duration of 1 year
     disc = Discounter(0.04, 1, uniform_years)
 
     δ = 1 / 1.04
     for (i, t) in enumerate(uniform_years)
         @test discount(disc, t) == δ^(i - 1)
     end
-    return
+
+    @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol =
+        1e-3
+
+    uniform_day = SimpleTimes(24, 1)
+    periods = TwoLevel(10, 8760, uniform_day)
+    disc_hour = Discounter(0.04, 1 / 8760, periods)
+
+    @test sum(
+        objective_weight(sp, disc_hour) for sp in strat_periods(periods)
+    ) ≈ 8.435 atol = 1e-3
+
+    uniform_day = SimpleTimes(24, 1u"hr")
+    periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
+    disc_unit = Discounter(0.04, periods_unit)
+
+    @test sum(
+        objective_weight(sp, disc_unit) for sp in strat_periods(periods_unit)
+    ) ≈ 8.435 atol = 1e-3
+end
+
+@testitem "Start and end times" begin
+    using Unitful
+
+    uniform_day = SimpleTimes(24, 1)
+    periods = TwoLevel(10, 8760, uniform_day)
+
+    start_t = collect(start_oper_time(t, periods) for t in periods)
+    end_t = collect(end_oper_time(t, periods) for t in periods)
+    @test start_t[26] == end_t[25]
+
+    uniform_day = SimpleTimes(24, 1u"hr")
+    periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
+    start_t = collect(start_oper_time(t, periods_unit) for t in periods_unit)
+    end_t = collect(end_oper_time(t, periods_unit) for t in periods_unit)
+    @test start_t[26] == end_t[25]
+
+    tsc =
+        TwoLevel(3, 168u"hr", OperationalScenarios(3, SimpleTimes(7, 24u"hr")))
+    start_t = collect(start_oper_time(t, tsc) for t in tsc)
+    end_t = collect(end_oper_time(t, tsc) for t in tsc)
+
+    @test start_t[1] == 0u"hr"
+    @test end_t[1] == 24u"hr"
+    @test start_t[9] == end_t[8]
 end
 
 @testitem "Dataframes" begin
@@ -518,37 +564,40 @@ end
     using Unitful
     ts = SimpleTimes(24, 1)
     df1 = DataFrame(period = [t for t in ts], value = rand(24))
-    TimeStruct.expand_dataframe!(df1)
+    TimeStruct.expand_dataframe!(df1, ts)
     @test df1[!, :oper_period] == [i for i in 1:24]
     @test hasproperty(df1, :duration)
     @test hasproperty(df1, :start_time)
+    @test hasproperty(df1, :end_time)
 
     twolevel = TwoLevel(5, 24, OperationalScenarios(3, SimpleTimes(6, 4)))
     df2 = DataFrame(
         period = [t for t in twolevel],
         value = rand(length(twolevel)),
     )
-    TimeStruct.expand_dataframe!(df2)
+    TimeStruct.expand_dataframe!(df2, twolevel)
     @test hasproperty(df2, :strategic_period)
     @test hasproperty(df2, :op_scenario)
     @test hasproperty(df2, :oper_period)
     @test hasproperty(df2, :duration)
-    @test hasproperty(df2, :start_time)
+    @test hasproperty(df2, :start_oper_time)
+    @test hasproperty(df2, :end_oper_time)
 
     scen = OperationalScenarios(
         5,
         SimpleTimes(4, [2.0u"hr", 3.5u"hr", 10u"hr", 20u"hr"]),
     )
     df3 = DataFrame(per = [t for t in scen], value = rand(length(scen)))
-    TimeStruct.expand_dataframe!(df3)
+    TimeStruct.expand_dataframe!(df3, scen)
     @test hasproperty(df3, :op_scenario)
     @test hasproperty(df3, :oper_period)
     @test hasproperty(df3, :duration)
     @test hasproperty(df3, :start_time)
+    @test hasproperty(df3, :end_time)
 
     sps = strat_periods(twolevel)
     df4 = DataFrame(strat = [sp for sp in sps], val = rand(length(sps)))
-    TimeStruct.expand_dataframe!(df4)
+    TimeStruct.expand_dataframe!(df4, twolevel)
     @test hasproperty(df4, :strategic_period)
     @test hasproperty(df4, :duration)
     @test hasproperty(df4, :start_time)
