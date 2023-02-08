@@ -39,6 +39,7 @@ export regular_tree, strat_nodes, scenarios
 export withprev
 export isfirst, duration, multiple, probability
 export start_time, end_time, remaining
+export start_oper_time, end_oper_time
 
 export Discounter
 export discount
