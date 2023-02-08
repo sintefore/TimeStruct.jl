@@ -1,37 +1,47 @@
-mutable struct Discounter
+"""
+    Discounter
+
+Structure to hold discount information to be used for a time structure.
+"""
+struct Discounter
     discount_rate::Any
     timeunit_to_year::Any
     ts::TimeStructure
 end
 
-function start(t::TimePeriod, ts::TimeStructure)
-    if isfirst(t)
-        return 0.0
-    end
+Discounter(rate, ts) = Discounter(rate, 1.0, ts)
 
-    return sum(duration(tt) for tt in ts if tt < t)
-end
 
-function start(t::OperationalPeriod, ts::TwoLevel)
-    sp = t.sp
+_start_strat(t::TimePeriod, ts::TimeStructure{T}) where {T} = zero(T)
+
+function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
+    sp = _strat_per(t)
     if sp == 1
-        return 0.0
+        return zero(S)
     end
 
-    return sum(duration(spp) for spp in strat_periods(ts) if spp.sp < sp)
+    return sum(duration(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp)
 end
 
-function start(sp::StrategicPeriod, ts::TwoLevel)
-    if sp.sp == 1
-        return 0.0
+function _start_strat(sp::StrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
+    if _strat_per(sp) == 1
+        return zero(S)
     end
 
     return sum(duration(spp) for spp in strat_periods(ts) if spp < sp)
 end
 
+function _to_year(start, disc)
+    return start * disc.timeunit_to_year
+end
+
+function _to_year(start::Unitful.Quantity{V,Unitful.𝐓}, disc) where {V}
+    return Unitful.ustrip(Unitful.uconvert(Unitful.u"yr", start))
+end
+
 function discount(disc::Discounter, t::TimePeriod; type = "start")
-    start_year = disc.timeunit_to_year * start(t, disc.ts)
-    duration_years = disc.timeunit_to_year * duration(t)
+    start_year = _to_year(_start_strat(t, disc.ts), disc)
+    duration_years = _to_year(duration(t), disc)
 
     multiplier = 1.0
 
@@ -62,12 +72,14 @@ function discount_start(discount_rate, start_year)
     return δ^start_year
 end
 
+objective_weight(p, disc::Discounter) = 1.0
+
 function objective_weight(p::SimplePeriod, disc::Discounter)
     return discount(disc, p)
 end
 
 function objective_weight(op::OperationalPeriod, disc::Discounter)
-    return probability(op) * discount(disc, op) * multiple(op, disc.ts)
+    return probability(op) * discount(disc, op) * multiple(op)
 end
 
 function objective_weight(sp::StrategicPeriod, disc::Discounter)
