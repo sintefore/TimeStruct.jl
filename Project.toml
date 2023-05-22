@@ -4,10 +4,14 @@ authors = ["Lars Hellemo <Lars.Hellemo@sintef.no>, Truls.Flatberg <Truls.Flatber
 version = "0.6.0"
 
 [deps]
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
+[weakdeps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+
+[extensions]
+TimeStructDataFramesExt = "DataFrames"
+
 [compat]
-julia = "^1.6"
+julia = "^1.9"
 Unitful = "1"
-Requires = "1.3"
