@@ -113,6 +113,13 @@ end
     @test length(pers) == length(ts)
 end
 
+@testitem "RepresentativePeriods" begin
+    rep = RepresentativePeriods(2, [SimpleTimes(5,1), SimpleTimes(3,2)])
+    @test length(rep) == length(collect(rep))
+    @test duration(rep) == 11
+
+end
+
 @testitem "TwoLevel" begin
     day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
