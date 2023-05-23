@@ -33,3 +33,5 @@ end
 function start_oper_time(t::TimePeriod, ts::TimeStructure)
     return end_oper_time(t, ts) - duration(t)
 end
+
+function expand_dataframe!(df, periods) end
