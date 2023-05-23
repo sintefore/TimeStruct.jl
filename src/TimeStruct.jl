@@ -7,6 +7,7 @@ import Unitful
 include("structures.jl")
 include("simple.jl")
 include("stochastic.jl")
+include("representative.jl")
 include("twolevel.jl")
 include("twoleveltree.jl")
 include("profiles.jl")
@@ -22,6 +23,7 @@ end
 export TimeStructure
 export SimpleTimes
 export OperationalScenarios
+export RepresentativePeriods
 export TwoLevel
 export TwoLevelTree
 
@@ -34,6 +36,7 @@ export StrategicStochasticProfile
 export DynamicStochasticProfile
 
 export opscenarios
+export repr_periods
 export strat_periods, strategic_periods
 export regular_tree, strat_nodes, scenarios
 export withprev

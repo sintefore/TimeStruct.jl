@@ -67,6 +67,15 @@ function ScenarioProfile(vals::Vector{Vector{T}}) where {T}
     return ScenarioProfile(v)
 end
 
+struct RepresentativeProfile{T} <: TimeProfile{T}
+    vals::Vector{<:TimeProfile{T}}
+end
+function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
+    return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
+end
+
+
+
 struct StrategicStochasticProfile{T} <: TimeProfile{T}
     vals::Vector{Vector{T}}
 end
