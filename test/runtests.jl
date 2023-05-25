@@ -17,17 +17,17 @@ end
 
 @testitem "SimpleTimes" begin
     day = SimpleTimes(24, 1)
-    @test first(day) == TimeStruct.SimplePeriod(1, 1)
+    @test first(day) == TimeStruct.SimplePeriod(1, 1, 24)
     @test length(day) == 24
-    @test isfirst(TimeStruct.SimplePeriod(1, 1))
-    @test first(day) < TimeStruct.SimplePeriod(3, 1)
+    @test isfirst(TimeStruct.SimplePeriod(1, 1,24))
+    @test first(day) < TimeStruct.SimplePeriod(3, 1, 24)
 
     tops = collect(t for t in day)
-    @test tops[2] == TimeStruct.SimplePeriod(2, 1)
+    @test tops[2] == TimeStruct.SimplePeriod(2, 1, 24)
 
     ts = SimpleTimes([4, 4, 4, 6, 3, 3])
     @test length(ts) == 6
-    @test first(ts) == TimeStruct.SimplePeriod(1, 4)
+    @test first(ts) == TimeStruct.SimplePeriod(1, 4, 24)
     @test duration(first(ts)) == 4
     @test duration(ts) == 24
 end
@@ -52,7 +52,7 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == TimeStruct.OperationalScenario{Int}
+    @test typeof(scen_coll[3]) == TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -66,7 +66,7 @@ end
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
     @test first(ts) ==
-          TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1))
+          TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1, 24))
     @test length(ts) == 216
     pers = []
     for sc in opscenarios(ts)
@@ -84,7 +84,7 @@ end
     ts = OperationalScenarios([day, week])
 
     @test first(ts) ==
-          TimeStruct.ScenarioPeriod(1, 0.5, TimeStruct.SimplePeriod(1, 1))
+          TimeStruct.ScenarioPeriod(1, 0.5, TimeStruct.SimplePeriod(1, 1, 24))
     @test length(ts) == 192
 
     scens = opscenarios(ts)
@@ -93,7 +93,7 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 2
 
-    @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int}
+    @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int, SimpleTimes{Int}}
     @test probability(scen_coll[2]) == 0.5
     @test repr(scen_coll[1]) == "sc-1"
 
@@ -111,17 +111,16 @@ end
 end
 
 @testitem "RepresentativePeriods" begin
-    rep = RepresentativePeriods(2, [SimpleTimes(5,1), SimpleTimes(3,2)])
+    rep = RepresentativePeriods(2, [100, 200], [SimpleTimes(5,1), SimpleTimes(3,2)])
     @test length(rep) == length(collect(rep))
-    @test duration(rep) == 11
-
+    @test duration(rep) == 300
 end
 
 @testitem "TwoLevel" begin
     day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
 
-    @test typeof(uniform_week) == TwoLevel{Int,Int}
+    @test typeof(uniform_week) == TwoLevel{Int,Int,SimpleTimes{Int}}
     @test length(uniform_week) == 168
 
     # One year with monthly strategic periods and one day of operations for each month
@@ -206,6 +205,48 @@ end
     end
 end
 
+@testitem "TwoLevel with rep periods" begin
+    summer_wk = SimpleTimes(7, 1)
+    winter_wk = SimpleTimes(14, 1)
+
+    rep = RepresentativePeriods(2, [185, 180], [summer_wk, winter_wk])
+
+    ts = TwoLevel(5, rep)
+
+    per = first(ts)
+
+    sp = first(strat_periods(ts))
+    rp = first(TimeStruct.repr_periods(sp))
+    per = first(rp)
+
+    summer_sc = OperationalScenarios([SimpleTimes(7, 1), SimpleTimes(1,1)])
+    winter_sc = OperationalScenarios(3, SimpleTimes(14, 1))
+
+    rep_sc = RepresentativePeriods(2, [185, 180], [summer_sc, winter_sc])
+
+    ts = TwoLevel(5, rep_sc)
+
+    per = first(ts)
+
+    sp = first(strat_periods(ts))
+    rp = first(repr_periods(sp))
+    sc = first(opscenarios(rp))
+    t = first(sc)
+
+    pers = []
+    for sp in strat_periods(ts)
+        for rp in repr_periods(sp)
+            for sc in opscenarios(rp)
+                for t in sc
+                    push!(pers, t)
+                end
+            end
+        end
+    end
+
+
+end
+
 @testitem "TwoLevel with op scenarios" begin
     day = SimpleTimes(24, 1)
     week = SimpleTimes(168, 1)
@@ -217,7 +258,7 @@ end
     ops = collect(seasonal_year)
     @test ops[1] == TimeStruct.OperationalPeriod(
         1,
-        TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1)),
+        TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1, 24)),
         91.0,
     )
 
@@ -329,9 +370,9 @@ end
 
     op = OperationalProfile([2, 2, 2, 2, 1])
     @test sum(op[t] for t in day) == 4 * 2 + 20 * 1
-    @test op[TimeStruct.SimplePeriod(7, 1)] == 1
+    @test op[TimeStruct.SimplePeriod(7, 1, 9)] == 1
     opunit = OperationalProfile([2, 3, 4], u"m/s")
-    @test opunit[TimeStruct.SimplePeriod(6, 1)] == 4u"m/s"
+    @test opunit[TimeStruct.SimplePeriod(6, 1, 9)] == 4u"m/s"
     opadd = op + 1
     @test sum(opadd[t] for t in day) == sum(op[t] for t in day) + 24
     opmin = op - 1
@@ -505,7 +546,7 @@ end
     @test first(withprev(uniform_day))[1] === nothing
     @test collect(withprev(uniform_week))[25] == (
         nothing,
-        TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1), 1.0),
+        TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1, 24), 1.0),
     )
 end
 
