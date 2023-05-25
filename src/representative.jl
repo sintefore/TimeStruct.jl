@@ -1,40 +1,44 @@
-struct RepresentativePeriods{T,OP<:TimeStructure{T}} <: TimeStructure{T}
+struct RepresentativePeriods{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
+    duration::Vector{S}
     rep_periods::Vector{OP}
 end
 
+duration(ts::RepresentativePeriods) = sum(ts.duration)
 
 # Iteration through all time periods for the representative
-function Base.iterate(itr::RepresentativePeriods)
+function Base.iterate(ts::RepresentativePeriods)
     rp = 1
-    next = iterate(itr.rep_periods[rp])
+    next = iterate(ts.rep_periods[rp])
     next === nothing && return nothing
-    return RepresentativePeriod(rp, next[1]), (rp, next[2])
+    mult = ts.duration[rp] / total_duration(next[1])
+    return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
-function Base.iterate(itr::RepresentativePeriods, state)
+function Base.iterate(ts::RepresentativePeriods, state)
     rp = state[1]
-    next = iterate(itr.rep_periods[rp], state[2])
+    next = iterate(ts.rep_periods[rp], state[2])
     if next === nothing
         rp = rp + 1
-        if rp > itr.len
+        if rp > ts.len
             return nothing
         end
-        next = iterate(itr.rep_periods[rp])
+        next = iterate(ts.rep_periods[rp])
     end
-    return RepresentativePeriod(rp, next[1]), (rp, next[2])
+    mult = ts.duration[rp] / total_duration(next[1])
+    return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
-function Base.length(itr::RepresentativePeriods)
-    return sum(length(rpers) for rpers in itr.rep_periods)
+function Base.length(ts::RepresentativePeriods)
+    return sum(length(rpers) for rpers in ts.rep_periods)
 end
 
 Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 
-
-struct ReprPeriod{T}
+struct ReprPeriod{T} <: TimePeriod 
     rp::Int
     period::T
+    mult::Float64
 end
 
 Base.show(io::IO, rp::ReprPeriod) = print(io, "rp$(rp.rp)-$(rp.period)")
@@ -58,10 +62,11 @@ iteration over its time periods.
 struct RepresentativePeriod{T} <: TimeStructure{T}
     rper::Int
     operational::TimeStructure{T}
+    duration::T
 end
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(rp.rper)")
 probability(rp::RepresentativePeriod) = 1.0
-duration(rp::RepresentativePeriod) = duration(rp.operational)
+duration(rp::RepresentativePeriod) = rp.duration
 
 # Iterate the time periods of a representative period
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
@@ -69,7 +74,8 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
         isnothing(state) ? iterate(rp.operational) :
         iterate(rp.operational, state)
     next === nothing && return nothing
-    return ReprPeriod(rp.rper, next[1]), next[2]
+    mult = rp.duration / total_duration(next[1])
+    return ReprPeriod(rp.rper, next[1], mult), next[2]
 end
 
 Base.length(rp::RepresentativePeriod) = length(rp.operational)
@@ -89,7 +95,7 @@ repr_periods(ts) = ReprPeriods(ts)
 Base.length(rpers::ReprPeriods) = rpers.ts.len
 
 function Base.iterate(rpers::ReprPeriods)
-    return RepresentativePeriod(1,  rpers.ts.rep_periods[1]), 1
+    return RepresentativePeriod(1,  rpers.ts.rep_periods[1], rpers.ts.duration[1]), 1
 end
 
 function Base.iterate(rpers::ReprPeriods, state)
@@ -97,6 +103,7 @@ function Base.iterate(rpers::ReprPeriods, state)
     return RepresentativePeriod(
         state + 1,
         rpers.ts.rep_periods[state+1],
+        rpers.ts.duration[state+1],
     ),
     state + 1
 end
