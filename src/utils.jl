@@ -35,3 +35,8 @@ function start_oper_time(t::TimePeriod, ts::TimeStructure)
 end
 
 function expand_dataframe!(df, periods) end
+
+function Base.last(sp::StrategicPeriod)
+    per = iterate(sp.operational, length(sp.operational)-1)
+    return OperationalPeriod(sp.sp, per[1], _multiple(per[1], sp.operational, sp))
+end
