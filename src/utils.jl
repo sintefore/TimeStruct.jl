@@ -37,6 +37,13 @@ end
 function expand_dataframe!(df, periods) end
 
 function Base.last(sp::StrategicPeriod)
-    per = iterate(sp.operational, length(sp.operational)-1)
-    return OperationalPeriod(sp.sp, per[1], _multiple(per[1], sp.operational, sp))
+    if isa(sp.operational, OperationalScenarios)
+        return error("last() not implemented for OperationalScenarios")
+    end
+    per = iterate(sp.operational, length(sp.operational) - 1)
+    return OperationalPeriod(
+        sp.sp,
+        per[1],
+        _multiple(per[1], sp.operational, sp),
+    )
 end

@@ -140,6 +140,9 @@ end
     pers = collect(ts)
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
+
+    sp = collect(strat_periods(ts))
+    @test pers[length(day)] == last(sp[1])
 end
 
 @testitem "TwoLevel with units" begin
