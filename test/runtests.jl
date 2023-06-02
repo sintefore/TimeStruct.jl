@@ -30,6 +30,7 @@ end
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test duration(ts) == 24
+    @test last(ts) == last(collect(ts))
 end
 
 @testitem "SimpleTimes with units" begin
@@ -68,8 +69,10 @@ end
     @test first(ts) ==
           TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1))
     @test length(ts) == 216
+    @test_throws ErrorException last(ts)
     pers = []
     for sc in opscenarios(ts)
+        @test last(sc) == last(collect(sc))
         for t in sc
             push!(pers, t)
         end
@@ -140,6 +143,9 @@ end
     pers = collect(ts)
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
+
+    sp = collect(strat_periods(ts))
+    @test pers[length(day)] == last(sp[1])
 end
 
 @testitem "TwoLevel with units" begin
@@ -223,6 +229,7 @@ end
     pers = []
     for sp in strat_periods(seasonal_year)
         for sc in opscenarios(sp)
+            @test last(collect(sc)) == last(sc)
             for t in sc
                 push!(pers, t)
             end
