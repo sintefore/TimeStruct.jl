@@ -76,13 +76,17 @@ end
 objective_weight(p, disc::Discounter) = 1.0
 
 function objective_weight(p::SimplePeriod, disc::Discounter; type = "start")
-    return discount(disc, p, type=type)
+    return discount(disc, p, type = type)
 end
 
-function objective_weight(op::OperationalPeriod, disc::Discounter; type = "start")
-    return probability(op) * discount(disc, op, type=type) * multiple(op)
+function objective_weight(
+    op::OperationalPeriod,
+    disc::Discounter;
+    type = "start",
+)
+    return probability(op) * discount(disc, op, type = type) * multiple(op)
 end
 
 function objective_weight(sp::StrategicPeriod, disc::Discounter; type = "start")
-    return discount(disc, sp, type=type)
+    return discount(disc, sp, type = type)
 end
