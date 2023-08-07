@@ -17,7 +17,6 @@ function SimpleTimes(len::Integer, duration::Number)
 end
 SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
 
-
 Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 Base.length(st::SimpleTimes) = st.len
 
