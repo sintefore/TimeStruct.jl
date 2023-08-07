@@ -1,4 +1,6 @@
 using TestItemRunner
+using TimeStruct
+using Aqua
 
 @testitem "General TimePeriod" begin
     struct _DummyStruct <: TimeStructure{Int} end
@@ -611,3 +613,4 @@ end
 end
 
 @run_package_tests
+Aqua.test_all(TimeStruct)
