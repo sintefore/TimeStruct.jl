@@ -22,7 +22,6 @@ All time structures can be iterated as a sequence of TimePeriods that can be use
 
 ```julia
 using TimeStruct
-using Unitful
 using JuMP
 
 uniform_day = SimpleTimes(24, 1) # 24 hours/day

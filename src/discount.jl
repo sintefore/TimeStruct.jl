@@ -36,10 +36,6 @@ function _to_year(start, disc)
     return start * disc.timeunit_to_year
 end
 
-function _to_year(start::Unitful.Quantity{V,Unitful.𝐓}, disc) where {V}
-    return Unitful.ustrip(Unitful.uconvert(Unitful.u"yr", start))
-end
-
 function discount(disc::Discounter, t::TimePeriod; type = "start")
     start_year = _to_year(_start_strat(t, disc.ts), disc)
     duration_years = _to_year(duration(t), disc)

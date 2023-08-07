@@ -7,9 +7,6 @@ Time profile with a constant value for all time periods
 struct FixedProfile{T} <: TimeProfile{T}
     val::T
 end
-function FixedProfile(val::T, u::Unitful.Units) where {T}
-    return FixedProfile(Unitful.Quantity(val, u))
-end
 Base.getindex(fp::FixedProfile, _::TimePeriod) = fp.val
 
 """
@@ -22,9 +19,6 @@ repeated.
 """
 struct OperationalProfile{T} <: TimeProfile{T}
     vals::Array{T}
-end
-function OperationalProfile(val::T, u::Unitful.Units) where {T}
-    return OperationalProfile(Unitful.Quantity.(val, u))
 end
 function Base.getindex(op::OperationalProfile, i::TimePeriod)
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]

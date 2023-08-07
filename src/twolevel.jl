@@ -13,7 +13,7 @@ Example
 periods = TwoLevel(5, 1u"yr", SimpleTimes(24,1u"hr")) # 5 years with 24 hours of operations for each year
 ```
 """
-struct TwoLevel{S<:Duration,T} <: TimeStructure{T}
+struct TwoLevel{S,T} <: TimeStructure{T}
     len::Int
     duration::Vector{S}
     operational::Vector{<:TimeStructure{T}}
@@ -54,14 +54,6 @@ function TwoLevel(
         fill(oper, length(duration)),
         op_per_strat,
     )
-end
-
-function TwoLevel(
-    duration::Vector{<:Number},
-    u::Unitful.Units,
-    oper::TimeStructure{<:Unitful.Quantity{V,Unitful.𝐓}},
-) where {V}
-    return TwoLevel(Unitful.Quantity.(duration, u), oper; op_per_strat = 1.0)
 end
 
 function Base.iterate(itr::TwoLevel)
@@ -119,7 +111,6 @@ function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
 end
 
 stripunit(val) = val
-stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
 
 # Returns the number of times a time period should be counted when aggregating
 function _multiple(op::SimplePeriod, sp, ts::TwoLevel)

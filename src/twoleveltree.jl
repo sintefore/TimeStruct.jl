@@ -90,7 +90,7 @@ end
 struct StratNode{T} <: TimePeriod
     sp::Int
     branch::Int
-    duration::Duration
+    duration::Float64
     probability::Float64
     operational::TimeStructure{T}
     time_struct::TimeStructure

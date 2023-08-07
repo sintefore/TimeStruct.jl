@@ -1,13 +1,10 @@
-# Durations can be provided as real numbers or as a Quantity with time dimension
-Duration = Union{Real,Unitful.Quantity{V,Unitful.𝐓} where {V}}
-
 """
     abstract type TimeStructure{T}
 Abstract type representing different time structures that 
 consists of one or more time periods. The type 'T' gives
 the data type used for the duration of the time periods.  
 """
-abstract type TimeStructure{T<:Duration} end
+abstract type TimeStructure{T} end
 
 """
     abstract type TimePeriod

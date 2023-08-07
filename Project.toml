@@ -3,14 +3,13 @@ uuid = "f9ed5ce0-9f41-4eaa-96da-f38ab8df101c"
 authors = ["Lars Hellemo <Lars.Hellemo@sintef.no>, Truls.Flatberg <Truls.Flatberg@sintef.no>"]
 version = "0.6.1"
 
-[deps]
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
 [weakdeps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
 TimeStructDataFramesExt = "DataFrames"
+TimeStructUnitfulExt = "Unitful"
 
 [compat]
 julia = "^1.9"

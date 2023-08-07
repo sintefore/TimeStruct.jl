@@ -1,7 +1,5 @@
 module TimeStruct
 
-import Unitful
-
 include("structures.jl")
 include("simple.jl")
 include("stochastic.jl")
