@@ -18,29 +18,6 @@ function Base.iterate(w::WithPrev, state)
     return (isfirst(n[1]) ? nothing : state[1], n[1]), (n[1], n[2])
 end
 
-struct WithNext{I}
-    itr::I
-    ns::Int64
-end
-
-withnext(iter, n) = WithNext(iter, n)
-Base.length(w::WithNext) = length(w.itr)
-Base.size(w::WithNext) = size(w.itr)
-
-function Base.iterate(w::WithNext)
-    n = iterate(w.itr)
-    n === nothing && return n
-    next = Iterators.take(w.itr, w.ns)
-    return (n[1], next), n[2]
-end
-
-function Base.iterate(w::WithNext, state)
-    n = iterate(w.itr, state)
-    n === nothing && return n
-    next = Iterators.take(Iterators.rest(w.itr, state), w.ns)
-    return (n[1], next), n[2]
-end
-
 function end_oper_time(t::TimePeriod, ts::SimpleTimes)
     return sum(duration(tt) for tt in ts if _oper(tt) <= _oper(t))
 end
