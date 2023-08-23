@@ -76,7 +76,7 @@ end
 objective_weight(p, disc::Discounter) = 1.0
 
 function objective_weight(p::SimplePeriod, disc::Discounter; type = "start")
-    return discount(disc, p, type = type)
+    return discount(disc, p; type)
 end
 
 function objective_weight(
