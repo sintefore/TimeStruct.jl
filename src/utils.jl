@@ -37,7 +37,7 @@ end
 function expand_dataframe!(df, periods) end
 
 function Base.last(ts::SimpleTimes)
-    return SimplePeriod(ts.len, ts.duration[ts.len])
+    return SimplePeriod(ts.len, ts.duration[ts.len], duration(ts))
 end
 
 function Base.last(_::OperationalScenarios)
@@ -50,7 +50,8 @@ end
 
 function Base.last(sp::StrategicPeriod)
     per = last(sp.operational)
-    return OperationalPeriod(sp.sp, per, _multiple(per, sp.operational, sp))
+    sp_dur = sp.duration * sp.op_per_strat
+    return OperationalPeriod(sp.sp, per, _multiple(per, sp_dur))
 end
 
 function Base.last(sos::StratOperationalScenario)

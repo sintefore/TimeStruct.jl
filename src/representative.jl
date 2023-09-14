@@ -35,7 +35,7 @@ end
 
 Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 
-struct ReprPeriod{T} <: TimePeriod 
+struct ReprPeriod{T} <: TimePeriod
     rp::Int
     period::T
     mult::Float64
@@ -82,8 +82,8 @@ Base.length(rp::RepresentativePeriod) = length(rp.operational)
 Base.eltype(::Type{RepresentativePeriod}) = ReprPeriod
 
 # Iteration through representative periods 
-struct ReprPeriods{T, OP}
-    ts::RepresentativePeriods{T, OP}
+struct ReprPeriods{T,OP}
+    ts::RepresentativePeriods{T,OP}
 end
 
 """
@@ -95,7 +95,12 @@ repr_periods(ts) = ReprPeriods(ts)
 Base.length(rpers::ReprPeriods) = rpers.ts.len
 
 function Base.iterate(rpers::ReprPeriods)
-    return RepresentativePeriod(1,  rpers.ts.rep_periods[1], rpers.ts.duration[1]), 1
+    return RepresentativePeriod(
+        1,
+        rpers.ts.rep_periods[1],
+        rpers.ts.duration[1],
+    ),
+    1
 end
 
 function Base.iterate(rpers::ReprPeriods, state)
@@ -107,4 +112,3 @@ function Base.iterate(rpers::ReprPeriods, state)
     ),
     state + 1
 end
-

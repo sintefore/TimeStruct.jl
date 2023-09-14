@@ -19,7 +19,7 @@ end
     day = SimpleTimes(24, 1)
     @test first(day) == TimeStruct.SimplePeriod(1, 1, 24)
     @test length(day) == 24
-    @test isfirst(TimeStruct.SimplePeriod(1, 1,24))
+    @test isfirst(TimeStruct.SimplePeriod(1, 1, 24))
     @test first(day) < TimeStruct.SimplePeriod(3, 1, 24)
 
     tops = collect(t for t in day)
@@ -53,7 +53,8 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
+    @test typeof(scen_coll[3]) ==
+          TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -82,7 +83,7 @@ end
     @test pers[1] < pers[2]
     @test isfirst(pers[25])
 
-    # Two operational scenarios, one for a day and one for a week with hourly 
+    # Two operational scenarios, one for a day and one for a week with hourly
     # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
@@ -96,7 +97,8 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 2
 
-    @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int, SimpleTimes{Int}}
+    @test typeof(scen_coll[2]) ==
+          TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
     @test probability(scen_coll[2]) == 0.5
     @test repr(scen_coll[1]) == "sc-1"
 
@@ -114,7 +116,11 @@ end
 end
 
 @testitem "RepresentativePeriods" begin
-    rep = RepresentativePeriods(2, [100, 200], [SimpleTimes(5,1), SimpleTimes(3,2)])
+    rep = RepresentativePeriods(
+        2,
+        [100, 200],
+        [SimpleTimes(5, 1), SimpleTimes(3, 2)],
+    )
     @test length(rep) == length(collect(rep))
     @test duration(rep) == 300
 end
@@ -225,7 +231,7 @@ end
     rp = first(TimeStruct.repr_periods(sp))
     per = first(rp)
 
-    summer_sc = OperationalScenarios([SimpleTimes(7, 1), SimpleTimes(1,1)])
+    summer_sc = OperationalScenarios([SimpleTimes(7, 1), SimpleTimes(1, 1)])
     winter_sc = OperationalScenarios(3, SimpleTimes(14, 1))
 
     rep_sc = RepresentativePeriods(2, [185, 180], [summer_sc, winter_sc])
@@ -249,8 +255,6 @@ end
             end
         end
     end
-
-
 end
 
 @testitem "TwoLevel with op scenarios" begin

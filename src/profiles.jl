@@ -74,8 +74,6 @@ function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
     return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
 end
 
-
-
 struct StrategicStochasticProfile{T} <: TimeProfile{T}
     vals::Vector{Vector{T}}
 end

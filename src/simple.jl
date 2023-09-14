@@ -49,5 +49,6 @@ end
 
 function Base.iterate(itr::SimpleTimes{T}, state) where {T}
     state == itr.len && return nothing
-    return SimplePeriod{T}(state + 1, itr.duration[state+1], duration(itr)), state + 1
+    return SimplePeriod{T}(state + 1, itr.duration[state+1], duration(itr)),
+    state + 1
 end

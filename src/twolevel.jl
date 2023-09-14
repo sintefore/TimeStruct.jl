@@ -1,9 +1,9 @@
 """
     struct TwoLevel <: TimeStructure
-A time structure with two levels of time periods. 
+A time structure with two levels of time periods.
 
-On the top level it has a sequence of strategic periods of varying duration. 
-For each strategic period a separate time structure is used for 
+On the top level it has a sequence of strategic periods of varying duration.
+For each strategic period a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 It is possible to use different time units for the two levels by providing the number
 of operational time units per strategic time unit.
@@ -40,7 +40,12 @@ function TwoLevel(
     oper::Vector{<:TimeStructure{T}};
     op_per_strat = 1.0,
 ) where {S,T}
-    return TwoLevel(len, fill(duration, len), oper, convert(Float64, op_per_strat))
+    return TwoLevel(
+        len,
+        fill(duration, len),
+        oper,
+        convert(Float64, op_per_strat),
+    )
 end
 
 function TwoLevel(
@@ -48,9 +53,13 @@ function TwoLevel(
     oper::TimeStructure{T};
     op_per_strat = 1.0,
 ) where {T}
-    return TwoLevel(len, fill(duration(oper), len), fill(oper, len), convert(Float64, op_per_strat))
+    return TwoLevel(
+        len,
+        fill(duration(oper), len),
+        fill(oper, len),
+        convert(Float64, op_per_strat),
+    )
 end
-
 
 function TwoLevel(
     duration::Vector{S},
@@ -119,10 +128,9 @@ function _multiple(rp::ReprPeriod, duration)
     return stripunit(mult)
 end
 
-
 """
 	struct OperationalPeriod <: TimePeriod
-Time period for iteration of a TwoLevel time structure. 
+Time period for iteration of a TwoLevel time structure.
 """
 struct OperationalPeriod <: TimePeriod
     sp::Int
@@ -149,7 +157,6 @@ end
 
 stripunit(val) = val
 stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
-
 
 """
     struct StrategicPeriod <: TimePeriod
@@ -190,7 +197,7 @@ function Base.iterate(sps::StratPeriods)
     1
 end
 
-function Base.iterate(sps::StratPeriods, state) 
+function Base.iterate(sps::StratPeriods, state)
     state == sps.ts.len && return nothing
     sp = StrategicPeriod(
         state + 1,
@@ -214,8 +221,7 @@ function Base.iterate(itr::StrategicPeriod, state = nothing)
     next === nothing && return nothing
     per = next[1]
     sp_dur = itr.duration * itr.op_per_strat
-    return OperationalPeriod(itr.sp, per, _multiple(per, sp_dur)),
-    next[2]
+    return OperationalPeriod(itr.sp, per, _multiple(per, sp_dur)), next[2]
 end
 
 function start_time(sp::StrategicPeriod, ts::TwoLevel{S}) where {S}
@@ -237,7 +243,7 @@ strat_periods(ts::OperationalScenarios) = [ts]
 strategic_periods(ts) = strat_periods(ts)
 
 """
-    struct StratOperationalScenario 
+    struct StratOperationalScenario
 
 A structure representing a single operational scenario for a strategic period supporting
 iteration over its time periods.
@@ -274,7 +280,7 @@ function Base.eltype(::Type{StratOperationalScenario{S,T}}) where {S,T}
     return OperationalPeriod
 end
 
-# Iteration through scenarios 
+# Iteration through scenarios
 struct StratOpScens
     sper::StrategicPeriod
     opscens::Any
@@ -331,8 +337,9 @@ function Base.iterate(srp::StratReprPeriod, state = nothing)
         iterate(srp.operational, state)
     isnothing(next) && return nothing
 
-    sp_dur = srp.duration * srp.op_per_strat 
-    return OperationalPeriod(srp.sp, next[1], _multiple(next[1], sp_dur)), next[2]
+    sp_dur = srp.duration * srp.op_per_strat
+    return OperationalPeriod(srp.sp, next[1], _multiple(next[1], sp_dur)),
+    next[2]
 end
 
 Base.length(srp::StratReprPeriod) = length(srp.operational)
@@ -340,7 +347,7 @@ function Base.eltype(::Type{StratReprPeriod{S,T}}) where {S,T}
     return OperationalPeriod
 end
 
-# Iteration through representative periods 
+# Iteration through representative periods
 struct StratReprPeriods
     sper::StrategicPeriod
     rperiods::Any
@@ -403,7 +410,6 @@ Base.length(os::StratReprOpscenPeriod) = length(os.operational)
 function Base.eltype(::Type{StratReprOpscenPeriod{S,T}}) where {S,T}
     return OperationalPeriod
 end
-
 
 struct StratReprOpscenPeriods{T}
     srp::StratReprPeriod

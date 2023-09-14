@@ -3,7 +3,7 @@
 Time structure that have multiple scenarios where each scenario has its own time structure
 and an associated probability. Note that all scenarios must use the same type for the duration.
 """
-struct OperationalScenarios{T, OP<:TimeStructure{T}} <: TimeStructure{T}
+struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
     scenarios::Vector{OP}
     probability::Vector{Float64}
@@ -74,7 +74,6 @@ total_duration(t::ScenarioPeriod) = total_duration(t.period)
 
 _oper(t::ScenarioPeriod) = _oper(t.period)
 _opscen(t::ScenarioPeriod) = t.sc
-
 
 """
     struct OperationalScenario 

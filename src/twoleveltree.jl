@@ -170,7 +170,9 @@ end
 
 opscenarios(n::StratNode) = StratNodeOpScens(n, n.operational)
 
-function Base.length(sops::StratNodeOpScens{OperationalScenarios{T,OP}}) where {T,OP}
+function Base.length(
+    sops::StratNodeOpScens{OperationalScenarios{T,OP}},
+) where {T,OP}
     return sops.operational.len
 end
 function Base.iterate(
