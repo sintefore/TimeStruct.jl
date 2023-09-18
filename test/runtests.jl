@@ -111,7 +111,7 @@ end
 end
 
 @testitem "RepresentativePeriods" begin
-    rep = RepresentativePeriods(2, [100, 200], [SimpleTimes(5,1), SimpleTimes(3,2)])
+    rep = RepresentativePeriods(2, 8760, [0.4, 0.6], [SimpleTimes(24,1), SimpleTimes(24,1)])
     @test length(rep) == length(collect(rep))
     @test duration(rep) == 300
 end

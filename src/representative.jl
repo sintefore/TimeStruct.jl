@@ -1,17 +1,18 @@
 struct RepresentativePeriods{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
-    duration::Vector{S}
+    duration::S
+    period_share::Vector{Float64}
     rep_periods::Vector{OP}
 end
 
 duration(ts::RepresentativePeriods) = sum(ts.duration)
 
-# Iteration through all time periods for the representative
+# Iteration through all time periods for the representative periods
 function Base.iterate(ts::RepresentativePeriods)
     rp = 1
     next = iterate(ts.rep_periods[rp])
     next === nothing && return nothing
-    mult = ts.duration[rp] / total_duration(next[1])
+    mult = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
@@ -25,7 +26,7 @@ function Base.iterate(ts::RepresentativePeriods, state)
         end
         next = iterate(ts.rep_periods[rp])
     end
-    mult = ts.duration[rp] / total_duration(next[1])
+    mult = ts.period_share[rp] * ts.duration / duration(repr_periods[rp])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
