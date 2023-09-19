@@ -48,6 +48,18 @@ function Base.last(sc::OperationalScenario)
     return ScenarioPeriod(sc.scen, sc.probability, last(sc.operational))
 end
 
+function Base.last(rp::RepresentativePeriod)
+    per = last(rp.operational)
+    mult = rp.duration / total_duration(per)
+    return ReprPeriod(rp.rper, per, mult)
+end
+
+function Base.last(srp::StratReprPeriod)
+    per = last(srp.operational)
+    sp_dur = srp.duration * srp.op_per_strat
+    return OperationalPeriod(srp.sp, per, _multiple(per, sp_dur))
+end
+
 function Base.last(sp::StrategicPeriod)
     per = last(sp.operational)
     sp_dur = sp.duration * sp.op_per_strat
