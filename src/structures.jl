@@ -18,7 +18,7 @@ abstract type TimePeriod end
 
 """
     duration(t::TimePeriod) 
-The duration of a time period in number of time units.
+The duration of a time period in number of operational time units.
 """
 duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 

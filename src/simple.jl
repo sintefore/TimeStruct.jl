@@ -32,11 +32,10 @@ A single time period returned when iterating through a SimpleTimes structure
 struct SimplePeriod{T<:Number} <: TimePeriod
     op::Int
     duration::T
-    total_duration::T
 end
 
 duration(t::SimplePeriod) = t.duration
-total_duration(t::SimplePeriod) = t.total_duration
+multiple(t::SimplePeriod) = 1
 isfirst(t::SimplePeriod) = t.op == 1
 _oper(t::SimplePeriod) = t.op
 
@@ -44,10 +43,10 @@ Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
 Base.show(io::IO, t::SimplePeriod) = print(io, "t$(t.op)")
 
 function Base.iterate(itr::SimpleTimes{T}) where {T}
-    return SimplePeriod{T}(1, itr.duration[1], duration(itr)), 1
+    return SimplePeriod{T}(1, itr.duration[1]), 1
 end
 
 function Base.iterate(itr::SimpleTimes{T}, state) where {T}
     state == itr.len && return nothing
-    return SimplePeriod{T}(state + 1, itr.duration[state+1], duration(itr)), state + 1
+    return SimplePeriod{T}(state + 1, itr.duration[state+1]), state + 1
 end

@@ -1,6 +1,23 @@
-struct RepresentativePeriods{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
+"""
+    RepresentativePeriods <: TimeStructure
+
+Time structure that allows a time period to be represented by one or more
+shorter representative time periods.
+
+The representative periods are an ordered sequence of TimeStructures that are 
+used for each representative period. In addition, each representative period
+has an associated share that specifies how much of the total duration that
+is attributed to it. 
+
+### Example
+```julia
+# A year represented by two days with hourly resolution and relative shares of 0.7 and 0.3
+periods = RepresentativePeriods(2, 8760, [0.7, 0.3], [SimpleTimes(24, 1), SimpleTimes(24,1)]) 
+```
+"""
+struct RepresentativePeriods{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
-    duration::S
+    duration::T
     period_share::Vector{Float64}
     rep_periods::Vector{OP}
 end
@@ -12,7 +29,8 @@ function Base.iterate(ts::RepresentativePeriods)
     rp = 1
     next = iterate(ts.rep_periods[rp])
     next === nothing && return nothing
-    mult = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
+    mult_adj = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
+    mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
@@ -26,7 +44,8 @@ function Base.iterate(ts::RepresentativePeriods, state)
         end
         next = iterate(ts.rep_periods[rp])
     end
-    mult = ts.period_share[rp] * ts.duration / duration(repr_periods[rp])
+    mult_adj = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
+    mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
 
@@ -36,6 +55,8 @@ end
 
 Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 
+# A single operational time period used when iterating through
+# a represenative period 
 struct ReprPeriod{T} <: TimePeriod 
     rp::Int
     period::T
@@ -50,20 +71,23 @@ end
 isfirst(t::ReprPeriod) = isfirst(t.period)
 duration(t::ReprPeriod) = duration(t.period)
 probability(t::ReprPeriod) = probability(t.period)
+multiple(t::ReprPeriod) = t.mult
 
 _oper(t::ReprPeriod) = _oper(t.period)
 _opscen(t::ReprPeriod) = _opscen(t.period)
 _rper(t::ReprPeriod) = t.rp
 
 """
-    struct RepresentativePeriod 
+    RepresentativePeriod 
+
 A structure representing a single representative period supporting
 iteration over its time periods.
 """
-struct RepresentativePeriod{T} <: TimeStructure{T}
+struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     rper::Int
-    operational::TimeStructure{T}
+    operational::OP
     duration::T
+    per_share::Float64
 end
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(rp.rper)")
 probability(rp::RepresentativePeriod) = 1.0
@@ -75,7 +99,8 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
         isnothing(state) ? iterate(rp.operational) :
         iterate(rp.operational, state)
     next === nothing && return nothing
-    mult = rp.duration / total_duration(next[1])
+    mult_adj = rp.per_share * rp.duration / duration(rp.operational)
+    mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp.rper, next[1], mult), next[2]
 end
 
@@ -89,14 +114,15 @@ end
 
 """
     repr_periods(ts)
+
 Iterator that iterates over representative periods in an `RepresentativePeriods` time structure.
 """
-repr_periods(ts) = ReprPeriods(ts)
+repr_periods(ts::RepresentativePeriods) = ReprPeriods(ts)
 
 Base.length(rpers::ReprPeriods) = rpers.ts.len
 
 function Base.iterate(rpers::ReprPeriods)
-    return RepresentativePeriod(1,  rpers.ts.rep_periods[1], rpers.ts.duration[1]), 1
+    return RepresentativePeriod(1,  rpers.ts.rep_periods[1], rpers.ts.duration[1], rpers.ts.period_share[1]), 1
 end
 
 function Base.iterate(rpers::ReprPeriods, state)
@@ -104,8 +130,11 @@ function Base.iterate(rpers::ReprPeriods, state)
     return RepresentativePeriod(
         state + 1,
         rpers.ts.rep_periods[state+1],
-        rpers.ts.duration[state+1],
+        rpers.ts.duration,
+        rpers.ts.period_share[state+1],
     ),
     state + 1
 end
 
+# Fallback solution is to behave as a single representative period
+repr_periods(ts::TimeStructure) = [ts]

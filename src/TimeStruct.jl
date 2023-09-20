@@ -6,8 +6,8 @@ import Unitful
 
 include("structures.jl")
 include("simple.jl")
-include("stochastic.jl")
 include("representative.jl")
+include("stochastic.jl")
 include("twolevel.jl")
 include("twoleveltree.jl")
 include("profiles.jl")
