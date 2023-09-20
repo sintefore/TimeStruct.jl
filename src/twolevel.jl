@@ -150,7 +150,8 @@ stripunit(val) = val
 stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
 
 """
-    struct StrategicPeriod <: TimePeriod
+    StrategicPeriod <: TimePeriod
+
 Time period for iteration of strategic periods.
 """
 struct StrategicPeriod{S,OP} <: TimePeriod
@@ -167,12 +168,29 @@ Base.isless(sp1::StrategicPeriod, sp2::StrategicPeriod) = sp1.sp < sp2.sp
 duration(sp::StrategicPeriod) = sp.duration
 _strat_per(sp::StrategicPeriod) = sp.sp
 
+"""
+    multiple_strat(sp::StrategicPeriod, t)
+
+Returns the number of times a time period `t` should be accounted for
+when accumulating over one single unit of strategic time.
+
+# Example
+```julia
+periods = TwoLevel(10, 1, SimpleTimes(24,1); op_per_strat = 8760)
+for sp in strategic_periods(periods)
+    hours_per_year = sum(duration(t) * multiple_strat(sp, t) for t in sp)
+end
+```
+"""
+multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration(sp)
+
 struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
 end
 
 """
     strat_periods(ts::TwoLevel)
+
 Iteration through the strategic periods of a 'TwoLevel' structure.
 """
 strat_periods(ts::TwoLevel) = StratPeriods(ts)
