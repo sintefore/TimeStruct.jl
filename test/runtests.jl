@@ -129,6 +129,22 @@ end
     @test sum(duration(t) * multiple(t) for t in pers) == 10
 end
 
+@testitem "RepresentativePeriods with units" begin
+    using Unitful
+
+    rep = RepresentativePeriods(
+        2,
+        1u"yr",
+        [0.4, 0.6],
+        [SimpleTimes(24, 1u"hr"), SimpleTimes(24, 1u"hr")],
+    )
+
+    mult1 = [multiple(t) for t in rep]
+    mult2 = [multiple(t) for rp in repr_periods(rep) for t in rp]
+
+    @test mult1 == mult2
+end
+
 @testitem "RepresentativePeriods with OperationalScenarios" begin
     day = SimpleTimes(1, 1)
     week = SimpleTimes(7, 1)
@@ -193,6 +209,26 @@ end
 
     @test pers == pers_rep
     @test pers == pers_scen
+end
+
+@testitem "RepresentativePeriods and OperationalScenarios with units" begin
+    using Unitful
+
+    day = SimpleTimes(1, 1u"d")
+    week = SimpleTimes(7, 1u"d")
+    scenarios = OperationalScenarios(2, [day, week], [0.1, 0.9])
+
+    rep = RepresentativePeriods(2, 10u"wk", [0.7, 0.3], [scenarios, scenarios])
+
+    @test sum(probability(t) * duration(t) * multiple(t) for t in rep) ≈ 70u"d"
+    @test sum(
+        probability(t) * duration(t) * multiple(t) for rp in repr_periods(rep)
+        for t in rp
+    ) ≈ 70u"d"
+    @test sum(
+        probability(t) * duration(t) * multiple(t) for rp in repr_periods(rep)
+        for sc in opscenarios(rp) for t in sc
+    ) ≈ 70u"d"
 end
 
 @testitem "TwoLevel" begin

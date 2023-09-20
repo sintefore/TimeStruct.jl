@@ -15,9 +15,9 @@ is attributed to it.
 periods = RepresentativePeriods(2, 8760, [0.7, 0.3], [SimpleTimes(24, 1), SimpleTimes(24,1)]) 
 ```
 """
-struct RepresentativePeriods{T,OP<:TimeStructure{T}} <: TimeStructure{T}
+struct RepresentativePeriods{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
-    duration::T
+    duration::S
     period_share::Vector{Float64}
     rep_periods::Vector{OP}
 end
@@ -29,7 +29,9 @@ function Base.iterate(ts::RepresentativePeriods)
     rp = 1
     next = iterate(ts.rep_periods[rp])
     next === nothing && return nothing
-    mult_adj = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
+    mult_adj = stripunit(
+        ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp]),
+    )
     mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
@@ -44,7 +46,9 @@ function Base.iterate(ts::RepresentativePeriods, state)
         end
         next = iterate(ts.rep_periods[rp])
     end
-    mult_adj = ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp])
+    mult_adj = stripunit(
+        ts.period_share[rp] * ts.duration / duration(ts.rep_periods[rp]),
+    )
     mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp, next[1], mult), (rp, next[2])
 end
@@ -83,10 +87,10 @@ _rper(t::ReprPeriod) = t.rp
 A structure representing a single representative period supporting
 iteration over its time periods.
 """
-struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: TimeStructure{T}
+struct RepresentativePeriod{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
     rper::Int
     operational::OP
-    duration::T
+    duration::S
     per_share::Float64
 end
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(rp.rper)")
@@ -99,7 +103,7 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
         isnothing(state) ? iterate(rp.operational) :
         iterate(rp.operational, state)
     next === nothing && return nothing
-    mult_adj = rp.per_share * rp.duration / duration(rp.operational)
+    mult_adj = stripunit(rp.per_share * rp.duration / duration(rp.operational))
     mult = mult_adj * multiple(next[1])
     return ReprPeriod(rp.rper, next[1], mult), next[2]
 end
