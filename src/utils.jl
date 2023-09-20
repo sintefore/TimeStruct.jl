@@ -33,3 +33,47 @@ end
 function start_oper_time(t::TimePeriod, ts::TimeStructure)
     return end_oper_time(t, ts) - duration(t)
 end
+
+function expand_dataframe!(df, periods) end
+
+function Base.last(ts::SimpleTimes)
+    return SimplePeriod(ts.len, ts.duration[ts.len], duration(ts))
+end
+
+function Base.last(_::OperationalScenarios)
+    return error("last() not implemented for OperationalScenarios")
+end
+
+function Base.last(sc::OperationalScenario)
+    return ScenarioPeriod(
+        sc.scen,
+        sc.probability,
+        sc.multiple,
+        last(sc.operational),
+    )
+end
+
+function Base.last(rp::RepresentativePeriod)
+    per = last(rp.operational)
+    mult = stripunit(rp.duration / duration(rp.operational))
+    return ReprPeriod(rp.rper, per, mult)
+end
+
+function Base.last(srp::StratReprPeriod)
+    per = last(srp.operational)
+    mult = stripunit(srp.duration_sp * srp.op_per_strat / srp.duration_rp)
+    return OperationalPeriod(srp.sp, per, mult * multiple(per))
+end
+
+function Base.last(sp::StrategicPeriod)
+    per = last(sp.operational)
+    mult = stripunit(duration(sp) * sp.op_per_strat / duration(sp.operational))
+    return OperationalPeriod(sp.sp, per, mult * multiple(per))
+end
+
+function Base.last(sos::StratOperationalScenario)
+    per = last(sos.operational)
+    mult =
+        stripunit(sos.duration * sos.op_per_strat / duration(sos.operational))
+    return OperationalPeriod(sos.sp, per, mult * multiple(per))
+end

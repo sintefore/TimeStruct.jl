@@ -41,7 +41,12 @@ function TwoLevel(
     oper::Vector{<:TimeStructure{T}};
     op_per_strat = 1.0,
 ) where {S,T}
-    return TwoLevel(len, fill(duration, len), oper, convert(Float64, op_per_strat))
+    return TwoLevel(
+        len,
+        fill(duration, len),
+        oper,
+        convert(Float64, op_per_strat),
+    )
 end
 
 function TwoLevel(
@@ -49,9 +54,13 @@ function TwoLevel(
     oper::TimeStructure{T};
     op_per_strat = 1.0,
 ) where {T}
-    return TwoLevel(len, fill(duration(oper), len), fill(oper, len), convert(Float64, op_per_strat))
+    return TwoLevel(
+        len,
+        fill(duration(oper), len),
+        fill(oper, len),
+        convert(Float64, op_per_strat),
+    )
 end
-
 
 function TwoLevel(
     duration::Vector{S},
@@ -80,7 +89,8 @@ function Base.iterate(itr::TwoLevel)
     next === nothing && return nothing
     per = next[1]
 
-    mult_adj = itr.duration[sp] * itr.op_per_strat /  duration(itr.operational[sp])
+    mult_adj =
+        itr.duration[sp] * itr.op_per_strat / duration(itr.operational[sp])
     mult = mult_adj * multiple(per)
     return OperationalPeriod(sp, per, mult), (sp, next[2])
 end
@@ -97,7 +107,8 @@ function Base.iterate(itr::TwoLevel, state)
     end
     per = next[1]
 
-    mult_adj = itr.duration[sp] * itr.op_per_strat /  duration(itr.operational[sp])
+    mult_adj =
+        itr.duration[sp] * itr.op_per_strat / duration(itr.operational[sp])
     mult = mult_adj * multiple(per)
     return OperationalPeriod(sp, per, mult), (sp, next[2])
 end
@@ -107,7 +118,6 @@ function Base.length(itr::TwoLevel)
 end
 
 Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
-
 
 """
 	struct OperationalPeriod <: TimePeriod
@@ -138,7 +148,6 @@ end
 
 stripunit(val) = val
 stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
-
 
 """
     struct StrategicPeriod <: TimePeriod
@@ -179,7 +188,7 @@ function Base.iterate(sps::StratPeriods)
     1
 end
 
-function Base.iterate(sps::StratPeriods, state) 
+function Base.iterate(sps::StratPeriods, state)
     state == sps.ts.len && return nothing
     sp = StrategicPeriod(
         state + 1,
@@ -202,11 +211,10 @@ function Base.iterate(itr::StrategicPeriod, state = nothing)
         iterate(itr.operational, state)
     next === nothing && return nothing
     per = next[1]
-    
-    mult_adj = itr.duration * itr.op_per_strat /  duration(itr.operational)
+
+    mult_adj = itr.duration * itr.op_per_strat / duration(itr.operational)
     mult = mult_adj * multiple(per)
-    return OperationalPeriod(itr.sp, per,mult),
-    next[2]
+    return OperationalPeriod(itr.sp, per, mult), next[2]
 end
 
 function start_time(sp::StrategicPeriod, ts::TwoLevel{S}) where {S}
@@ -324,8 +332,8 @@ function Base.iterate(srp::StratReprPeriod, state = nothing)
     isnothing(next) && return nothing
 
     per = next[1]
-    
-    mult_adj = srp.duration_sp * srp.op_per_strat /  srp.duration_rp
+
+    mult_adj = srp.duration_sp * srp.op_per_strat / srp.duration_rp
     mult = mult_adj * multiple(per)
     return OperationalPeriod(srp.sp, next[1], mult), next[2]
 end
@@ -399,7 +407,6 @@ Base.length(os::StratReprOpscenPeriod) = length(os.operational)
 function Base.eltype(::Type{StratReprOpscenPeriod{S,T}}) where {S,T}
     return OperationalPeriod
 end
-
 
 struct StratReprOpscenPeriods{T}
     srp::StratReprPeriod

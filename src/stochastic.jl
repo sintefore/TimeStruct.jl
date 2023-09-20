@@ -4,7 +4,7 @@
 Time structure that have multiple scenarios where each scenario has its own time structure
 and an associated probability. Note that all scenarios must use the same type for the duration.
 """
-struct OperationalScenarios{T, OP<:TimeStructure{T}} <: TimeStructure{T}
+struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
     scenarios::Vector{OP}
     probability::Vector{Float64}
@@ -68,7 +68,12 @@ struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
 end
 
 function ScenarioPeriod(scenario::Int, prob::Number, multiple::Number, period)
-    return ScenarioPeriod(scenario, Base.convert(Float64, prob), Base.convert(Float64, multiple), period)
+    return ScenarioPeriod(
+        scenario,
+        Base.convert(Float64, prob),
+        Base.convert(Float64, multiple),
+        period,
+    )
 end
 
 Base.show(io::IO, up::ScenarioPeriod) = print(io, "sc$(up.sc)-$(up.period)")
@@ -83,7 +88,6 @@ multiple(t::ScenarioPeriod) = t.multiple
 
 _oper(t::ScenarioPeriod) = _oper(t.period)
 _opscen(t::ScenarioPeriod) = t.sc
-
 
 """
     struct OperationalScenario 
@@ -106,7 +110,8 @@ function Base.iterate(os::OperationalScenario, state = nothing)
         isnothing(state) ? iterate(os.operational) :
         iterate(os.operational, state)
     next === nothing && return nothing
-    return ScenarioPeriod(os.scen, os.probability, os.multiple, next[1]), next[2]
+    return ScenarioPeriod(os.scen, os.probability, os.multiple, next[1]),
+    next[2]
 end
 
 Base.length(os::OperationalScenario) = length(os.operational)
@@ -127,17 +132,23 @@ Base.length(ops::OpScens) = ops.ts.len
 
 function Base.iterate(ops::OpScens)
     mult = duration(ops.ts) / duration(ops.ts.scenarios[1])
-    return OperationalScenario(1, ops.ts.probability[1], mult, ops.ts.scenarios[1]), 1
+    return OperationalScenario(
+        1,
+        ops.ts.probability[1],
+        mult,
+        ops.ts.scenarios[1],
+    ),
+    1
 end
 
 function Base.iterate(ops::OpScens, state)
     state == ops.ts.len && return nothing
-    mult = duration(ops.ts) / duration(ops.ts.scenarios[state + 1])
+    mult = duration(ops.ts) / duration(ops.ts.scenarios[state+1])
     return OperationalScenario(
         state + 1,
-        ops.ts.probability[state + 1],
+        ops.ts.probability[state+1],
         mult,
-        ops.ts.scenarios[state + 1],
+        ops.ts.scenarios[state+1],
     ),
     state + 1
 end
@@ -146,7 +157,7 @@ end
 opscenarios(ts::SimpleTimes) = [ts]
 probability(ts::SimpleTimes) = 1.0
 
-struct ReprOperationalScenario{T, OP<:TimeStructure{T}} <: TimeStructure{T}
+struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     rper::Int64
     scen::Int64
     probability::Float64
@@ -155,7 +166,9 @@ struct ReprOperationalScenario{T, OP<:TimeStructure{T}} <: TimeStructure{T}
     operational::OP
 end
 
-Base.show(io::IO, ros::ReprOperationalScenario) = print(io, "rp$(ros.rp)-sc$(ros.scen)")
+function Base.show(io::IO, ros::ReprOperationalScenario)
+    return print(io, "rp$(ros.rp)-sc$(ros.scen)")
+end
 
 # Iterate the time periods of an operational scenario
 function Base.iterate(ros::ReprOperationalScenario, state = nothing)
@@ -165,12 +178,17 @@ function Base.iterate(ros::ReprOperationalScenario, state = nothing)
     next === nothing && return nothing
     period = next[1]
     return ReprPeriod(
-        ros.rper, 
-        ScenarioPeriod(ros.scen, ros.probability, ros.multiple_scen * multiple(period), period), 
-        ros.multiple_repr * ros.multiple_scen * multiple(period)),
-         next[2]
+        ros.rper,
+        ScenarioPeriod(
+            ros.scen,
+            ros.probability,
+            ros.multiple_scen * multiple(period),
+            period,
+        ),
+        ros.multiple_repr * ros.multiple_scen * multiple(period),
+    ),
+    next[2]
 end
-
 
 # Iteration through scenarios of a representative period
 struct RepOpScens{T}
@@ -184,35 +202,41 @@ end
 
 Iterator that iterates over operational scenarios in a `RepresentativePeriod` time structure.
 """
-function opscenarios(rep::RepresentativePeriod{T, OperationalScenarios{T,OP}}) where {T,OP} 
+function opscenarios(
+    rep::RepresentativePeriod{T,OperationalScenarios{T,OP}},
+) where {T,OP}
     mult = rep.per_share * duration(rep) / duration(rep.operational)
     return RepOpScens(rep.rper, mult, rep.operational)
 end
 
-opscenarios(rep::RepresentativePeriod) = [rep] 
+opscenarios(rep::RepresentativePeriod) = [rep]
 
 Base.length(ros::RepOpScens) = length(ros.op_scens)
 
 function Base.iterate(ros::RepOpScens)
     mult_scen = duration(ros.op_scens) / duration(ros.op_scens.scenarios[1])
-    return ReprOperationalScenario(ros.rper, 1, ros.op_scens.probability[1], ros.mult, mult_scen, ros.op_scens.scenarios[1]), 1
+    return ReprOperationalScenario(
+        ros.rper,
+        1,
+        ros.op_scens.probability[1],
+        ros.mult,
+        mult_scen,
+        ros.op_scens.scenarios[1],
+    ),
+    1
 end
 
 function Base.iterate(ros::RepOpScens, state)
     state == length(ros.op_scens.scenarios) && return nothing
-    mult_scen = duration(ros.op_scens) / duration(ros.op_scens.scenarios[state + 1])
+    mult_scen =
+        duration(ros.op_scens) / duration(ros.op_scens.scenarios[state+1])
     return ReprOperationalScenario(
         ros.rper,
         state + 1,
-        ros.op_scens.probability[state + 1],
+        ros.op_scens.probability[state+1],
         ros.mult,
         mult_scen,
-        ros.op_scens.scenarios[state + 1],
+        ros.op_scens.scenarios[state+1],
     ),
     state + 1
 end
-
-
-
-
-

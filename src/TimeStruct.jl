@@ -1,7 +1,5 @@
 module TimeStruct
 
-using Requires
-
 import Unitful
 
 include("structures.jl")
@@ -13,12 +11,6 @@ include("twoleveltree.jl")
 include("profiles.jl")
 include("utils.jl")
 include("discount.jl")
-
-function __init__()
-    @require DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0" include(
-        "dataframes.jl",
-    )
-end
 
 export TimeStructure
 export SimpleTimes
