@@ -83,6 +83,32 @@ function TwoLevel(
     return TwoLevel(Unitful.Quantity.(duration, u), oper; op_per_strat = 1.0)
 end
 
+"""
+    TwoLevel(len, duration::Real, oper::RepresentativePeriods)
+
+Creates a TwoLevel time structure of given length using the same duration 
+and representative periods for each strategic period. The `op_per_strat` parameter
+is set equal to the duration of the RepresentativePeriods structure to ensure consistency. 
+
+# Example
+```julia
+# 3 strategic periods of length 5 years, where each year of 365 day is represented by two weeks
+periods = TwoLevel(3, 5, RepresentativePeriods(2, 365, [0.5, 0.5], [SimpleTimes(7,1), SimpleTimes(7,1)]))
+```
+"""
+function TwoLevel(
+    len::Integer,
+    duration::Real,
+    oper::RepresentativePeriods
+) 
+    return TwoLevel(
+        len,
+        fill(duration, len),
+        fill(oper, len),
+        convert(Float64, TimeStruct.duration(oper)),
+    )
+end
+
 function Base.iterate(itr::TwoLevel)
     sp = 1
     next = iterate(itr.operational[sp])
