@@ -348,6 +348,9 @@ end
         rep in repr_periods(sp) for t in rep
     )
     @test total_dur_rep === total_dur
+
+    ts_rep = TwoLevel(10, 5, rep)
+    @test ts_rep.op_per_strat == 365
 end
 
 @testitem "TwoLevel with op scenarios" begin
@@ -445,7 +448,8 @@ end
             8760,
             [0.7, 0.3],
             [opscen_summer, opscen_winter],
-        ),
+        );
+        op_per_strat = 1.0
     )
 
     pers = collect(ts)
