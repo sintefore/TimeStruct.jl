@@ -18,7 +18,7 @@ Time profile with a value that varies with the operational time
 period.
 
 If too few values are provided, the last provided value will be
-repeated. 
+repeated.
 """
 struct OperationalProfile{T} <: TimeProfile{T}
     vals::Array{T}
@@ -35,7 +35,7 @@ end
 Time profile with a separate time profile for each strategic period.
 
 If too few profiles are provided, the last given profile will be
-repeated.    
+repeated.
 """
 struct StrategicProfile{T} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
@@ -48,7 +48,7 @@ function StrategicProfile(vals::Vector{T}) where {T}
     return StrategicProfile{T}([FixedProfile{T}(v) for v in vals])
 end
 
-""" 
+"""
     ScenarioProfile
 Time profile with a separate time profile for each scenario
 """

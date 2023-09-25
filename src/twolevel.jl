@@ -1,10 +1,10 @@
 """
     struct TwoLevel <: TimeStructure
 
-A time structure with two levels of time periods. 
+A time structure with two levels of time periods.
 
-On the top level it has a sequence of strategic periods of varying duration. 
-For each strategic period a separate time structure is used for 
+On the top level it has a sequence of strategic periods of varying duration.
+For each strategic period a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 It is possible to use different time units for the two levels by providing the number
 of operational time units per strategic time unit.
@@ -86,9 +86,9 @@ end
 """
     TwoLevel(len, duration::Real, oper::RepresentativePeriods)
 
-Creates a TwoLevel time structure of given length using the same duration 
+Creates a TwoLevel time structure of given length using the same duration
 and representative periods for each strategic period. The `op_per_strat` parameter
-is set equal to the duration of the RepresentativePeriods structure to ensure consistency. 
+is set equal to the duration of the RepresentativePeriods structure to ensure consistency.
 
 # Example
 ```julia
@@ -96,11 +96,7 @@ is set equal to the duration of the RepresentativePeriods structure to ensure co
 periods = TwoLevel(3, 5, RepresentativePeriods(2, 365, [0.5, 0.5], [SimpleTimes(7,1), SimpleTimes(7,1)]))
 ```
 """
-function TwoLevel(
-    len::Integer,
-    duration::Real,
-    oper::RepresentativePeriods
-) 
+function TwoLevel(len::Integer, duration::Real, oper::RepresentativePeriods)
     return TwoLevel(
         len,
         fill(duration, len),
@@ -147,7 +143,7 @@ Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 
 """
 	struct OperationalPeriod <: TimePeriod
-Time period for iteration of a TwoLevel time structure. 
+Time period for iteration of a TwoLevel time structure.
 """
 struct OperationalPeriod <: TimePeriod
     sp::Int
@@ -280,7 +276,7 @@ strat_periods(ts::OperationalScenarios) = [ts]
 strategic_periods(ts) = strat_periods(ts)
 
 """
-    struct StratOperationalScenario 
+    struct StratOperationalScenario
 
 A structure representing a single operational scenario for a strategic period supporting
 iteration over its time periods.
@@ -317,7 +313,7 @@ function Base.eltype(::Type{StratOperationalScenario{S,T}}) where {S,T}
     return OperationalPeriod
 end
 
-# Iteration through scenarios 
+# Iteration through scenarios
 struct StratOpScens
     sper::StrategicPeriod
     opscens::Any
@@ -361,6 +357,7 @@ struct StratReprPeriod{S1,S2,T} <: TimeStructure{T}
     operational::TimeStructure{T}
     op_per_strat::Float64
 end
+isfirst(srp::StratReprPeriod) = srp.rp == 1
 
 function Base.show(io::IO, srp::StratReprPeriod)
     return print(io, "sp$(srp.sp)-rp$(srp.rp)")
@@ -387,19 +384,32 @@ function Base.eltype(::Type{StratReprPeriod{S,T}}) where {S,T}
     return OperationalPeriod
 end
 
-# Iteration through representative periods 
+# Iteration through representative periods
 struct StratReprPeriods
     sper::StrategicPeriod
     rperiods::Any
 end
 
 """
-    repr_periods(sp)
+    repr_periods(sper)
 
     Iterator that iterates over representative periods for a specific strategic period.
 """
 function repr_periods(sper::StrategicPeriod)
     return StratReprPeriods(sper, repr_periods(sper.operational))
+end
+
+"""
+    repr_periods(ts)
+
+    Iterator that iterates over representative periods for a TwoLevel time structure.
+"""
+function repr_periods(ts::TwoLevel)
+    rps = []
+    for sp in collect(strategic_periods(ts))
+        append!(rps, collect(repr_periods(sp)))
+    end
+    return rps
 end
 
 Base.length(reps::StratReprPeriods) = length(reps.rperiods)

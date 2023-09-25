@@ -80,7 +80,7 @@ end
     @test pers[1] < pers[2]
     @test isfirst(pers[25])
 
-    # Two operational scenarios, one for a day and one for a week with hourly 
+    # Two operational scenarios, one for a day and one for a week with hourly
     # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
@@ -121,6 +121,8 @@ end
     )
     @test length(rep) == length(collect(rep))
     @test duration(rep) == 8760
+    per = collect(rep)
+    @test last(collect(repr_periods(rep))[2]) == per[end]
 
     # SimpleTimes as one representative period
     simple = SimpleTimes(10, 1)
@@ -198,7 +200,7 @@ end
         t in sc
     )
 
-    # Test with just SimpleTimes 
+    # Test with just SimpleTimes
     simple = SimpleTimes(10, 1)
 
     pers = collect(simple)
@@ -351,6 +353,19 @@ end
 
     ts_rep = TwoLevel(10, 5, rep)
     @test ts_rep.op_per_strat == 365
+
+    sps = collect(strategic_periods(ts))
+    rps_1 = collect(repr_periods(sps[1]))
+    @test isfirst(rps_1[1])
+    @test !isfirst(rps_1[2])
+    @test last(sps[1]) == rps_1[2]
+    @test last(sps[1]) != rps_1[1]
+
+    rps = repr_periods(ts)
+    @test sum(
+        sum(rp == rps[(rp.sp-1)*length(sp)+rp.rp] for rp in repr_periods(sp))
+        for sp in strategic_periods(ts)
+    ) == length(rps)
 end
 
 @testitem "TwoLevel with op scenarios" begin
@@ -449,7 +464,7 @@ end
             [0.7, 0.3],
             [opscen_summer, opscen_winter],
         );
-        op_per_strat = 1.0
+        op_per_strat = 1.0,
     )
 
     pers = collect(ts)

@@ -4,15 +4,15 @@
 Time structure that allows a time period to be represented by one or more
 shorter representative time periods.
 
-The representative periods are an ordered sequence of TimeStructures that are 
+The representative periods are an ordered sequence of TimeStructures that are
 used for each representative period. In addition, each representative period
 has an associated share that specifies how much of the total duration that
-is attributed to it. 
+is attributed to it.
 
 ### Example
 ```julia
 # A year represented by two days with hourly resolution and relative shares of 0.7 and 0.3
-periods = RepresentativePeriods(2, 8760, [0.7, 0.3], [SimpleTimes(24, 1), SimpleTimes(24,1)]) 
+periods = RepresentativePeriods(2, 8760, [0.7, 0.3], [SimpleTimes(24, 1), SimpleTimes(24,1)])
 ```
 """
 struct RepresentativePeriods{S,T,OP<:TimeStructure{T}} <: TimeStructure{T}
@@ -60,7 +60,7 @@ end
 Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 
 # A single operational time period used when iterating through
-# a represenative period 
+# a represenative period
 struct ReprPeriod{T} <: TimePeriod
     rp::Int
     period::T
@@ -82,7 +82,7 @@ _opscen(t::ReprPeriod) = _opscen(t.period)
 _rper(t::ReprPeriod) = t.rp
 
 """
-    RepresentativePeriod 
+    RepresentativePeriod
 
 A structure representing a single representative period supporting
 iteration over its time periods.
@@ -111,7 +111,7 @@ end
 Base.length(rp::RepresentativePeriod) = length(rp.operational)
 Base.eltype(::Type{RepresentativePeriod}) = ReprPeriod
 
-# Iteration through representative periods 
+# Iteration through representative periods
 struct ReprPeriods{T,OP}
     ts::RepresentativePeriods{T,OP}
 end

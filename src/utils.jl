@@ -55,7 +55,7 @@ end
 
 function Base.last(rp::RepresentativePeriod)
     per = last(rp.operational)
-    mult = stripunit(rp.duration / duration(rp.operational))
+    mult = stripunit(rp.duration * rp.per_share / duration(rp.operational))
     return ReprPeriod(rp.rper, per, mult)
 end
 
@@ -76,4 +76,8 @@ function Base.last(sos::StratOperationalScenario)
     mult =
         stripunit(sos.duration * sos.op_per_strat / duration(sos.operational))
     return OperationalPeriod(sos.sp, per, mult * multiple(per))
+end
+
+function Base.last(sp::StrategicPeriod{T,U}) where {T,U<:RepresentativePeriods}
+    return collect(repr_periods(sp))[end]
 end

@@ -26,6 +26,7 @@ export ScenarioProfile
 export StrategicProfile
 export StrategicStochasticProfile
 export DynamicStochasticProfile
+export RepresentativeProfile
 
 export opscenarios
 export repr_periods
