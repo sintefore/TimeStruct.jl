@@ -1,6 +1,7 @@
 stages:
   - testing
   - formatting
+  - deploy
 
 test_light:
   stage: testing
@@ -43,3 +44,21 @@ format:
   only:
     - merge_requests
     - main
+
+pages:
+  stage: deploy
+  image: julia:latest
+  script:
+    - cd docs
+    - julia --project=. -e 'using Pkg; Pkg.add("Documenter")'  # install Documenter
+    - julia --project=. --color=yes make.jl  # make documentation
+    - cd ..
+    - mv docs/build public  # move to the directory picked up by Gitlab pages
+  artifacts:
+    paths:
+      - public
+  only:
+    - merge_requests
+    - main
+
+   
