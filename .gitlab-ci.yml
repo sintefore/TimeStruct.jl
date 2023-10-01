@@ -49,7 +49,7 @@ pages:
   stage: deploy
   image: julia:latest
   script:
-    - julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+    - julia --project=docs -e 'using Pkg; Pkg.add("Documenter"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
     - julia --project=docs --color=yes docs/make.jl  # make documentation
     - mv docs/build public  # move to the directory picked up by Gitlab pages
   artifacts:
