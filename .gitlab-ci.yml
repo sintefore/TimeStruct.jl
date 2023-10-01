@@ -10,6 +10,7 @@ before_script:
   # Install ssh-agent and add the private key.
   - command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )
   - eval $(ssh-agent -s)
+  - echo "$PRIVATE_KEY_ONESINTEF"
   - echo "$PRIVATE_KEY_ONESINTEF" | tr -d '\r' | ssh-add -
 
   # Set up the .ssh directory.
