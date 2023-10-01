@@ -3,6 +3,31 @@ stages:
   - formatting
   - deploy
 
+before_script:
+  # Install git.
+  - apt-get update -qq && apt-get install -y git
+
+  # Install ssh-agent and add the private key.
+  - command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )
+  - eval $(ssh-agent -s)
+  - echo "$PRIVATE_KEY_ONESINTEF" | tr -d '\r' | ssh-add -
+
+  # Set up the .ssh directory.
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+
+  # Set the known_hosts to a variable containing the public key(s) of gitlab.sintef.no
+  - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+  # Test the ssh connection.
+  - ssh -T git@gitlab.sintef.no
+
+  # Add the ONESintef registry and the public General registry.
+  - julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "git@gitlab.sintef.no:julia-one-sintef/onesintef.git"))'
+  - julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "https://github.com/JuliaRegistries/General"))'
+
+
 test_light:
   stage: testing
   image: julia:latest
@@ -50,6 +75,7 @@ pages:
   image: julia:latest
   script:
     - julia --project=docs -e 'using Pkg; Pkg.add("Documenter"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+    - julia --project=docs -e 'using Pkg; Pkg.status()'
     - julia --project=docs --color=yes docs/make.jl  # make documentation
     - mv docs/build public  # move to the directory picked up by Gitlab pages
   artifacts:
