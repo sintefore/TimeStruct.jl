@@ -99,7 +99,7 @@ register:
     # Set name and email for the bot pushing to the registry.
     - git config --global user.email "<@>"
     - git config --global user.name "Registrator"
-    - julia --project="test" -e 'using Pkg; Pkg.add("LocalRegistry"); Pkg.instantiate()'  # install dependencies.
+    - julia --project="test" -e 'using Pkg; Pkg.instantiate()'  # install dependencies.
     # Register the package. LocalRegistry will not register a new version if it is already registered.
     - julia --project="test" -e 'using LocalRegistry;
         repo = "git@gitlab.sintef.no:" * ENV["CI_PROJECT_PATH"] * ".git";
