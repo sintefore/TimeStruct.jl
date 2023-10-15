@@ -11,6 +11,7 @@ function FixedProfile(val::T, u::Unitful.Units) where {T}
     return FixedProfile(Unitful.Quantity(val, u))
 end
 Base.getindex(fp::FixedProfile, _::TimePeriod) = fp.val
+Base.getindex(fp::FixedProfile, _::TimeStructure) = fp.val
 
 """
     OperationalProfile

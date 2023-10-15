@@ -343,6 +343,8 @@ end
     opdiv = op / 4.0
     @test opdiv[first(day)] == 0.5
 
+    @test sum(fp[t_inv] == 12 for t_inv in strat_periods(day)) == 1
+
     ts = TwoLevel(5, 168, SimpleTimes(7, 24))
     p1 = first(ts)
     @test sum(fp[t] for t in ts) == 12.0 * length(ts)
