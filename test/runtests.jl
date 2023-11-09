@@ -84,7 +84,7 @@ end
     @test pers[1] < pers[2]
     @test isfirst(pers[25])
 
-    # Two operational scenarios, one for a day and one for a week with hourly 
+    # Two operational scenarios, one for a day and one for a week with hourly
     # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
@@ -148,6 +148,10 @@ end
 
     sp = collect(strat_periods(ts))
     @test pers[length(day)] == last(sp[1])
+
+    # Test that collect is working correctly
+    ops = collect(sp[1])
+    @test sum(ops[it] == op for (it, op) in enumerate(sp[1])) == 24
 end
 
 @testitem "TwoLevel with units" begin
@@ -258,6 +262,11 @@ end
     per = first(scen)
     @test repr(per) == "sp1-sc1-t1"
     @test typeof(per) <: TimeStruct.OperationalPeriod
+
+    # Test that collect is working correctly
+    sps = collect(strat_periods(seasonal_year))
+    ops = collect(sps[1])
+    @test sum(ops[it] == op for (it, op) in enumerate(sps[1])) == 24 + 24 + 168
 
     # Test that operational scenarios runs without scenarios
     ts = TwoLevel(3, 10, SimpleTimes(10, 1))
