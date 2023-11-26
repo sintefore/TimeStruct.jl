@@ -32,7 +32,6 @@ end
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test duration(ts) == 24
-    @test last(ts) == last(collect(ts))
 end
 
 @testitem "SimpleTimes with units" begin
@@ -55,7 +54,8 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 5
 
-    @test typeof(scen_coll[3]) == TimeStruct.OperationalScenario{Int}
+    @test typeof(scen_coll[3]) ==
+          TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
     @test probability(scen_coll[3]) == 0.2
 
     @test length(scen_coll[3]) == 10
@@ -69,12 +69,10 @@ end
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
     @test first(ts) ==
-          TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1))
+          TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1))
     @test length(ts) == 216
-    @test_throws ErrorException last(ts)
     pers = []
     for sc in opscenarios(ts)
-        @test last(sc) == last(collect(sc))
         for t in sc
             push!(pers, t)
         end
@@ -89,7 +87,7 @@ end
     ts = OperationalScenarios([day, week])
 
     @test first(ts) ==
-          TimeStruct.ScenarioPeriod(1, 0.5, TimeStruct.SimplePeriod(1, 1))
+          TimeStruct.ScenarioPeriod(1, 0.5, 7.0, TimeStruct.SimplePeriod(1, 1))
     @test length(ts) == 192
 
     scens = opscenarios(ts)
@@ -98,7 +96,8 @@ end
     scen_coll = collect(scens)
     @test length(scen_coll) == 2
 
-    @test typeof(scen_coll[2]) == TimeStruct.OperationalScenario{Int}
+    @test typeof(scen_coll[2]) ==
+          TimeStruct.OperationalScenario{Int,SimpleTimes{Int}}
     @test probability(scen_coll[2]) == 0.5
     @test repr(scen_coll[1]) == "sc-1"
 
@@ -115,11 +114,132 @@ end
     @test length(pers) == length(ts)
 end
 
+@testitem "RepresentativePeriods" begin
+    rep = RepresentativePeriods(
+        2,
+        8760,
+        [0.4, 0.6],
+        [SimpleTimes(24, 1), SimpleTimes(24, 1)],
+    )
+    @test length(rep) == length(collect(rep))
+    @test duration(rep) == 8760
+    per = collect(rep)
+    @test last(collect(repr_periods(rep))[2]) == per[end]
+
+    # SimpleTimes as one representative period
+    simple = SimpleTimes(10, 1)
+    pers = [t for rp in repr_periods(simple) for t in rp]
+    @test pers == collect(simple)
+    @test sum(duration(t) * multiple(t) for t in pers) == 10
+end
+
+@testitem "RepresentativePeriods with units" begin
+    using Unitful
+
+    rep = RepresentativePeriods(
+        2,
+        1u"yr",
+        [0.4, 0.6],
+        [SimpleTimes(24, 1u"hr"), SimpleTimes(24, 1u"hr")],
+    )
+
+    mult1 = [multiple(t) for t in rep]
+    mult2 = [multiple(t) for rp in repr_periods(rep) for t in rp]
+
+    @test mult1 == mult2
+end
+
+@testitem "RepresentativePeriods with OperationalScenarios" begin
+    day = SimpleTimes(1, 1)
+    week = SimpleTimes(7, 1)
+    scenarios = OperationalScenarios(2, [day, week], [0.1, 0.9])
+
+    rep = RepresentativePeriods(2, 28, [0.7, 0.3], [scenarios, scenarios])
+
+    @test sum(probability(t) * multiple(t) * duration(t) for t in rep) ≈ 28
+    @test sum(
+        probability(t) * multiple(t) * duration(t) for rp in repr_periods(rep)
+        for t in rp
+    ) ≈ 28
+    @test sum(
+        probability(t) * multiple(t) * duration(t) for rp in repr_periods(rep)
+        for sc in opscenarios(rp) for t in sc
+    ) ≈ 28
+
+    pers = collect(rep)
+    pers_rep = collect(t for rp in repr_periods(rep) for t in rp)
+    pers_scen = collect(
+        t for rp in repr_periods(rep) for sc in opscenarios(rp) for t in sc
+    )
+
+    @test pers == pers_rep
+    @test pers == pers_scen
+
+    @test [multiple(t) for t in pers] == [multiple(t) for t in pers_rep]
+    @test [multiple(t) for t in pers] == [multiple(t) for t in pers_scen]
+
+    # Without operational scenarios
+    rep_simple = RepresentativePeriods(2, 28, [0.7, 0.3], [day, week])
+
+    pers = collect(rep_simple)
+    pers_rep = collect(t for rp in repr_periods(rep_simple) for t in rp)
+    pers_scen = collect(
+        t for rp in repr_periods(rep_simple) for sc in opscenarios(rp) for
+        t in sc
+    )
+
+    @test pers == pers_rep
+    @test pers == pers_scen
+
+    @test [multiple(t) for t in pers] == [multiple(t) for t in pers_rep]
+    @test [multiple(t) for t in pers] == [multiple(t) for t in pers_scen]
+
+    # Test with only OperationalScenarios
+    pers = collect(scenarios)
+    pers_rep = collect(t for rp in repr_periods(scenarios) for t in rp)
+    pers_scen = collect(
+        t for rp in repr_periods(scenarios) for sc in opscenarios(rp) for
+        t in sc
+    )
+
+    # Test with just SimpleTimes
+    simple = SimpleTimes(10, 1)
+
+    pers = collect(simple)
+    pers_rep = collect(t for rp in repr_periods(simple) for t in rp)
+    pers_scen = collect(
+        t for rp in repr_periods(simple) for sc in opscenarios(rp) for t in sc
+    )
+
+    @test pers == pers_rep
+    @test pers == pers_scen
+end
+
+@testitem "RepresentativePeriods and OperationalScenarios with units" begin
+    using Unitful
+
+    day = SimpleTimes(1, 1u"d")
+    week = SimpleTimes(7, 1u"d")
+    scenarios = OperationalScenarios(2, [day, week], [0.1, 0.9])
+
+    rep = RepresentativePeriods(2, 10u"wk", [0.7, 0.3], [scenarios, scenarios])
+
+    @test sum(probability(t) * duration(t) * multiple(t) for t in rep) ≈ 70u"d"
+    @test sum(
+        probability(t) * duration(t) * multiple(t) for rp in repr_periods(rep)
+        for t in rp
+    ) ≈ 70u"d"
+    @test sum(
+        probability(t) * duration(t) * multiple(t) for rp in repr_periods(rep)
+        for sc in opscenarios(rp) for t in sc
+    ) ≈ 70u"d"
+end
+
 @testitem "TwoLevel" begin
     day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, day)  # 7 strategic periods, hourly resolution each day
 
-    @test typeof(uniform_week) == TwoLevel{Int,Int}
+    @test typeof(uniform_week) == TwoLevel{Int,Int,SimpleTimes{Int}}
     @test length(uniform_week) == 168
 
     # One year with monthly strategic periods and one day of operations for each month
@@ -211,6 +331,51 @@ end
     end
 end
 
+@testitem "TwoLevel with rep periods" begin
+    summer_wk = SimpleTimes(7, 1)
+    winter_wk = SimpleTimes(14, 1)
+
+    rep = RepresentativePeriods(2, 365, [0.55, 0.45], [summer_wk, winter_wk])
+
+    ts = TwoLevel([5, 5, 10], rep; op_per_strat = 365)
+
+    pers = collect(ts)
+    pers_rep = collect(
+        t for sp in strategic_periods(ts) for rep in repr_periods(sp) for
+        t in rep
+    )
+    @test sum(multiple(t) for t in pers) == sum(multiple(t) for t in pers_rep)
+
+    total_dur = sum(duration(t) * multiple(t) for t in ts)
+    @test total_dur ≈ 365 * 20
+
+    total_dur_alt = sum(
+        duration(t) * multiple(t) for sp in strategic_periods(ts) for t in sp
+    )
+    @test total_dur_alt === total_dur
+
+    total_dur_rep = sum(
+        duration(t) * multiple(t) for sp in strategic_periods(ts) for
+        rep in repr_periods(sp) for t in rep
+    )
+    @test total_dur_rep === total_dur
+
+    ts_rep = TwoLevel(10, 5, rep)
+    @test ts_rep.op_per_strat == 365
+
+    sps = collect(strategic_periods(ts))
+    rps = repr_periods(sps[1])
+    rps_1 = collect(repr_periods(sps[1]))
+    @test isfirst(rps_1[1])
+    @test !isfirst(rps_1[2])
+    @test last(rps) == rps_1[2]
+    @test last(rps) != rps_1[1]
+
+    rps = repr_periods(ts)
+    rps_alt = [rep for sp in strategic_periods(ts) for rep in repr_periods(sp)]
+    @test rps == rps_alt
+end
+
 @testitem "TwoLevel with op scenarios" begin
     day = SimpleTimes(24, 1)
     week = SimpleTimes(168, 1)
@@ -222,7 +387,7 @@ end
     ops = collect(seasonal_year)
     @test ops[1] == TimeStruct.OperationalPeriod(
         1,
-        TimeStruct.ScenarioPeriod(1, 0.1, TimeStruct.SimplePeriod(1, 1)),
+        TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1)),
         91.0,
     )
 
@@ -235,7 +400,6 @@ end
     pers = []
     for sp in strat_periods(seasonal_year)
         for sc in opscenarios(sp)
-            @test last(collect(sc)) == last(sc)
             for t in sc
                 push!(pers, t)
             end
@@ -295,6 +459,32 @@ end
     pers = [t for sp in strat_periods(ts) for sc in opscenarios(sp) for t in sc]
     pers_ts = [t for t in ts]
     @test pers == pers_ts
+end
+
+@testitem "TwoLevel with RepresentativePeriods and OperationalScenarios" begin
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
+
+    opscen_summer = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
+    opscen_winter = OperationalScenarios(2, [day, week], [0.1, 0.9])
+
+    ts = TwoLevel(
+        3,
+        5 * 8760,
+        RepresentativePeriods(
+            2,
+            8760,
+            [0.7, 0.3],
+            [opscen_summer, opscen_winter],
+        );
+        op_per_strat = 1.0,
+    )
+
+    pers = collect(ts)
+    @test length(pers) == length(ts)
+
+    total_dur = sum(probability(t) * multiple(t) * duration(t) for t in ts)
+    @test total_dur ≈ 3 * 5 * 8760
 end
 
 @testitem "SimpleTimes as TwoLevel" begin
