@@ -18,7 +18,7 @@ abstract type TimePeriod end
 
 """
     duration(t::TimePeriod) 
-The duration of a time period in number of time units.
+The duration of a time period in number of operational time units.
 """
 duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 
@@ -36,9 +36,7 @@ probability(t::TimePeriod) = 1.0
 
 # Functions used for indexing into time profiles
 _oper(t::TimePeriod) = error("_oper() not implemented for $(typeof(t))")
-
 _strat_per(t::TimePeriod) = 1
-
 _opscen(t::TimePeriod) = 1
-
+_rper(t::TimePeriod) = 1
 _branch(t::TimePeriod) = 1

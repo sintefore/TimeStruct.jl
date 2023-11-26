@@ -1,11 +1,11 @@
-""" 
+"""
     struct SimpleTimes <: TimeStructure
 A simple time structure conisisting of consecutive time periods of varying duration
 
 Example
 ```julia
 uniform = SimpleTimes(5, 1.0) # 5 periods of equal length
-varying = SimpleTimes([2, 2, 2, 4, 10]) 
+varying = SimpleTimes([2, 2, 2, 4, 10])
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
@@ -25,7 +25,7 @@ Base.length(st::SimpleTimes) = st.len
 
 duration(st::SimpleTimes) = sum(st.duration)
 
-""" 
+"""
     struct SimplePeriod <: TimePeriod
 A single time period returned when iterating through a SimpleTimes structure
 """
@@ -35,6 +35,7 @@ struct SimplePeriod{T<:Number} <: TimePeriod
 end
 
 duration(t::SimplePeriod) = t.duration
+multiple(t::SimplePeriod) = 1
 isfirst(t::SimplePeriod) = t.op == 1
 _oper(t::SimplePeriod) = t.op
 
