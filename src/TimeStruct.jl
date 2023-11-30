@@ -1,9 +1,12 @@
 module TimeStruct
 
 import Unitful
+import Dates
+import TimeZones
 
 include("structures.jl")
 include("simple.jl")
+include("calendar.jl")
 include("representative.jl")
 include("stochastic.jl")
 include("twolevel.jl")
@@ -14,6 +17,7 @@ include("discount.jl")
 
 export TimeStructure
 export SimpleTimes
+export CalendarTimes
 export OperationalScenarios
 export RepresentativePeriods
 export TwoLevel

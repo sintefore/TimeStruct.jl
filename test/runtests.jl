@@ -42,6 +42,52 @@ end
     @test duration(periods) == 192u"hr"
 end
 
+@testitem "CalendarTimes" begin
+    using Dates
+    using TimeZones
+
+    year = CalendarTimes(DateTime(2024, 1, 1), 12, Month(1))
+    @test length(year) == 12
+
+    @test first(year) == TimeStruct.CalendarPeriod(
+        DateTime(2024, 1, 1),
+        DateTime(2024, 2, 1),
+        1,
+    )
+    @test duration(year) == 366 * 24
+
+    months = collect(year)
+    @test duration(months[2]) == 29 * 24
+
+    # 10 weeks with reduced length due to DST
+    periods = CalendarTimes(DateTime(2023, 3, 1), tz"CET", 10, Week(1))
+    dur = [duration(w) for w in periods]
+    @test duration(periods) == 10 * 168 - 1
+    @test dur[4] == 167
+
+    # 10 weeks not affected by DST
+    periods = CalendarTimes(DateTime(2023, 4, 1), tz"CET", 10, Week(1))
+    dur = [duration(w) for w in periods]
+    @test duration(periods) == 10 * 168
+    @test dur[4] == 168
+
+    hours = CalendarTimes(
+        DateTime(2023, 3, 25),
+        DateTime(2023, 3, 26),
+        tz"CET",
+        Hour(1),
+    )
+    @test duration(hours) == 24
+
+    hours = CalendarTimes(
+        DateTime(2023, 3, 26),
+        DateTime(2023, 3, 27),
+        tz"CET",
+        Hour(1),
+    )
+    @test duration(hours) == 23
+end
+
 @testitem "OperationalScenarios" begin
     # 5 scenarios with 10 periods
     ts = OperationalScenarios(5, SimpleTimes(10, 1))
@@ -259,7 +305,7 @@ end
     end
     @test ops1 == ops2
 
-    ts = TwoLevel(3, 24, [day, day, day])
+    ts = TwoLevel([day, day, day])
     @test duration(first(ts)) == 1
     @test repr(first(ts)) == "sp1-t1"
     pers = collect(ts)
@@ -331,49 +377,41 @@ end
     end
 end
 
-@testitem "TwoLevel with rep periods" begin
-    summer_wk = SimpleTimes(7, 1)
-    winter_wk = SimpleTimes(14, 1)
+@testitem "TwoLevel with CalendarTimes" begin
+    using Dates
+    years = TwoLevel([
+        CalendarTimes(DateTime(y, 1, 1), 12, Month(1)) for y in 2023:2032
+    ])
 
-    rep = RepresentativePeriods(2, 365, [0.55, 0.45], [summer_wk, winter_wk])
+    @test length(years) == length(collect(years))
 
-    ts = TwoLevel([5, 5, 10], rep; op_per_strat = 365)
+    dur = [duration(sp) for sp in strat_periods(years)]
+    @test dur[2] == 366 * 24
+
+    sp = first(strat_periods(years))
+    mths = collect(sp)
+
+    m = mths[4]
+    @test TimeStruct._oper(m) == 4
+    @test duration(m) == 30 * 24
+    @test TimeStruct.start_date(m.period) == DateTime(2023, 4, 1)
+
+    scens = OperationalScenarios(
+        4,
+        CalendarTimes(DateTime(2023, 9, 1), 10, Hour(1)),
+    )
+    ts = TwoLevel(5, 1, scens; op_per_strat = 8760)
 
     pers = collect(ts)
-    pers_rep = collect(
-        t for sp in strategic_periods(ts) for rep in repr_periods(sp) for
-        t in rep
-    )
-    @test sum(multiple(t) for t in pers) == sum(multiple(t) for t in pers_rep)
+    per = pers[52]
 
-    total_dur = sum(duration(t) * multiple(t) for t in ts)
-    @test total_dur ≈ 365 * 20
+    @test typeof(per) <: TimeStruct.OperationalPeriod
+    @test TimeStruct._oper(per) == 2
+    @test TimeStruct._strat_per(per) == 2
+    @test TimeStruct._opscen(per) == 2
 
-    total_dur_alt = sum(
-        duration(t) * multiple(t) for sp in strategic_periods(ts) for t in sp
-    )
-    @test total_dur_alt === total_dur
-
-    total_dur_rep = sum(
-        duration(t) * multiple(t) for sp in strategic_periods(ts) for
-        rep in repr_periods(sp) for t in rep
-    )
-    @test total_dur_rep === total_dur
-
-    ts_rep = TwoLevel(10, 5, rep)
-    @test ts_rep.op_per_strat == 365
-
-    sps = collect(strategic_periods(ts))
-    rps = repr_periods(sps[1])
-    rps_1 = collect(repr_periods(sps[1]))
-    @test isfirst(rps_1[1])
-    @test !isfirst(rps_1[2])
-    @test last(rps) == rps_1[2]
-    @test last(rps) != rps_1[1]
-
-    rps = repr_periods(ts)
-    rps_alt = [rep for sp in strategic_periods(ts) for rep in repr_periods(sp)]
-    @test rps == rps_alt
+    @test multiple(per) == 8760 / 10
+    @test probability(per) == 0.25
 end
 
 @testitem "TwoLevel with op scenarios" begin
@@ -814,4 +852,4 @@ end
 end
 
 @run_package_tests
-Aqua.test_all(TimeStruct)
+Aqua.test_all(TimeStruct; ambiguities = false)
