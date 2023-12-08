@@ -90,7 +90,7 @@ _oper(t::ScenarioPeriod) = _oper(t.period)
 _opscen(t::ScenarioPeriod) = t.sc
 
 """
-    struct OperationalScenario 
+    struct OperationalScenario
 A structure representing a single operational scenario supporting
 iteration over its time periods.
 """
@@ -117,7 +117,7 @@ end
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 
-# Iteration through scenarios 
+# Iteration through scenarios
 struct OpScens{T}
     ts::OperationalScenarios{T}
 end
@@ -155,7 +155,9 @@ end
 
 # Allow SimpleTimes to behave as one operational scenario
 opscenarios(ts::SimpleTimes) = [ts]
+opscenarios(ts::StrategicPeriodSimple) = [ts]
 probability(ts::SimpleTimes) = 1.0
+probability(ts::StrategicPeriodSimple) = 1.0
 
 struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     rper::Int64
