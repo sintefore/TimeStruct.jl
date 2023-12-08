@@ -40,6 +40,11 @@ function Base.last(ts::SimpleTimes)
     return SimplePeriod(ts.len, ts.duration[ts.len])
 end
 
+function Base.last(ts::StrategicPeriodSimple)
+    len = length(ts)
+    return SimplePeriod(len, ts.operational[len])
+end
+
 function Base.last(_::OperationalScenarios)
     return error("last() not implemented for OperationalScenarios")
 end
