@@ -36,13 +36,13 @@ function CalendarTimes(
     end_date::Union{Dates.Date,Dates.DateTime},
     period::Dates.Period,
 )
-    length = 1
-    dt = start_date + period
-    while dt < end_date
+    length = 0
+    dt = start_date
+    while dt + period <= end_date
         dt += period
         length += 1
     end
-    return CalendarTimes(start_date, length, period)
+    return CalendarTimes(Dates.DateTime(start_date), length, period)
 end
 
 function CalendarTimes(
