@@ -5,6 +5,7 @@ pages = [
     "Manual" => [
         "Operational time structures" => "manual/basic.md",
         "Multi-horizon" => "manual/multi.md",
+        "Time profiles" => "manual/profiles.md",
         "Iteration utilities" => "manual/iteration.md",
         "Discounting" => "manual/discount.md",
     ],
@@ -20,6 +21,7 @@ makedocs(
         edit_link = "main",
         assets = String[],
     ),
+    doctest = false,
     #modules = [TimeStruct],
     pages = pages,
 )

@@ -1,14 +1,28 @@
+```@meta
+CurrentModule = TimeStruct
+```
 
 # Available time structures
+
+```@docs
+TimeStructure
+```
 
 ```@docs
 SimpleTimes
 ```
 
 ```@docs
-OperationalScenarios
+CalendarTimes
 ```
 
+```@docs
+RepresentativePeriods
+```
+
+```@docs
+OperationalScenarios
+```
 
 ```@docs
 TwoLevel
@@ -25,12 +39,20 @@ duration
 isfirst
 ```
 
+```@docs
+multiple
+```
+
 
 ```@docs
 probability
 ```
 
 # Iterating time structures
+
+```@docs
+repr_periods
+```
 
 ```@docs
 opscenarios
@@ -40,6 +62,11 @@ opscenarios
 strat_periods
 ```
 
+```@docs
+withprev
+```
+
+
 # Time profiles
 
 ```@docs
@@ -48,6 +75,10 @@ FixedProfile
 
 ```@docs
 OperationalProfile
+```
+
+```@docs
+RepresentativeProfile
 ```
 
 ```@docs
