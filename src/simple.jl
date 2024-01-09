@@ -2,7 +2,7 @@
     struct SimpleTimes <: TimeStructure
 A simple time structure conisisting of consecutive time periods of varying duration
 
-Example
+## Example
 ```julia
 uniform = SimpleTimes(5, 1.0) # 5 periods of equal length
 varying = SimpleTimes([2, 2, 2, 4, 10])

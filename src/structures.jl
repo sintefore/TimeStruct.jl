@@ -3,9 +3,9 @@ Duration = Union{Real,Unitful.Quantity{V,Unitful.𝐓} where {V}}
 
 """
     abstract type TimeStructure{T}
-Abstract type representing different time structures that 
+Abstract type representing different time structures that
 consists of one or more time periods. The type 'T' gives
-the data type used for the duration of the time periods.  
+the data type used for the duration of the time periods.
 """
 abstract type TimeStructure{T<:Duration} end
 
@@ -17,7 +17,7 @@ time structures and indexing of time profiles.
 abstract type TimePeriod end
 
 """
-    duration(t::TimePeriod) 
+    duration(t::TimePeriod)
 The duration of a time period in number of operational time units.
 """
 duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
@@ -27,6 +27,13 @@ duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 Returns true if the time period is the first in a sequence and has no previous time period
 """
 isfirst(t::TimePeriod) = error("isfirst() not implemented for$(typeof(t))")
+
+"""
+    multiple(t::TimePeriod)
+Returns the number of times a time period should be counted for the whole time
+structure.
+"""
+multiple(t::TimePeriod) = 1.0
 
 """
     probability(t::TimePeriod)

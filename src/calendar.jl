@@ -25,7 +25,7 @@ starting at `start_date` and the last period ending at or before `end_date`
 
 ## Example
 ```jldoctest
-julia> using Dates
+julia> using TimeStruct, Dates
 
 julia> ts = CalendarTimes(DateTime(2023, 1, 1), DateTime(2025, 1, 1), Month(3))
 CalendarTimes{DateTime}(DateTime("2023-01-01T00:00:00"), 8, Month(3))

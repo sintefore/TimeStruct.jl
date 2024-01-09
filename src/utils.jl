@@ -2,6 +2,13 @@ struct WithPrev{I}
     itr::I
 end
 
+"""
+    withprev(iter)
+
+Iterator wrapper that yields `(prev, t)` where `prev`
+is the previous time period or `nothing` for the first
+time period.
+"""
 withprev(iter) = WithPrev(iter)
 Base.length(w::WithPrev) = length(w.itr)
 Base.size(w::WithPrev) = size(w.itr)

@@ -68,6 +68,13 @@ function ScenarioProfile(vals::Vector{Vector{T}}) where {T}
     return ScenarioProfile(v)
 end
 
+"""
+    RepresentativeProfile
+Time profile with a separate time profile for each representative period.
+
+If too few profiles are provided, the last given profile will be
+repeated.
+"""
 struct RepresentativeProfile{T} <: TimeProfile{T}
     vals::Vector{<:TimeProfile{T}}
 end
