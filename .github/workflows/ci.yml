@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Since TimeStruct doesn't have binary dependencies, only test on a subset
-        # of possible platforms.
+        # Since TimeStruct doesn't have binary dependencies, only test on a subset of
+        # possible platforms.
         include:
           - version: '1'  # The latest point-release (Linux)
             os: ubuntu-latest
@@ -28,6 +28,9 @@ jobs:
           - version: '1.6'  # 1.6 LTS (32-bit Linux)
             os: ubuntu-latest
             arch: x86
+          - version: 'nightly'
+            os: ubuntu-latest
+            arch: x64
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
