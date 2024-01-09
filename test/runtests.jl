@@ -87,11 +87,7 @@ end
     )
     @test duration(hours) == 23
 
-    days = CalendarTimes(
-        Date(2023, 10, 1),
-        Date(2023, 10, 27),
-        Day(2),
-    )
+    days = CalendarTimes(Date(2023, 10, 1), Date(2023, 10, 27), Day(2))
     @test duration(days) == 13 * 48
 end
 
