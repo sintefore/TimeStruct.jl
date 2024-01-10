@@ -24,6 +24,4 @@ Documenter.makedocs(
     pages = pages,
 )
 
-Documenter.deploydocs(;
-    repo = "github.com/sintefore/TimeStruct.jl.git"
-)
+Documenter.deploydocs(; repo = "github.com/sintefore/TimeStruct.jl.git")
