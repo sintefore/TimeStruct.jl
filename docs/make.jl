@@ -25,6 +25,5 @@ Documenter.makedocs(
 )
 
 Documenter.deploydocs(;
-    repo = "github.com/sintefore/TimeStruct.jl.git",
-    push_preview = true,
+    repo = "github.com/sintefore/TimeStruct.jl.git"
 )
