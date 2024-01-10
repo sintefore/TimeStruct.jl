@@ -12,12 +12,10 @@ pages = [
     "API reference" => "reference/api.md",
 ]
 
-makedocs(
-    sitename = "TimeStruct.jl",
-    repo = "https://gitlab.sintef.no/julia-one-sintef/timestruct.jl/blob/{commit}{path}#{line}",
+Documenter.makedocs(
+    sitename = "TimeStruct",
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://julia-one-sintef.pages.sintef.no/timestruct.jl/",
         edit_link = "main",
         assets = String[],
     ),
@@ -25,3 +23,5 @@ makedocs(
     #modules = [TimeStruct],
     pages = pages,
 )
+
+Documenter.deploydocs(; repo = "github.com/sintefore/TimeStruct.jl.git")
