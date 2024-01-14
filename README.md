@@ -1,5 +1,5 @@
 # TimeStruct.jl
-[![Build Status](https://github.com/TimeStruct.jl/workflows/CI/badge.svg?branch=main)](https://github.com/TimeStruct.jl/actions?query=workflow%3ACI)
+[![Build Status](https://github.com/sintefore/TimeStruct.jl/workflows/CI/badge.svg?branch=main)](https://github.com/sintefore/TimeStruct.jl/actions?query=workflow%3ACI)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
 [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://sintefore.github.io/TimeStruct.jl/dev/)
 
