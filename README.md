@@ -1,5 +1,5 @@
 # TimeStruct.jl
-![Run tests](https://github.com/sintefore/TimeStruct.jl/workflows/Run%20tests/badge.svg)
+[![Build Status](https://sintefore.github.io/TimeStruct.jl/workflows/CI/badge.svg?branch=main)](https://sintefore.github.io/TimeStruct.jl/actions?query=workflow%3ACI)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
 [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://sintefore.github.io/TimeStruct.jl/dev/)
 
@@ -14,10 +14,25 @@ The package is designed to be used in combination with the JuMP package for opti
 
 ## Example
 
+The following shows a simple example of usage. For further details we refer to the documentation. 
 
+```julia 
+using JuMP
+using TimeStruct
+
+periods = SimpleTimes(10, 1)    # 10 periods of length 1
+income = FixedProfile(5.0)      # Fixed income profile 
+
+model = MOdel()
+@varible(model, x[periods] >= 0)
+
+@constraint(model, sum(x[t] for t in periods) <= 4)
+@objective(model, sum(income[t] * x[t] for t in periods))
+```
 
 ## Cite
-
+If you find TimeStruct useful in your work, we kindly request that you cite the
+following:
 ```
 @misc{TimeStruct.jl.0.8.0,
   author       = {Flatberg, Truls and Hellemo, Lars},
@@ -32,11 +47,8 @@ The package is designed to be used in combination with the JuMP package for opti
 ```
 
 
-
 ## Acknowledgements
 
-This material is based upon work supported by the Research Council of Norway through the projects ZeroKyst (328721
-
-), MaritimeNH3 (328679) and CleanExport (308811).
+This material is based upon work supported by the Research Council of Norway through the projects ZeroKyst (328721), MaritimeNH3 (328679) and CleanExport (308811).
 
 
