@@ -2,7 +2,16 @@
 
 ## Basic iteration
 
-All time structures are iterable over all operational time periods
+All time structures are iterable over their operational time periods
+```@repl ts
+using TimeStruct
+
+function iterate_ex(periods::TimeStructure)
+    for t in periods
+        writeln(t)
+    end
+end
+```
 
 
 ## Iteration with previous
@@ -17,10 +26,5 @@ periods = SimpleTimes(5, 1);
 collect(withprev(periods))
 ```
 
-```@repl ts
-using JuMP
-
-
-```
 
 

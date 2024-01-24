@@ -34,15 +34,14 @@ model = MOdel()
 If you find TimeStruct useful in your work, we kindly request that you cite the
 following:
 ```
-@misc{TimeStruct.jl.0.8.0,
+@misc{TimeStruct.jl,
   author       = {Flatberg, Truls and Hellemo, Lars},
   title        = {{TimeStruct.jl: Flexible time structures in optimization modelling}},
   month        = Jan,
   year         = 2024,
-  doi          = {},
-  version      = {0.8.0},
+  doi          = {10.5281/zenodo.10511399},
   publisher    = {Zenodo},
-  url          = {}
+  url          = {https://zenodo.org/records/10511399}
 }
 ```
 

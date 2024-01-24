@@ -1,5 +1,5 @@
 """
-    Discounter
+    Discounter(discount_rate, timeunit_to_year, ts)
 
 Structure to hold discount information to be used for a time structure.
 """
@@ -32,28 +32,54 @@ function _start_strat(sp::StrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
     return sum(duration(spp) for spp in strat_periods(ts) if spp < sp)
 end
 
-function _to_year(start, disc)
-    return start * disc.timeunit_to_year
+function _to_year(start, timeunit_to_year)
+    return start * timeunit_to_year
 end
 
-function _to_year(start::Unitful.Quantity{V,Unitful.𝐓}, disc) where {V}
+function _to_year(
+    start::Unitful.Quantity{V,Unitful.𝐓},
+    timeunit_to_year,
+) where {V}
     return Unitful.ustrip(Unitful.uconvert(Unitful.u"yr", start))
 end
 
-function discount(disc::Discounter, t::TimePeriod; type = "start")
-    start_year = _to_year(_start_strat(t, disc.ts), disc)
-    duration_years = _to_year(duration(t), disc)
+"""
+    discount(t, time_struct, discount_rate; type, timeunit_to_year)
+
+Calculates the discount factor to be used for a time period `t`
+using a fixed 'discount_rate`. There are two types of discounting
+available, either discounting to the start of the time period
+or calculating an approximate value for the average discount factor
+over the whole time period (`type="avg"`).
+"""
+function discount(
+    t::TimePeriod,
+    ts::TimeStructure,
+    discount_rate;
+    type = "start",
+    timeunit_to_year = 1.0,
+)
+    start_year = _to_year(_start_strat(t, ts), timeunit_to_year)
+    duration_years = _to_year(duration(t), timeunit_to_year)
 
     multiplier = 1.0
 
     if type == "start"
-        multiplier = discount_start(disc.discount_rate, start_year)
+        multiplier = discount_start(discount_rate, start_year)
     elseif type == "avg"
-        multiplier =
-            discount_avg(disc.discount_rate, start_year, duration_years)
+        multiplier = discount_avg(discount_rate, start_year, duration_years)
     end
 
     return multiplier
+end
+
+function discount(
+    disc::Discounter,
+    t::TimePeriod;
+    type = "start",
+    timeunit_to_year = 1.0,
+)
+    return discount(t, disc.ts, disc.discount_rate; type, timeunit_to_year)
 end
 
 function discount_avg(discount_rate, start_year, duration_years)
@@ -73,20 +99,31 @@ function discount_start(discount_rate, start_year)
     return δ^start_year
 end
 
-objective_weight(p, disc::Discounter) = 1.0
+"""
+    objective_weight(t, time_struct, discount_rate; type, timeunit_to_year)
 
-function objective_weight(p::SimplePeriod, disc::Discounter; type = "start")
-    return discount(disc, p; type)
-end
-
+Returns an overall weight to be used for a time period `t`
+in the objective function considering both discounting,
+probability and possible multiplicity.
+"""
 function objective_weight(
-    op::OperationalPeriod,
-    disc::Discounter;
+    t::TimePeriod,
+    ts::TimeStructure,
+    discount_rate;
     type = "start",
+    timeunit_to_year = 1.0,
 )
-    return probability(op) * discount(disc, op, type = type) * multiple(op)
+    return probability(t) *
+           discount(t, ts, discount_rate; type, timeunit_to_year) *
+           multiple(t)
 end
 
-function objective_weight(sp::StrategicPeriod, disc::Discounter; type = "start")
-    return discount(disc, sp, type = type)
+function objective_weight(t::TimePeriod, disc::Discounter; type = "start")
+    return objective_weight(
+        t,
+        disc.ts,
+        disc.discount_rate;
+        type = type,
+        timeunit_to_year = disc.timeunit_to_year,
+    )
 end
