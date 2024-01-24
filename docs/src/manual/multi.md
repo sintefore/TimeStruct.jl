@@ -2,7 +2,7 @@
 
 ## TwoLevel
 
-As described earlier, the main motivation for the `TimeStruct` package is to support
+The main motivation for the `TimeStruct` package is to support
 multi-horizon optimization models. The time structure [`TwoLevel`](@ref) allows for a two level 
 approach, combining an ordered sequence of strategic periods with given duration and an associated operational time structure. 
 ```@repl ts
