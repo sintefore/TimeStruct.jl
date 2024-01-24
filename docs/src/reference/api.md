@@ -88,3 +88,17 @@ ScenarioProfile
 ```@docs
 StrategicProfile
 ```
+
+# Discounting
+
+```@docs
+discount
+```
+
+```@docs
+objective_weight
+```
+
+```@docs
+Discounter
+```
