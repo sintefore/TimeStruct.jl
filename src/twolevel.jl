@@ -260,7 +260,7 @@ function remaining(sp::StrategicPeriod, ts::TwoLevel)
 end
 
 # Let SimpleTimes and OperationalScenarios behave as a TwoLevel time structure with one strategic period
-strat_periods(ts::SimpleTimes) = [ts]
+# strat_periods(ts::SimpleTimes) = [ts]
 strat_periods(ts::OperationalScenarios) = [ts]
 
 # Allow both strategic_periods and strat_periods as function name

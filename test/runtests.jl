@@ -32,6 +32,18 @@ end
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test duration(ts) == 24
+
+    sps = strat_periods(ts)
+    sp = collect(sps)[1]
+    @test length(sps) == 1
+    @test last(sp) == last(ts)
+    @test duration(sp) == 1
+
+    ops1 = collect(ts)
+    ops2 = collect(sp)
+    @test length(ops1) == length(ops2)
+    @test first(ops1) == first(ops2)
+    @test ops1 == ops2
 end
 
 @testitem "SimpleTimes with units" begin
