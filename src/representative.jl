@@ -25,7 +25,9 @@ end
 _total_duration(ts::RepresentativePeriods) = ts.duration
 
 function _multiple_adj(ts::RepresentativePeriods, rper)
-    mult = _total_duration(ts) * ts.period_share[rper] / _total_duration(ts.rep_periods[rper])
+    mult =
+        _total_duration(ts) * ts.period_share[rper] /
+        _total_duration(ts.rep_periods[rper])
     return stripunit(mult)
 end
 

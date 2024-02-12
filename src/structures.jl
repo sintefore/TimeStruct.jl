@@ -48,7 +48,6 @@ _opscen(t::TimePeriod) = 1
 _rper(t::TimePeriod) = 1
 _branch(t::TimePeriod) = 1
 
-
 # Iterator that wraps a time structure as an iterable colllection with one element
 struct SingleTimeStructWrapper{T} <: TimeStructure{T}
     ts::TimeStructure{T}

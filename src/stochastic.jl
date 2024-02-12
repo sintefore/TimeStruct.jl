@@ -34,7 +34,6 @@ function _multiple_adj(os::OperationalScenarios, scen)
     return stripunit(_total_duration(os) / _total_duration(os.scenarios[scen]))
 end
 
-
 # Iteration through all time periods for the operational scenarios
 function Base.iterate(itr::OperationalScenarios)
     sc = 1
@@ -116,7 +115,12 @@ function Base.iterate(os::OperationalScenario, state = nothing)
         isnothing(state) ? iterate(os.operational) :
         iterate(os.operational, state)
     next === nothing && return nothing
-    return ScenarioPeriod(os.scen, os.probability, os.mult_sc * multiple(next[1]), next[1]),
+    return ScenarioPeriod(
+        os.scen,
+        os.probability,
+        os.mult_sc * multiple(next[1]),
+        next[1],
+    ),
     next[2]
 end
 

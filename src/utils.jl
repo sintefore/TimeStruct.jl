@@ -67,7 +67,11 @@ end
 
 function Base.last(srp::StratReprPeriod)
     per = last(srp.operational)
-    return OperationalPeriod(srp.sp, per, srp.mult_sp * srp.mult_rp * multiple(per))
+    return OperationalPeriod(
+        srp.sp,
+        per,
+        srp.mult_sp * srp.mult_rp * multiple(per),
+    )
 end
 
 function Base.last(sp::StrategicPeriod)
@@ -83,9 +87,12 @@ end
 function Base.last(sro::StratReprOpscenPeriod)
     per = last(sro.operational)
     rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
-    return OperationalPeriod(sro.sp, rper, sro.mult_sp * sro.mult_rp * multiple(per))
+    return OperationalPeriod(
+        sro.sp,
+        rper,
+        sro.mult_sp * sro.mult_rp * multiple(per),
+    )
 end
-
 
 #=
 function Base.last(reps::StratReprPeriods)

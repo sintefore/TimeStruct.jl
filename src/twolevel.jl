@@ -96,11 +96,12 @@ function TwoLevel(len::Integer, duration::Real, oper::RepresentativePeriods)
     )
 end
 
-
 _total_duration(itr::TwoLevel) = sum(itr.duration)
 
 function _multiple_adj(itr::TwoLevel, sp)
-    mult = itr.duration[sp] * itr.op_per_strat / _total_duration(itr.operational[sp])
+    mult =
+        itr.duration[sp] * itr.op_per_strat /
+        _total_duration(itr.operational[sp])
     return stripunit(mult)
 end
 
@@ -151,9 +152,6 @@ duration(t::OperationalPeriod) = duration(t.period)
 probability(t::OperationalPeriod) = probability(t.period)
 multiple(t::OperationalPeriod) = t.multiple
 
-multiple(ts::TwoLevel, sp::StrategicPeriod) = _multiple_adj(ts, sp.sp)
-multiple(srp::StratReprPeriod, t::OperationalPeriod) = t.multiple / srp.mult_sp
-
 _oper(t::OperationalPeriod) = _oper(t.period)
 _strat_per(t::OperationalPeriod) = t.sp
 _opscen(t::OperationalPeriod) = _opscen(t.period)
@@ -165,7 +163,6 @@ end
 function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
     return t1.sp < t2.sp || (t1.sp == t2.sp && t1.period < t2.period)
 end
-
 
 """
     StrategicPeriod <: TimePeriod
@@ -202,6 +199,8 @@ end
 """
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration(sp)
 
+multiple(ts::TwoLevel, sp::StrategicPeriod) = _multiple_adj(ts, sp.sp)
+
 struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
 end
@@ -233,7 +232,6 @@ function Base.iterate(sps::StratPeriods, state)
         sps.ts.duration[state+1],
         mult_sp,
         sps.ts.operational[state+1],
-
     )
     return sp, state + 1
 end
@@ -300,7 +298,8 @@ function Base.iterate(os::StratOperationalScenario, state = nothing)
         iterate(os.operational, state)
     isnothing(next) && return nothing
 
-    return OperationalPeriod(os.sp, next[1], os.mult_sp * multiple(next[1])), next[2]
+    return OperationalPeriod(os.sp, next[1], os.mult_sp * multiple(next[1])),
+    next[2]
 end
 
 Base.length(os::StratOperationalScenario) = length(os.operational)
@@ -312,7 +311,7 @@ end
 struct StratOpScens
     sp::Int
     mult_sp::Float64
-    opscens
+    opscens::Any
 end
 
 function StratOpScens(sper::StrategicPeriod, opscens)
@@ -328,7 +327,9 @@ function opscenarios(sper::StrategicPeriod{S,T,OP}) where {S,T,OP}
     return StratOpScens(sper, opscenarios(sper.operational))
 end
 
-function opscenarios(sp::StrategicPeriod{S1,T,RepresentativePeriods{S2,T,OP}}) where {S1,S2,T,OP}
+function opscenarios(
+    sp::StrategicPeriod{S1,T,RepresentativePeriods{S2,T,OP}},
+) where {S1,S2,T,OP}
     opscens = StratReprOpscenPeriod[]
     for rp in repr_periods(sp)
         push!(opscens, opscenarios(rp)...)
@@ -380,7 +381,7 @@ function Base.iterate(ops::StratOpScens, state = (nothing, 1))
     (next[2], scen + 1)
 end
 
-struct StratReprPeriod{T, OP<:TimeStructure{T}} <: TimeStructure{T}
+struct StratReprPeriod{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     sp::Int
     rp::Int
     mult_sp::Float64
@@ -389,13 +390,13 @@ struct StratReprPeriod{T, OP<:TimeStructure{T}} <: TimeStructure{T}
 end
 
 isfirst(srp::StratReprPeriod) = srp.rp == 1
+multiple(srp::StratReprPeriod, t::OperationalPeriod) = t.multiple / srp.mult_sp
 
 function Base.show(io::IO, srp::StratReprPeriod)
     return print(io, "sp$(srp.sp)-rp$(srp.rp)")
 end
 _strat_per(srp::StratReprPeriod) = srp.sp
 _rper(srp::StratReprPeriod) = srp.rp
-
 
 # Iterate the time periods of a StratReprPeriod
 function Base.iterate(srp::StratReprPeriod, state = nothing)
@@ -417,7 +418,7 @@ end
 # Iteration through representative periods
 struct StratReprPeriods
     sper::StrategicPeriod
-    repr
+    repr::Any
 end
 
 """
@@ -444,26 +445,18 @@ end
 
 Base.length(reps::StratReprPeriods) = length(reps.repr)
 
-
 _multiple_rp(rpers, rper) = 1.0
 _multiple_rp(rpers::ReprPeriods, rper) = _multiple_adj(rpers.ts, rper)
 
 function Base.iterate(reps::StratReprPeriods, state = (nothing, 1))
     next =
-        isnothing(state[1]) ? iterate(reps.repr) :
-        iterate(reps.repr, state[1])
+        isnothing(state[1]) ? iterate(reps.repr) : iterate(reps.repr, state[1])
     isnothing(next) && return nothing
 
     rper = state[2]
     mult_sp = reps.sper.mult_sp
     mult_rp = _multiple_rp(reps.repr, rper)
-    return StratReprPeriod(
-        reps.sper.sp,
-        rper,
-        mult_sp,
-        mult_rp,
-        next[1],
-    ),
+    return StratReprPeriod(reps.sper.sp, rper, mult_sp, mult_rp, next[1]),
     (next[2], rper + 1)
 end
 
@@ -488,7 +481,12 @@ function Base.iterate(os::StratReprOpscenPeriod, state = nothing)
     isnothing(next) && return nothing
 
     period = ReprPeriod(os.rp, next[1], os.mult_rp * multiple(next[1]))
-    return OperationalPeriod(os.sp, period, os.mult_sp * os.mult_rp * multiple(next[1])), next[2]
+    return OperationalPeriod(
+        os.sp,
+        period,
+        os.mult_sp * os.mult_rp * multiple(next[1]),
+    ),
+    next[2]
 end
 
 Base.length(os::StratReprOpscenPeriod) = length(os.operational)
@@ -498,10 +496,12 @@ end
 
 struct StratReprOpscenPeriods
     srp::StratReprPeriod
-    opscens
+    opscens::Any
 end
 
-function opscenarios(srp::StratReprPeriod{T, RepresentativePeriod{T,OP}}) where {T,OP}
+function opscenarios(
+    srp::StratReprPeriod{T,RepresentativePeriod{T,OP}},
+) where {T,OP}
     return StratReprOpscenPeriods(srp, opscenarios(srp.operational.operational))
 end
 

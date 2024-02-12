@@ -526,12 +526,14 @@ end
     pers_rp = collect(t for rp in repr_periods(ts) for t in rp)
     @test issetequal(pers, pers_rp)
 
-    pers_rp_os = collect(t for rp in repr_periods(ts) for sc in opscenarios(rp) for t in sc)
+    pers_rp_os = collect(
+        t for rp in repr_periods(ts) for sc in opscenarios(rp) for t in sc
+    )
     @test issetequal(pers, pers_rp_os)
 
-
-    pers_os = collect(t for sp in strat_periods(ts) for sc in opscenarios(sp) for t in sc)
-
+    pers_os = collect(
+        t for sp in strat_periods(ts) for sc in opscenarios(sp) for t in sc
+    )
 end
 
 @testitem "SimpleTimes as TwoLevel" begin
@@ -561,9 +563,9 @@ end
     using Dates
 
     function test_invariants(periods)
-
         pers = collect(t for t in periods)
-        @test sum(probability(t) * duration(t) * multiple(t) for t in pers) ≈ TimeStruct._total_duration(periods)
+        @test sum(probability(t) * duration(t) * multiple(t) for t in pers) ≈
+              TimeStruct._total_duration(periods)
 
         pers_rp = collect(t for rp in repr_periods(periods) for t in rp)
         @test issetequal(pers, pers_rp)
@@ -574,42 +576,78 @@ end
         pers_sp = collect(t for sp in strat_periods(periods) for t in sp)
         @test issetequal(pers, pers_sp)
 
-        pers_rp_sc = collect(t for rp in repr_periods(periods) for sc in opscenarios(rp) for t in sc)
+        pers_rp_sc = collect(
+            t for rp in repr_periods(periods) for sc in opscenarios(rp) for
+            t in sc
+        )
         @test issetequal(pers, pers_rp_sc)
 
-        pers_sp_rp = collect(t for sp in strat_periods(periods) for rp in repr_periods(sp) for t in rp)
+        pers_sp_rp = collect(
+            t for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for t in rp
+        )
         @test issetequal(pers, pers_sp_rp)
 
-        pers_sp_sc = collect(t for sp in strat_periods(periods) for sc in opscenarios(sp) for t in sc)
+        pers_sp_sc = collect(
+            t for sp in strat_periods(periods) for sc in opscenarios(sp) for
+            t in sc
+        )
         @test issetequal(pers, pers_sp_sc)
 
-        pers_sp_rp_sc = collect(t for sp in strat_periods(periods) for rp in repr_periods(sp) for sc in opscenarios(rp) for t in sc)
+        pers_sp_rp_sc = collect(
+            t for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for sc in opscenarios(rp) for t in sc
+        )
         @test issetequal(pers, pers_sp_rp_sc)
 
         repr_pers = collect(rp for rp in repr_periods(periods))
-        repr_pers_sp = collect(rp for sp in strat_periods(periods) for rp in repr_periods(sp))
+        repr_pers_sp = collect(
+            rp for sp in strat_periods(periods) for rp in repr_periods(sp)
+        )
         @test issetequal(repr_pers, repr_pers_sp)
 
         opscens = collect(sc for sc in opscenarios(periods))
-        opscens_sp = collect(sc for sp in strat_periods(periods) for sc in opscenarios(sp))
+        opscens_sp = collect(
+            sc for sp in strat_periods(periods) for sc in opscenarios(sp)
+        )
         @test issetequal(opscens, opscens_sp)
-        opscens_rp_sp = collect(sc for sp in strat_periods(periods) for rp in repr_periods(sp) for sc in opscenarios(rp))
+        opscens_rp_sp = collect(
+            sc for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for sc in opscenarios(rp)
+        )
         @test issetequal(opscens, opscens_rp_sp)
-
     end
 
-    test_invariants(SimpleTimes(10,1))
-    test_invariants(CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1)))
-    test_invariants(OperationalScenarios(3, SimpleTimes(10,1)))
-    test_invariants(RepresentativePeriods(2, 10, [0.2, 0.8], [SimpleTimes(10,1), SimpleTimes(5,1)]))
-    opscen = OperationalScenarios(2, [SimpleTimes(10,1), SimpleTimes(5,3)], [0.4, 0.6])
+    test_invariants(SimpleTimes(10, 1))
+    test_invariants(
+        CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1)),
+    )
+    test_invariants(OperationalScenarios(3, SimpleTimes(10, 1)))
+    test_invariants(
+        RepresentativePeriods(
+            2,
+            10,
+            [0.2, 0.8],
+            [SimpleTimes(10, 1), SimpleTimes(5, 1)],
+        ),
+    )
+    opscen = OperationalScenarios(
+        2,
+        [SimpleTimes(10, 1), SimpleTimes(5, 3)],
+        [0.4, 0.6],
+    )
     repr_op = RepresentativePeriods(2, 10, [0.2, 0.8], [opscen, opscen])
     test_invariants(repr_op)
 
-    test_invariants(TwoLevel(5, 10, SimpleTimes(10,1)))
+    test_invariants(TwoLevel(5, 10, SimpleTimes(10, 1)))
     test_invariants(TwoLevel(5, 30, opscen))
 
-    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [SimpleTimes(5,1), SimpleTimes(5,1)])
+    repr = RepresentativePeriods(
+        2,
+        20,
+        [0.2, 0.8],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
     two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1)
     test_invariants(two_level)
 
@@ -618,8 +656,6 @@ end
     test_invariants(two_level)
 
     periods = two_level
-
-
 end
 
 @testitem "Profiles" begin
