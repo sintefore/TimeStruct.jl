@@ -23,7 +23,8 @@ end
 Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 Base.length(st::SimpleTimes) = st.len
 
-duration(st::SimpleTimes) = sum(st.duration)
+_total_duration(st::SimpleTimes) = sum(st.duration)
+#multiple(st::SimpleTimes) = 1
 
 """
     struct SimplePeriod <: TimePeriod

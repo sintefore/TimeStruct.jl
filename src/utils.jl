@@ -55,45 +55,49 @@ function Base.last(sc::OperationalScenario)
     return ScenarioPeriod(
         sc.scen,
         sc.probability,
-        sc.multiple,
+        sc.mult_sc,
         last(sc.operational),
     )
 end
 
 function Base.last(rp::RepresentativePeriod)
     per = last(rp.operational)
-    mult = stripunit(rp.duration * rp.per_share / duration(rp.operational))
-    return ReprPeriod(rp.rper, per, mult)
+    return ReprPeriod(rp.rper, per, rp.mult_rp * multiple(per))
 end
 
 function Base.last(srp::StratReprPeriod)
     per = last(srp.operational)
-    mult = stripunit(srp.duration_sp * srp.op_per_strat / srp.duration_rp)
-    return OperationalPeriod(srp.sp, per, mult * multiple(per))
+    return OperationalPeriod(srp.sp, per, srp.mult_sp * srp.mult_rp * multiple(per))
 end
 
 function Base.last(sp::StrategicPeriod)
     per = last(sp.operational)
-    mult = stripunit(duration(sp) * sp.op_per_strat / duration(sp.operational))
-    return OperationalPeriod(sp.sp, per, mult * multiple(per))
+    return OperationalPeriod(sp.sp, per, sp.mult_sp * multiple(per))
 end
 
 function Base.last(sos::StratOperationalScenario)
     per = last(sos.operational)
-    mult =
-        stripunit(sos.duration * sos.op_per_strat / duration(sos.operational))
-    return OperationalPeriod(sos.sp, per, mult * multiple(per))
+    return OperationalPeriod(sos.sp, per, sos.mult_sp * multiple(per))
 end
 
+function Base.last(sro::StratReprOpscenPeriod)
+    per = last(sro.operational)
+    rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
+    return OperationalPeriod(sro.sp, rper, sro.mult_sp * sro.mult_rp * multiple(per))
+end
+
+
+#=
 function Base.last(reps::StratReprPeriods)
     per = last(collect(reps.rperiods))
 
     return StratReprPeriod(
         reps.sper.sp,
         per.rper,
+        reps.
         duration(reps.sper),
         duration(reps.rperiods.ts),
-        per,
-        reps.sper.op_per_strat,
+        per
     )
 end
+=#

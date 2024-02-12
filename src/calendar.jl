@@ -77,7 +77,7 @@ end
 Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
 Base.length(ts::CalendarTimes) = ts.length
 
-duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
+_total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
 
 """
     struct CalendarPeriod <: TimePeriod
