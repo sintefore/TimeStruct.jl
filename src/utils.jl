@@ -84,7 +84,7 @@ function Base.last(sos::StratOperationalScenario)
     return OperationalPeriod(sos.sp, per, sos.mult_sp * multiple(per))
 end
 
-function Base.last(sro::StratReprOpscenPeriod)
+function Base.last(sro::StratReprOpscenario)
     per = last(sro.operational)
     rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
     return OperationalPeriod(

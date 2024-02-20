@@ -296,7 +296,7 @@ end
     uniform_year = TwoLevel(monthly_hours, day)
 
     @test length(uniform_year) == 12 * 24
-    @test sum(duration(sp) for sp in strat_periods(uniform_year)) == 8760
+    @test sum(duration_strat(sp) for sp in strat_periods(uniform_year)) == 8760
     @test multiple(first(uniform_year)) == 31
 
     ops1 = collect(uniform_year)
@@ -334,7 +334,7 @@ end
     sps = strat_periods(tsunit)
     @test length(sps) == 4
     sp = first(sps)
-    @test duration(sp) == 31u"d"
+    @test duration_strat(sp) == 31u"d"
     @test length(sp) == 24
     @test multiple(first(sp)) == 31
     @test eltype(sp) <: TimeStruct.OperationalPeriod
@@ -388,7 +388,7 @@ end
 
     @test length(years) == length(collect(years))
 
-    dur = [duration(sp) for sp in strat_periods(years)]
+    dur = [duration_strat(sp) for sp in strat_periods(years)]
     @test dur[2] == 366 * 24
 
     sp = first(strat_periods(years))
@@ -655,7 +655,22 @@ end
     two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
     test_invariants(two_level)
 
-    periods = two_level
+end
+
+@testitem "Duration invariants" begin
+
+    #=
+    day = SimpleTimes(24,1)
+    @test sum(duration(sp) for sp in strat_periods(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(rp) for rp in repr_periods(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(sc) for sc in opscenarios(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(rp) for sp in strat_periods(day) for rp in repr_periods(sp)) == TimeStruct._total_duration(day)
+
+    periods = TwoLevel(10, 240, day)
+    @test sum(duration(sp) for sp in strat_periods(periods)) == TimeStruct._total_duration(periods)
+    @test sum(duration(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)) == TimeStruct._total_duration(periods)
+    =#
+
 end
 
 @testitem "Profiles" begin
@@ -876,18 +891,16 @@ end
 
     uniform_day = SimpleTimes(24, 1)
     periods = TwoLevel(10, 8760, uniform_day)
-    disc_hour = Discounter(0.04, 1 / 8760, periods)
 
     @test sum(
-        objective_weight(sp, disc_hour) for sp in strat_periods(periods)
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for sp in strat_periods(periods)
     ) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
-    disc_unit = Discounter(0.04, periods_unit)
 
     @test sum(
-        objective_weight(sp, disc_unit) for sp in strat_periods(periods_unit)
+        objective_weight(sp, periods_unit, 0.04) for sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end
 

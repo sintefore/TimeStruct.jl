@@ -20,16 +20,16 @@ function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
     end
 
     return sum(
-        duration(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp
+        duration_strat(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp
     )
 end
 
-function _start_strat(sp::StrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
+function _start_strat(sp::AbstractStrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
     if _strat_per(sp) == 1
         return zero(S)
     end
 
-    return sum(duration(spp) for spp in strat_periods(ts) if spp < sp)
+    return sum(duration_strat(spp) for spp in strat_periods(ts) if spp < sp)
 end
 
 function _to_year(start, timeunit_to_year)
@@ -99,6 +99,17 @@ function discount_start(discount_rate, start_year)
     return δ^start_year
 end
 
+function discount(
+    sp::AbstractStrategicPeriod,
+    ts::TimeStructure,
+    discount_rate;
+    timeunit_to_year = 1.0,
+)
+    start_year = _to_year(_start_strat(sp, ts), timeunit_to_year)
+    return discount_start(discount_rate, start_year)
+end
+
+
 """
     objective_weight(t, time_struct, discount_rate; type, timeunit_to_year)
 
@@ -126,4 +137,13 @@ function objective_weight(t::TimePeriod, disc::Discounter; type = "start")
         type = type,
         timeunit_to_year = disc.timeunit_to_year,
     )
+end
+
+function objective_weight(
+    sp::AbstractStrategicPeriod,
+    ts::TimeStructure,
+    discount_rate;
+    timeunit_to_year = 1.0
+)
+    return discount(sp, ts, discount_rate; timeunit_to_year)
 end
