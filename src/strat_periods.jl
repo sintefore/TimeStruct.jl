@@ -1,7 +1,11 @@
 abstract type AbstractStrategicPeriod{T} <: TimeStructure{T} end
 
-duration_strat(sp::AbstractStrategicPeriod) = error("duration_strat() not implemented for $(typeof(sp))")
-_strat_per(sp::AbstractStrategicPeriod) = error("_strat_per() not implemented for $(typeof(sp))")
+function duration_strat(sp::AbstractStrategicPeriod)
+    return error("duration_strat() not implemented for $(typeof(sp))")
+end
+function _strat_per(sp::AbstractStrategicPeriod)
+    return error("_strat_per() not implemented for $(typeof(sp))")
+end
 
 """
     StrategicPeriod <: TimePeriod
@@ -97,13 +101,17 @@ function start_time(sp::StrategicPeriod, ts::TwoLevel{S}) where {S}
            sum(duration_strat(spp) for spp in strategic_periods(ts) if spp < sp)
 end
 
-end_time(sp::StrategicPeriod, ts::TwoLevel) = start_time(sp, ts) + duration_strat(sp)
-
-function remaining(sp::StrategicPeriod, ts::TwoLevel)
-    return sum(duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp)
+function end_time(sp::StrategicPeriod, ts::TwoLevel)
+    return start_time(sp, ts) + duration_strat(sp)
 end
 
-struct SingleStrategicPeriodWrapper{T, SP<:TimeStructure{T}} <: TimeStructure{T}
+function remaining(sp::StrategicPeriod, ts::TwoLevel)
+    return sum(
+        duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp
+    )
+end
+
+struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
     ts::SP
 end
 
@@ -112,9 +120,12 @@ function Base.iterate(ssp::SingleStrategicPeriodWrapper, state = nothing)
     return SingleStrategicPeriod(ssp.ts), 1
 end
 Base.length(ssp::SingleStrategicPeriodWrapper) = 1
-Base.eltype(::Type{SingleStrategicPeriodWrapper{T, SP}}) where {T,SP} = SingleStrategicPeriod{T,RP}
+function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
+    return SingleStrategicPeriod{T,RP}
+end
 
-struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T}
+struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <:
+       AbstractStrategicPeriod{T}
     ts::SP
 end
 Base.length(ssp::SingleStrategicPeriod) = length(ssp.ts)
@@ -132,6 +143,5 @@ _strat_per(ssp::SingleStrategicPeriod) = 1
 
 # Default solution is to behave as a single strategic period
 strat_periods(ts::TimeStructure) = SingleStrategicPeriodWrapper(ts)
-
 
 strategic_periods(ts) = strat_periods(ts)

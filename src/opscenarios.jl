@@ -1,13 +1,16 @@
 abstract type AbstractOperationalScenario{T} <: TimeStructure{T} end
 
-probability(scen::AbstractOperationalScenario) = error("probabilty not implemented for type $(typeof(scen))")
+function probability(scen::AbstractOperationalScenario)
+    return error("probabilty not implemented for type $(typeof(scen))")
+end
 
 """
     struct OperationalScenario
 A structure representing a single operational scenario supporting
 iteration over its time periods.
 """
-struct OperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
+struct OperationalScenario{T,OP<:TimeStructure{T}} <:
+       AbstractOperationalScenario{T}
     scen::Int
     probability::Float64
     mult_sc::Float64
@@ -74,7 +77,8 @@ function Base.iterate(ops::OpScens, state)
     state + 1
 end
 
-struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
+struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <:
+       AbstractOperationalScenario{T}
     rper::Int
     scen::Int
     probability::Float64
@@ -348,8 +352,7 @@ function Base.iterate(srop::StratReprOpscenarios, state = (nothing, 1))
     (next[2], scen + 1)
 end
 
-
-struct SingleScenarioWrapper{T, SC<:TimeStructure{T}} <: TimeStructure{T}
+struct SingleScenarioWrapper{T,SC<:TimeStructure{T}} <: TimeStructure{T}
     ts::SC
 end
 
@@ -358,7 +361,9 @@ function Base.iterate(ssw::SingleScenarioWrapper, state = nothing)
     return SingleScenario(ssw.ts), 1
 end
 Base.length(ssw::SingleScenarioWrapper) = 1
-Base.eltype(::Type{SingleScenarioWrapper{T, SC}}) where {T,SC} = SingleScenario{T,SC}
+function Base.eltype(::Type{SingleScenarioWrapper{T,SC}}) where {T,SC}
+    return SingleScenario{T,SC}
+end
 
 struct SingleScenario{T,SC<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     ts::SC
@@ -374,7 +379,6 @@ function Base.iterate(ssw::SingleScenario, state = nothing)
 end
 
 probability(ss::SingleScenario) = 1.0
-
 
 # Allow TimeStructures without operational scenarios to behave as one operational scenario
 opscenarios(ts::TimeStructure) = SingleScenarioWrapper(ts)

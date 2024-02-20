@@ -654,7 +654,6 @@ end
     repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
     two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
     test_invariants(two_level)
-
 end
 
 @testitem "Duration invariants" begin
@@ -893,14 +892,16 @@ end
     periods = TwoLevel(10, 8760, uniform_day)
 
     @test sum(
-        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for sp in strat_periods(periods)
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
+        sp in strat_periods(periods)
     ) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
 
     @test sum(
-        objective_weight(sp, periods_unit, 0.04) for sp in strat_periods(periods_unit)
+        objective_weight(sp, periods_unit, 0.04) for
+        sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end
 

@@ -7,14 +7,14 @@ period.
 """
 abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T} end
 
-
 """
     RepresentativePeriod
 
 A structure representing a single representative period supporting
 iteration over its time periods.
 """
-struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+struct RepresentativePeriod{T,OP<:TimeStructure{T}} <:
+       AbstractRepresentativePeriod{T}
     rper::Int
     mult_rp::Float64
     operational::OP
@@ -69,8 +69,8 @@ function Base.iterate(rpers::ReprPeriods, state)
     state + 1
 end
 
-
-struct StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+struct StratReprPeriod{T,OP<:TimeStructure{T}} <:
+       AbstractRepresentativePeriod{T}
     sp::Int
     rp::Int
     mult_sp::Float64
@@ -149,9 +149,7 @@ function Base.iterate(reps::StratReprPeriods, state = (nothing, 1))
     (next[2], rper + 1)
 end
 
-
-
-struct SingleReprPeriodWrapper{T, RP<:TimeStructure{T}} <: TimeStructure{T}
+struct SingleReprPeriodWrapper{T,RP<:TimeStructure{T}} <: TimeStructure{T}
     ts::RP
 end
 
@@ -160,9 +158,12 @@ function Base.iterate(srp::SingleReprPeriodWrapper, state = nothing)
     return SingleReprPeriod(srp.ts), 1
 end
 Base.length(srp::SingleReprPeriodWrapper) = 1
-Base.eltype(::Type{SingleReprPeriodWrapper{T, RP}}) where {T,RP} = SingleReprPeriod{T,RP}
+function Base.eltype(::Type{SingleReprPeriodWrapper{T,RP}}) where {T,RP}
+    return SingleReprPeriod{T,RP}
+end
 
-struct SingleReprPeriod{T,RP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+struct SingleReprPeriod{T,RP<:TimeStructure{T}} <:
+       AbstractRepresentativePeriod{T}
     ts::RP
 end
 Base.length(srp::SingleReprPeriod) = length(srp.ts)
