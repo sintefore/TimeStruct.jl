@@ -172,8 +172,6 @@ end
     )
     @test length(rep) == length(collect(rep))
     @test TimeStruct._total_duration(rep) == 8760
-    per = collect(rep)
-    @test last(collect(repr_periods(rep))[2]) == per[end]
 
     # SimpleTimes as one representative period
     simple = SimpleTimes(10, 1)
@@ -316,7 +314,6 @@ end
     @test pers[24] < pers[25]
 
     sp = collect(strat_periods(ts))
-    @test pers[length(day)] == last(sp[1])
 
     # Test that collect is working correctly
     ops = collect(sp[1])
@@ -654,6 +651,69 @@ end
     repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
     two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
     test_invariants(two_level)
+end
+
+@testitem "Last for time structures" begin
+    using Dates
+
+    function test_last(periods)
+        @test last(strategic_periods(periods)) ==
+              last(collect(strategic_periods(periods)))
+        @test last(repr_periods(periods)) ==
+              last(collect(repr_periods(periods)))
+
+        for sp in strategic_periods(periods)
+            @test last(repr_periods(sp)) == last(collect(repr_periods(sp)))
+            for rp in repr_periods(sp)
+                for scen in opscenarios(rp)
+                    @test last(scen) == last(collect(scen))
+                end
+            end
+        end
+
+        for rp in repr_periods(periods)
+            for scen in opscenarios(rp)
+                @test last(scen) == last(collect(scen))
+            end
+        end
+
+        for scen in opscenarios(periods)
+            @test last(scen) == last(collect(scen))
+        end
+    end
+
+    periods = SimpleTimes(24, 1)
+    test_last(periods)
+
+    periods = CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1))
+    test_last(periods)
+
+    periods = RepresentativePeriods(
+        2,
+        20,
+        [0.2, 0.8],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    test_last(periods)
+
+    opscen = OperationalScenarios(
+        2,
+        [SimpleTimes(10, 1), SimpleTimes(5, 3)],
+        [0.4, 0.6],
+    )
+    test_last(opscen)
+
+    periods = TwoLevel(2, 1, SimpleTimes(4, 1))
+    test_last(periods)
+
+    periods = TwoLevel(2, 1, opscen)
+    test_last(periods)
+
+    rep = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    test_last(rep)
+
+    periods = TwoLevel(2, 1, rep)
+    test_last(periods)
 end
 
 @testitem "Duration invariants" begin

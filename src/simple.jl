@@ -24,7 +24,6 @@ Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 Base.length(st::SimpleTimes) = st.len
 
 _total_duration(st::SimpleTimes) = sum(st.duration)
-#multiple(st::SimpleTimes) = 1
 
 """
     struct SimplePeriod <: TimePeriod
@@ -50,4 +49,8 @@ end
 function Base.iterate(itr::SimpleTimes{T}, state) where {T}
     state == itr.len && return nothing
     return SimplePeriod{T}(state + 1, itr.duration[state+1]), state + 1
+end
+
+function Base.last(ts::SimpleTimes)
+    return SimplePeriod(ts.len, ts.duration[ts.len])
 end

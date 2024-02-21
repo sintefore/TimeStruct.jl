@@ -112,3 +112,10 @@ function Base.iterate(ts::CalendarTimes, state)
     return CalendarPeriod(start_time, start_time + ts.period, state[1] + 1),
     (state[1] + 1, start_time)
 end
+
+function Base.last(ts::CalendarTimes)
+    n = ts.length
+    start = ts.start_date + (n - 1) * ts.period
+    stop = start + ts.period
+    return CalendarPeriod(start, stop, n)
+end

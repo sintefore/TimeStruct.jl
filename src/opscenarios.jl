@@ -4,6 +4,10 @@ function probability(scen::AbstractOperationalScenario)
     return error("probabilty not implemented for type $(typeof(scen))")
 end
 
+function _opscen(scen::AbstractOperationalScenario)
+    return error("_opscen() not implemented for type $(typeof(scen))")
+end
+
 """
     struct OperationalScenario
 A structure representing a single operational scenario supporting
@@ -18,8 +22,7 @@ struct OperationalScenario{T,OP<:TimeStructure{T}} <:
 end
 Base.show(io::IO, os::OperationalScenario) = print(io, "sc-$(os.scen)")
 probability(os::OperationalScenario) = os.probability
-#duration(os::OperationalScenario) = duration(os.operational)
-#multiple(os::OperationalScenario) = os.multiple
+_opscen(os::OperationalScenario) = os.scen
 
 # Iterate the time periods of an operational scenario
 function Base.iterate(os::OperationalScenario, state = nothing)
@@ -38,6 +41,14 @@ end
 
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
+function Base.last(sc::OperationalScenario)
+    return ScenarioPeriod(
+        sc.scen,
+        sc.probability,
+        sc.mult_sc,
+        last(sc.operational),
+    )
+end
 
 # Iteration through scenarios
 struct OpScens{T}
@@ -88,6 +99,7 @@ struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <:
 end
 
 probability(ros::ReprOperationalScenario) = ros.probability
+_opscen(ros::ReprOperationalScenario) = ros.scen
 
 function Base.show(io::IO, ros::ReprOperationalScenario)
     return print(io, "rp$(ros.rper)-sc$(ros.scen)")
@@ -111,6 +123,21 @@ function Base.iterate(ros::ReprOperationalScenario, state = nothing)
         ros.multiple_repr * ros.multiple_scen * multiple(period),
     ),
     next[2]
+end
+Base.length(ros::ReprOperationalScenario) = length(ros.operational)
+Base.eltype(ros::ReprOperationalScenario) = ReprPeriod
+function Base.last(ros::ReprOperationalScenario)
+    period = last(ros.operational)
+    return ReprPeriod(
+        ros.rper,
+        ScenarioPeriod(
+            ros.scen,
+            ros.probability,
+            ros.multiple_scen * multiple(period),
+            period,
+        ),
+        ros.multiple_repr * ros.multiple_scen * multiple(period),
+    )
 end
 
 # Iteration through scenarios of a representative period
@@ -186,8 +213,7 @@ function Base.show(io::IO, os::StratOperationalScenario)
     return print(io, "sp$(os.sp)-sc$(os.scen)")
 end
 probability(os::StratOperationalScenario) = os.probability
-#_strat_per(os::StratOperationalScenario) = os.sp
-#_opscen(os::StratOperationalScenario) = os.scen
+_opscen(os::StratOperationalScenario) = os.scen
 
 # Iterate the time periods of a StratOperationalScenario
 function Base.iterate(os::StratOperationalScenario, state = nothing)
@@ -203,6 +229,10 @@ end
 Base.length(os::StratOperationalScenario) = length(os.operational)
 function Base.eltype(::Type{StratOperationalScenario{T}}) where {T}
     return OperationalPeriod
+end
+function Base.last(sos::StratOperationalScenario)
+    per = last(sos.operational)
+    return OperationalPeriod(sos.sp, per, sos.mult_sp * multiple(per))
 end
 
 # Iteration through scenarios
@@ -289,7 +319,8 @@ struct StratReprOpscenario{T} <: AbstractOperationalScenario{T}
     operational::TimeStructure{T}
 end
 
-probability(srp::StratReprOpscenario) = srp.probability
+probability(sro::StratReprOpscenario) = sro.probability
+_opscen(sro::StratReprOpscenario) = sro.opscen
 
 function Base.show(io::IO, srop::StratReprOpscenario)
     return print(io, "sp$(srop.sp)-rp$(srop.rp)-sc$(srop.opscen)")
@@ -314,6 +345,15 @@ end
 Base.length(os::StratReprOpscenario) = length(os.operational)
 function Base.eltype(::Type{StratReprOpscenario{T}}) where {T}
     return OperationalPeriod
+end
+function Base.last(sro::StratReprOpscenario)
+    per = last(sro.operational)
+    rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
+    return OperationalPeriod(
+        sro.sp,
+        rper,
+        sro.mult_sp * sro.mult_rp * multiple(per),
+    )
 end
 
 struct StratReprOpscenarios
@@ -368,14 +408,21 @@ end
 struct SingleScenario{T,SC<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     ts::SC
 end
-Base.length(ssw::SingleScenario) = length(ssw.ts)
+Base.length(ss::SingleScenario) = length(ss.ts)
 Base.eltype(::Type{SingleScenario{T,SC}}) where {T,SC} = eltype(SC)
 
-function Base.iterate(ssw::SingleScenario, state = nothing)
+function Base.iterate(ss::SingleScenario, state = nothing)
     if isnothing(state)
-        return iterate(ssw.ts)
+        return iterate(ss.ts)
     end
-    return iterate(ssw.ts, state)
+    return iterate(ss.ts, state)
+end
+Base.last(ss::SingleScenario) = last(ss.ts)
+function Base.last(
+    ss::SingleScenario{T,RepresentativePeriod{T,OP}},
+) where {T,OP}
+    period = last(ss.ts.operational)
+    return ReprPeriod(ss.ts.rper, period, ss.ts.mult_rp * multiple(period))
 end
 
 probability(ss::SingleScenario) = 1.0

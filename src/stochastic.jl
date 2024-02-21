@@ -63,6 +63,10 @@ end
 
 Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
 
+function Base.last(_::OperationalScenarios)
+    return error("last() not implemented for OperationalScenarios")
+end
+
 # A time period with scenario number and probability
 struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
     sc::Int
