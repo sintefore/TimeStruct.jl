@@ -11,6 +11,14 @@ function _rper(rp::AbstractRepresentativePeriod)
     return error("_rper() not implemented for $(typeof(rp))")
 end
 isfirst(rp::AbstractRepresentativePeriod) = _rper(rp) == 1
+mult_repr(rp::AbstractRepresentativePeriod) = 1
+
+function Base.isless(
+    rp1::AbstractRepresentativePeriod,
+    rp2::AbstractRepresentativePeriod,
+)
+    return _rper(rp1) < _rper(rp2)
+end
 
 function Base.last(rp::AbstractRepresentativePeriod)
     return error(
@@ -34,7 +42,7 @@ struct RepresentativePeriod{T,OP<:TimeStructure{T}} <:
 end
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(rp.rper)")
 _rper(rp::RepresentativePeriod) = rp.rper
-_mult_rp(rp::RepresentativePeriod) = rp.mult_rp
+mult_repr(rp::RepresentativePeriod) = rp.mult_rp
 
 # Iterate the time periods of a representative period
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
@@ -104,8 +112,10 @@ multiple(srp::StratReprPeriod, t::OperationalPeriod) = t.multiple / srp.mult_sp
 function Base.show(io::IO, srp::StratReprPeriod)
     return print(io, "sp$(srp.sp)-rp$(srp.rp)")
 end
+
 _rper(srp::StratReprPeriod) = srp.rp
-_mult_rp(srp::StratReprPeriod) = srp.mult_rp
+
+mult_repr(srp::StratReprPeriod) = srp.mult_rp
 
 # Iterate the time periods of a StratReprPeriod
 function Base.iterate(srp::StratReprPeriod, state = nothing)
@@ -154,8 +164,8 @@ end
 
 Base.length(reps::StratReprPeriods) = length(reps.repr)
 
-_multiple_rp(rpers, rper) = 1.0
-_multiple_rp(rpers::ReprPeriods, rper) = _multiple_adj(rpers.ts, rper)
+#_multiple_rp(rpers, rper) = 1.0
+#_multiple_rp(rpers::ReprPeriods, rper) = _multiple_adj(rpers.ts, rper)
 
 function Base.iterate(reps::StratReprPeriods, state = (nothing, 1))
     next =
@@ -164,8 +174,13 @@ function Base.iterate(reps::StratReprPeriods, state = (nothing, 1))
 
     rper = state[2]
     mult_sp = reps.sper.mult_sp
-    mult_rp = _multiple_rp(reps.repr, rper)
-    return StratReprPeriod(reps.sper.sp, rper, mult_sp, mult_rp, next[1]),
+    return StratReprPeriod(
+        reps.sper.sp,
+        rper,
+        mult_sp,
+        mult_repr(next[1]),
+        next[1],
+    ),
     (next[2], rper + 1)
 end
 
@@ -176,7 +191,7 @@ function Base.last(reps::StratReprPeriods)
         reps.sper.sp,
         _rper(per),
         reps.sper.mult_sp,
-        _mult_rp(per),
+        mult_repr(per),
         per,
     )
 end
@@ -200,7 +215,7 @@ struct SingleReprPeriod{T,RP<:TimeStructure{T}} <:
     ts::RP
 end
 _rper(rp::SingleReprPeriod) = 1
-_mult_rp(rp::SingleReprPeriod) = 1.0
+mult_repr(rp::SingleReprPeriod) = 1.0
 
 Base.length(srp::SingleReprPeriod) = length(srp.ts)
 Base.eltype(::Type{SingleReprPeriod{T,RP}}) where {T,RP} = eltype(RP)

@@ -8,6 +8,8 @@ function _opscen(scen::AbstractOperationalScenario)
     return error("_opscen() not implemented for type $(typeof(scen))")
 end
 
+mult_scen(scen::AbstractOperationalScenario) = 1.0
+
 """
     struct OperationalScenario
 A structure representing a single operational scenario supporting
@@ -22,6 +24,7 @@ struct OperationalScenario{T,OP<:TimeStructure{T}} <:
 end
 Base.show(io::IO, os::OperationalScenario) = print(io, "sc-$(os.scen)")
 probability(os::OperationalScenario) = os.probability
+mult_scen(os::OperationalScenario) = os.mult_sc
 _opscen(os::OperationalScenario) = os.scen
 
 # Iterate the time periods of an operational scenario
@@ -99,6 +102,7 @@ struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <:
 end
 
 probability(ros::ReprOperationalScenario) = ros.probability
+mult_scen(ros::ReprOperationalScenario) = ros.multiple_scen
 _opscen(ros::ReprOperationalScenario) = ros.scen
 
 function Base.show(io::IO, ros::ReprOperationalScenario)
@@ -205,6 +209,7 @@ struct StratOperationalScenario{T} <: AbstractOperationalScenario{T}
     sp::Int
     scen::Int
     mult_sp::Float64
+    mult_scen::Float64
     probability::Float64
     operational::TimeStructure{T}
 end
@@ -213,6 +218,7 @@ function Base.show(io::IO, os::StratOperationalScenario)
     return print(io, "sp$(os.sp)-sc$(os.scen)")
 end
 probability(os::StratOperationalScenario) = os.probability
+mult_scen(os::StratOperationalScenario) = os.mult_scen
 _opscen(os::StratOperationalScenario) = os.scen
 
 # Iterate the time periods of a StratOperationalScenario
@@ -303,6 +309,7 @@ function Base.iterate(ops::StratOpScens, state = (nothing, 1))
         ops.sp,
         scen,
         ops.mult_sp,
+        mult_scen(next[1]),
         probability(next[1]),
         next[1],
     ),

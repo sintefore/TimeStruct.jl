@@ -1,4 +1,11 @@
-abstract type AbstractStrategicPeriod{T} <: TimeStructure{T} end
+"""
+    AbstractStrategicPeriod{S,T} <: TimeStructure{T}
+
+Abstract base type for all strategic periods returned
+when iterating through the periods using the
+`strategic_periods` function.
+"""
+abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
 
 function duration_strat(sp::AbstractStrategicPeriod)
     return error("duration_strat() not implemented for $(typeof(sp))")
@@ -9,6 +16,9 @@ function _strat_per(sp::AbstractStrategicPeriod)
 end
 
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
+
+mult_strat(sp::AbstractStrategicPeriod) = 1
+
 function Base.isless(sp1::AbstractStrategicPeriod, sp2::AbstractStrategicPeriod)
     return _strat_per(sp1) < _strat_per(sp2)
 end
@@ -21,12 +31,31 @@ function Base.last(sp::AbstractStrategicPeriod)
     )
 end
 
-"""
-    StrategicPeriod <: TimePeriod
+function start_time(
+    sp::AbstractStrategicPeriod{S,T},
+    ts::TimeStructure{T},
+) where {S,T}
+    return isfirst(sp) ? zero(S) :
+           sum(duration_strat(spp) for spp in strategic_periods(ts) if spp < sp)
+end
 
-Time period for iteration of strategic periods.
+function end_time(sp::AbstractStrategicPeriod, ts::TimeStructure)
+    return start_time(sp, ts) + duration_strat(sp)
+end
+
+function remaining(sp::AbstractStrategicPeriod, ts::TimeStructure)
+    return sum(
+        duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp
+    )
+end
+
 """
-struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{T}
+    StrategicPeriod <: AbstractStrategicPeriod
+
+Time period for iteration of strategic periods of a `TwoLevel`
+time structure.
+"""
+struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
     sp::Int
     duration::S
     mult_sp::Float64
@@ -37,6 +66,7 @@ Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
 
 duration_strat(sp::StrategicPeriod) = sp.duration
 _strat_per(sp::StrategicPeriod) = sp.sp
+mult_strat(sp::StrategicPeriod) = sp.mult_sp
 
 """
     multiple_strat(sp::StrategicPeriod, t)
@@ -54,18 +84,28 @@ end
 """
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration(sp)
 
-multiple(ts::TwoLevel, sp::StrategicPeriod) = _multiple_adj(ts, sp.sp)
-
 struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
 end
 
 """
-    strat_periods(ts::TwoLevel)
+    strat_periods(ts::TimeStructure)
 
-Iteration through the strategic periods of a 'TwoLevel' structure.
+Iterator to go through the strategic periods of a time structure.
+
+The elements returned will be subtypes of `AbstractStrategicPeriod`.
+If the time structure do not have strategic periods, the overall
+time structure will be wrapped as a single strategic period.
+
+## Example
+```julia
+periods = TwoLevel(5, SimpleTimes(10,1))
+
+total_dur = sum(duration_strat(sp) for sp in strategic_periods(periods))
+```
 """
 strat_periods(ts::TwoLevel) = StratPeriods(ts)
+
 Base.length(sps::StratPeriods) = sps.ts.len
 
 function Base.iterate(sps::StratPeriods)
@@ -116,21 +156,6 @@ function Base.iterate(itr::StrategicPeriod, state = nothing)
     return OperationalPeriod(itr.sp, per, mult), next[2]
 end
 
-function start_time(sp::StrategicPeriod, ts::TwoLevel{S}) where {S}
-    return isfirst(sp) ? zero(S) :
-           sum(duration_strat(spp) for spp in strategic_periods(ts) if spp < sp)
-end
-
-function end_time(sp::StrategicPeriod, ts::TwoLevel)
-    return start_time(sp, ts) + duration_strat(sp)
-end
-
-function remaining(sp::StrategicPeriod, ts::TwoLevel)
-    return sum(
-        duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp
-    )
-end
-
 struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
     ts::SP
 end
@@ -146,7 +171,7 @@ end
 Base.last(ssp::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(ssp.ts)
 
 struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <:
-       AbstractStrategicPeriod{T}
+       AbstractStrategicPeriod{T,T}
     ts::SP
 end
 Base.length(ssp::SingleStrategicPeriod) = length(ssp.ts)
