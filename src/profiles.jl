@@ -10,8 +10,7 @@ end
 function FixedProfile(val::T, u::Unitful.Units) where {T}
     return FixedProfile(Unitful.Quantity(val, u))
 end
-Base.getindex(fp::FixedProfile, _::TimePeriod) = fp.val
-Base.getindex(fp::FixedProfile, _::TimeStructure) = fp.val
+Base.getindex(fp::FixedProfile, _) = fp.val
 
 """
     OperationalProfile
@@ -38,25 +37,38 @@ Time profile with a separate time profile for each strategic period.
 If too few profiles are provided, the last given profile will be
 repeated.
 """
-struct StrategicProfile{T} <: TimeProfile{T}
-    vals::Vector{<:TimeProfile{T}}
+struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+    vals::Vector{P}
 end
 function Base.getindex(sp::StrategicProfile, i::TimePeriod)
     return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
 end
 
+function Base.getindex(
+    sp::StrategicProfile{T,FixedProfile{T}},
+    i::AbstractStrategicPeriod,
+) where {T}
+    return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
+end
+
 function StrategicProfile(vals::Vector{T}) where {T}
-    return StrategicProfile{T}([FixedProfile{T}(v) for v in vals])
+    return StrategicProfile([FixedProfile{T}(v) for v in vals])
 end
 
 """
     ScenarioProfile
 Time profile with a separate time profile for each scenario
 """
-struct ScenarioProfile{T} <: TimeProfile{T}
-    vals::Vector{<:TimeProfile{T}}
+struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+    vals::Vector{P}
 end
 function Base.getindex(scp::ScenarioProfile, i::TimePeriod)
+    return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
+end
+function Base.getindex(
+    scp::ScenarioProfile{T,FixedProfile{T}},
+    i::AbstractOperationalScenario,
+) where {T}
     return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
 end
 
@@ -75,10 +87,17 @@ Time profile with a separate time profile for each representative period.
 If too few profiles are provided, the last given profile will be
 repeated.
 """
-struct RepresentativeProfile{T} <: TimeProfile{T}
-    vals::Vector{<:TimeProfile{T}}
+struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+    vals::Vector{P}
 end
 function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
+    return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
+end
+
+function Base.getindex(
+    rp::RepresentativeProfile{T,FixedProfile{T}},
+    i::AbstractRepresentativePeriod,
+) where {T}
     return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
 end
 
