@@ -48,19 +48,6 @@ _opscen(t::TimePeriod) = 1
 _rper(t::TimePeriod) = 1
 _branch(t::TimePeriod) = 1
 
-# Iterator that wraps a time structure as an iterable colllection with one element
-struct SingleTimeStructWrapper{T} <: TimeStructure{T}
-    ts::TimeStructure{T}
-end
-
-function Base.iterate(sts::SingleTimeStructWrapper, state = nothing)
-    !isnothing(state) && return nothing
-    return sts.ts, 1
-end
-Base.length(sts::SingleTimeStructWrapper) = 1
-Base.eltype(::Type{SingleTimeStructWrapper{T}}) where {T} = T
-
-_total_duration(sts::SingleTimeStructWrapper) = _total_duration(sts.ts)
 _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 
 _multiple_adj(ts::TimeStructure, per) = 1.0
