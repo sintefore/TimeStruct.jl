@@ -914,11 +914,8 @@ end
 end
 
 @testitem "Profiles and operational scenarios" begin
-    profile = ScenarioProfile([
-        FixedProfile(1),
-        FixedProfile(2),
-        FixedProfile(3),
-    ])
+    profile =
+        ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
 
     simple = SimpleTimes(10, 1)
     sc = first(opscenarios(simple))
@@ -929,13 +926,8 @@ end
     vals = collect(profile[sc] for sc in opscenarios(ts))
     @test vals == [1, 1, 1]
 
-    oscen = OperationalScenarios([SimpleTimes(5,1), SimpleTimes(5,1)])
-    repr = RepresentativePeriods(
-        2,
-        5,
-        [0.6, 0.4],
-        [oscen, oscen],
-    )
+    oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
     ts = TwoLevel(3, 5, repr)
 
     vals = collect(profile[sc] for sc in opscenarios(ts))
@@ -946,7 +938,6 @@ end
     vals = collect(sprofile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
 end
-
 
 @testitem "TwoLevelTree and opscenarios" begin
     regtree = TimeStruct.regular_tree(
