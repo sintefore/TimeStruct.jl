@@ -26,9 +26,9 @@ function TimeStruct.expand_dataframe!(df::DataFrame, periods)
             df[!, :duration] = [duration(t) for t in col]
             df[!, :start_time] = [start_oper_time(t, periods) for t in col]
             df[!, :end_time] = [end_oper_time(t, periods) for t in col]
-        elseif eltype(col) <: TS.StrategicPeriod
+        elseif eltype(col) <: TS.AbstractStrategicPeriod
             df[!, :strategic_period] = [TS._strat_per(t) for t in col]
-            df[!, :duration] = [duration(t) for t in col]
+            df[!, :duration] = [duration_strat(t) for t in col]
             df[!, :start_time] = [start_time(t, periods) for t in col]
             df[!, :end_time] = [end_time(t, periods) for t in col]
         end

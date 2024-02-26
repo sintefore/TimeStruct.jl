@@ -77,7 +77,7 @@ end
 Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
 Base.length(ts::CalendarTimes) = ts.length
 
-duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
+_total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
 
 """
     struct CalendarPeriod <: TimePeriod
@@ -111,4 +111,11 @@ function Base.iterate(ts::CalendarTimes, state)
     start_time = state[2] + ts.period
     return CalendarPeriod(start_time, start_time + ts.period, state[1] + 1),
     (state[1] + 1, start_time)
+end
+
+function Base.last(ts::CalendarTimes)
+    n = ts.length
+    start = ts.start_date + (n - 1) * ts.period
+    stop = start + ts.period
+    return CalendarPeriod(start, stop, n)
 end

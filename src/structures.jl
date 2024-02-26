@@ -47,3 +47,12 @@ _strat_per(t::TimePeriod) = 1
 _opscen(t::TimePeriod) = 1
 _rper(t::TimePeriod) = 1
 _branch(t::TimePeriod) = 1
+
+_total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
+
+_multiple_adj(ts::TimeStructure, per) = 1.0
+
+stripunit(val) = val
+stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
+
+multiple(ts::TimeStructure, t::TimePeriod) = 1.0
