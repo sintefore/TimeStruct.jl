@@ -44,11 +44,17 @@ function Base.getindex(sp::StrategicProfile, i::TimePeriod)
     return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
 end
 
-function Base.getindex(
-    sp::StrategicProfile{T,FixedProfile{T}},
-    i::AbstractStrategicPeriod,
-) where {T}
-    return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
+function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
+    return sp.vals[_strat_per(period) > length(sp.vals) ? end :
+                   _strat_per(period)][period]
+end
+
+function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
+    return "Type $(typeof(period)) can not be used as index for a strategic profile"
+end
+
+function Base.getindex(sp::StrategicProfile, period::T) where {T}
+    return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
 function StrategicProfile(vals::Vector{T}) where {T}
@@ -65,11 +71,17 @@ end
 function Base.getindex(scp::ScenarioProfile, i::TimePeriod)
     return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
 end
-function Base.getindex(
-    scp::ScenarioProfile{T,FixedProfile{T}},
-    i::AbstractOperationalScenario,
-) where {T}
-    return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
+
+function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
+    return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][period]
+end
+
+function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
+    return "Type $(typeof(period)) can not be used as index for a scenario profile"
+end
+
+function Base.getindex(sp::ScenarioProfile, period::T) where {T}
+    return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
 function ScenarioProfile(vals::Vector{Vector{T}}) where {T}
@@ -94,11 +106,16 @@ function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
     return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
 end
 
-function Base.getindex(
-    rp::RepresentativeProfile{T,FixedProfile{T}},
-    i::AbstractRepresentativePeriod,
-) where {T}
-    return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
+function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
+    return rp.vals[_rper(period) > length(rp.vals) ? end : _rper(period)][period]
+end
+
+function _value_lookup(::NoReprIndex, rp::RepresentativeProfile, period)
+    return "Type $(typeof(period)) can not be used as index for a representative profile"
+end
+
+function Base.getindex(rp::RepresentativeProfile, period::T) where {T}
+    return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
 struct StrategicStochasticProfile{T} <: TimeProfile{T}
@@ -126,6 +143,9 @@ end
 function +(a::ScenarioProfile{T}, b::Number) where {T<:Number}
     return ScenarioProfile(a.vals .+ b)
 end
+function +(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+    return RepresentativeProfile(a.vals .+ b)
+end
 +(a::Number, b::TimeProfile{T}) where {T<:Number} = b + a
 -(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val - b)
 function -(a::OperationalProfile{T}, b::Number) where {T<:Number}
@@ -137,6 +157,10 @@ end
 function -(a::ScenarioProfile{T}, b::Number) where {T<:Number}
     return ScenarioProfile(a.vals .- b)
 end
+function -(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+    return RepresentativeProfile(a.vals .- b)
+end
+
 *(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val .* b)
 function *(a::OperationalProfile{T}, b::Number) where {T<:Number}
     return OperationalProfile(a.vals .* b)
@@ -147,6 +171,10 @@ end
 function *(a::ScenarioProfile{T}, b::Number) where {T<:Number}
     return ScenarioProfile(a.vals .* b)
 end
+function *(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+    return RepresentativeProfile(a.vals .* b)
+end
+
 *(a::Number, b::TimeProfile{T}) where {T<:Number} = b * a
 /(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val / b)
 function /(a::OperationalProfile{T}, b::Number) where {T<:Number}
@@ -157,4 +185,7 @@ function /(a::StrategicProfile{T}, b::Number) where {T<:Number}
 end
 function /(a::ScenarioProfile{T}, b::Number) where {T<:Number}
     return ScenarioProfile(a.vals ./ b)
+end
+function /(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+    return RepresentativeProfile(a.vals ./ b)
 end

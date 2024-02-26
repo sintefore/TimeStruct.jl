@@ -857,6 +857,97 @@ end
     @test dsp[ops[4]] == 5
 end
 
+@testitem "Profiles and strategic periods" begin
+    profile = StrategicProfile([1, 2, 3])
+
+    simple = SimpleTimes(10, 1)
+    sp = first(strat_periods(simple))
+
+    @test profile[sp] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+
+    repr = RepresentativePeriods(
+        2,
+        5,
+        [0.6, 0.4],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+end
+
+@testitem "Profiles and representative periods" begin
+    profile = RepresentativeProfile([
+        FixedProfile(1),
+        FixedProfile(2),
+        FixedProfile(3),
+    ])
+
+    simple = SimpleTimes(10, 1)
+    rp = first(repr_periods(simple))
+
+    @test profile[rp] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 1, 1]
+
+    repr = RepresentativePeriods(
+        2,
+        5,
+        [0.6, 0.4],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 1, 2, 1, 2]
+
+    sprofile = StrategicProfile([profile, 2 * profile, 3 * profile])
+    vals = collect(sprofile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 2, 4, 3, 6]
+end
+
+@testitem "Profiles and operational scenarios" begin
+    profile = ScenarioProfile([
+        FixedProfile(1),
+        FixedProfile(2),
+        FixedProfile(3),
+    ])
+
+    simple = SimpleTimes(10, 1)
+    sc = first(opscenarios(simple))
+
+    @test profile[sc] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 1, 1]
+
+    oscen = OperationalScenarios([SimpleTimes(5,1), SimpleTimes(5,1)])
+    repr = RepresentativePeriods(
+        2,
+        5,
+        [0.6, 0.4],
+        [oscen, oscen],
+    )
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+
+    rprofile = RepresentativeProfile([profile, profile + 2])
+    sprofile = StrategicProfile([rprofile, 2 * rprofile, 3 * rprofile])
+    vals = collect(sprofile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
+end
+
+
 @testitem "TwoLevelTree and opscenarios" begin
     regtree = TimeStruct.regular_tree(
         5,

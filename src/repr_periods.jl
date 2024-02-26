@@ -28,6 +28,14 @@ function Base.last(rp::AbstractRepresentativePeriod)
     )
 end
 
+abstract type RepresentativeIndexable end
+
+struct HasReprIndex <: RepresentativeIndexable end
+struct NoReprIndex <: RepresentativeIndexable end
+
+RepresentativeIndexable(::Type) = NoReprIndex()
+RepresentativeIndexable(::Type{<:AbstractRepresentativePeriod}) = HasReprIndex()
+
 """
     RepresentativePeriod
 
@@ -107,6 +115,8 @@ struct StratReprPeriod{T,OP<:TimeStructure{T}} <:
     operational::OP
 end
 
+StrategicIndexable(::Type{<:StratReprPeriod}) = HasStratIndex()
+
 multiple(srp::StratReprPeriod, t::OperationalPeriod) = t.multiple / srp.mult_sp
 
 function Base.show(io::IO, srp::StratReprPeriod)
@@ -114,6 +124,7 @@ function Base.show(io::IO, srp::StratReprPeriod)
 end
 
 _rper(srp::StratReprPeriod) = srp.rp
+_strat_per(srp::StratReprPeriod) = srp.sp
 
 mult_repr(srp::StratReprPeriod) = srp.mult_rp
 
@@ -215,10 +226,13 @@ struct SingleReprPeriod{T,RP<:TimeStructure{T}} <:
     ts::RP
 end
 _rper(rp::SingleReprPeriod) = 1
+_strat_per(rp::SingleReprPeriod) = 1
 mult_repr(rp::SingleReprPeriod) = 1.0
 
 Base.length(srp::SingleReprPeriod) = length(srp.ts)
 Base.eltype(::Type{SingleReprPeriod{T,RP}}) where {T,RP} = eltype(RP)
+
+StrategicIndexable(::Type{<:SingleReprPeriod}) = HasStratIndex()
 
 function Base.iterate(srp::SingleReprPeriod, state = nothing)
     if isnothing(state)

@@ -1,9 +1,10 @@
+
 """
     AbstractStrategicPeriod{S,T} <: TimeStructure{T}
 
 Abstract base type for all strategic periods returned
 when iterating through the periods using the
-`strategic_periods` function.
+`strat_periods` function.
 """
 abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
 
@@ -30,6 +31,14 @@ function Base.last(sp::AbstractStrategicPeriod)
   of the strategic period obtained with `opscenarios(sp)`",
     )
 end
+
+abstract type StrategicIndexable end
+
+struct HasStratIndex <: StrategicIndexable end
+struct NoStratIndex <: StrategicIndexable end
+
+StrategicIndexable(::Type) = NoStratIndex()
+StrategicIndexable(::Type{<:AbstractStrategicPeriod}) = HasStratIndex()
 
 function start_time(
     sp::AbstractStrategicPeriod{S,T},

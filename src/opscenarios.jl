@@ -10,6 +10,14 @@ end
 
 mult_scen(scen::AbstractOperationalScenario) = 1.0
 
+abstract type ScenarioIndexable end
+
+struct HasScenarioIndex <: ScenarioIndexable end
+struct NoScenarioIndex <: ScenarioIndexable end
+
+ScenarioIndexable(::Type) = NoScenarioIndex()
+ScenarioIndexable(::Type{<:AbstractOperationalScenario}) = HasScenarioIndex()
+
 """
     struct OperationalScenario
 A structure representing a single operational scenario supporting
@@ -104,6 +112,9 @@ end
 probability(ros::ReprOperationalScenario) = ros.probability
 mult_scen(ros::ReprOperationalScenario) = ros.multiple_scen
 _opscen(ros::ReprOperationalScenario) = ros.scen
+
+_rper(ros::ReprOperationalScenario) = ros.rper
+RepresentativeIndexable(::Type{<:ReprOperationalScenario}) = HasReprIndex()
 
 function Base.show(io::IO, ros::ReprOperationalScenario)
     return print(io, "rp$(ros.rper)-sc$(ros.scen)")
@@ -220,6 +231,10 @@ end
 probability(os::StratOperationalScenario) = os.probability
 mult_scen(os::StratOperationalScenario) = os.mult_scen
 _opscen(os::StratOperationalScenario) = os.scen
+_strat_per(os::StratOperationalScenario) = os.sp
+
+StrategicIndexable(::Type{<:StratOperationalScenario}) = HasStratIndex()
+ScenarioIndexable(::Type{<:StratOperationalScenario}) = HasScenarioIndex()
 
 # Iterate the time periods of a StratOperationalScenario
 function Base.iterate(os::StratOperationalScenario, state = nothing)
@@ -328,10 +343,18 @@ end
 
 probability(sro::StratReprOpscenario) = sro.probability
 _opscen(sro::StratReprOpscenario) = sro.opscen
+_strat_per(sro::StratReprOpscenario) = sro.sp
+_rper(sro::StratReprOpscenario) = sro.rp
 
 function Base.show(io::IO, srop::StratReprOpscenario)
     return print(io, "sp$(srop.sp)-rp$(srop.rp)-sc$(srop.opscen)")
 end
+
+StrategicIndexable(::Type{<:StratReprOpscenario}) = HasStratIndex()
+function RepresentativeIndexable(::Type{<:StratReprOpscenario})
+    return HasReprIndex()
+end
+ScenarioIndexable(::Type{<:StratReprOpscenario}) = HasScenarioIndex()
 
 # Iterate the time periods of a StratReprOpscenario
 function Base.iterate(os::StratReprOpscenario, state = nothing)
@@ -433,6 +456,13 @@ function Base.last(
 end
 
 probability(ss::SingleScenario) = 1.0
+_strat_per(ss::SingleScenario) = 1
+_repr_per(ss::SingleScenario) = 1
+_opscen(ss::SingleScenario) = 1
+
+StrategicIndexable(::Type{<:SingleScenario}) = HasStratIndex()
+RepresentativeIndexable(::Type{<:SingleScenario}) = HasRepresentativeIndex()
+ScenarioIndexable(::Type{<:SingleScenario}) = HasScenarioIndex()
 
 # Allow TimeStructures without operational scenarios to behave as one operational scenario
 opscenarios(ts::TimeStructure) = SingleScenarioWrapper(ts)
