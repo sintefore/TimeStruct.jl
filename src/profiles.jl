@@ -30,6 +30,12 @@ function Base.getindex(op::OperationalProfile, i::TimePeriod)
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]
 end
 
+function Base.getindex(op::OperationalProfile, period)
+    return error(
+        "Type $(typeof(period)) can not be used as index for an operational profile",
+    )
+end
+
 """
     StrategicProfile
 Time profile with a separate time profile for each strategic period.
@@ -50,7 +56,9 @@ function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
 end
 
 function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
-    return "Type $(typeof(period)) can not be used as index for a strategic profile"
+    return error(
+        "Type $(typeof(period)) can not be used as index for a strategic profile",
+    )
 end
 
 function Base.getindex(sp::StrategicProfile, period::T) where {T}
@@ -77,7 +85,9 @@ function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
 end
 
 function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
-    return "Type $(typeof(period)) can not be used as index for a scenario profile"
+    return error(
+        "Type $(typeof(period)) can not be used as index for a scenario profile",
+    )
 end
 
 function Base.getindex(sp::ScenarioProfile, period::T) where {T}
@@ -111,7 +121,9 @@ function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
 end
 
 function _value_lookup(::NoReprIndex, rp::RepresentativeProfile, period)
-    return "Type $(typeof(period)) can not be used as index for a representative profile"
+    return error(
+        "Type $(typeof(period)) can not be used as index for a representative profile",
+    )
 end
 
 function Base.getindex(rp::RepresentativeProfile, period::T) where {T}
