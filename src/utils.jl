@@ -27,7 +27,7 @@ end
 
 struct Slice{I}
     itr::I
-    ns::Int64
+    ns::Int
     cyclic::Bool
 end
 
