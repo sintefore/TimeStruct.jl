@@ -25,6 +25,90 @@ function Base.iterate(w::WithPrev, state)
     return (isfirst(n[1]) ? nothing : state[1], n[1]), (n[1], n[2])
 end
 
+struct Slice{I}
+    itr::I
+    ns::Int64
+    cyclic::Bool
+end
+
+"""
+    slice(iter, n; cyclic = false)
+
+Iterator wrapper that yields slices where each slice is an iterator over at most
+`n` consecutive time periods starting at each time period of the original iterator.
+
+It is possible to get the `n` consecutive time periods in a cyclic fashion, by
+setting `cyclic` to true.
+"""
+slice(iter, n; cyclic = false) = Slice(iter, n, cyclic)
+Base.length(w::Slice) = length(w.itr)
+Base.size(w::Slice) = size(w.itr)
+
+function Base.iterate(w::Slice, state = nothing)
+    n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
+    n === nothing && return n
+    itr = w.itr
+    if w.cyclic
+        itr = Iterators.cycle(w.itr)
+    end
+    next = Iterators.take(
+        isnothing(state) ? itr : Iterators.rest(itr, state),
+        w.ns,
+    )
+    return next, n[2]
+end
+
+struct TakeDuration{I}
+    xs::I
+    duration::Duration
+end
+
+take_duration(xs, dur::Duration) = TakeDuration(xs, dur)
+
+IteratorSize(::Type{<:TakeDuration}) = Base.SizeUnknown()
+eltype(::Type{TakeDuration{I}}) where {I} = eltype(I)
+IteratorEltype(::Type{TakeDuration{I}}) where {I} = IteratorEltype(I)
+
+function Base.iterate(it::TakeDuration, state = (it.duration,))
+    dur, rest = state[1], Base.tail(state)
+    dur <= 0 && return nothing
+    y = iterate(it.xs, rest...)
+    y === nothing && return nothing
+    return y[1], (dur - duration(y[1]), y[2])
+end
+
+struct SliceDuration{I}
+    itr::I
+    duration::Duration
+    cyclic::Bool
+end
+
+"""
+    slice_duration(iter, dur)
+
+Iterator wrapper that yields slices based on duration where each slice is an iterator over the following
+time periods until at least `dur` time is covered or the end is reached.
+"""
+slice_duration(iter, dur; cyclic = false) = SliceDuration(iter, dur, cyclic)
+
+eltype(::Type{SliceDuration{I}}) where {I} = eltype(I)
+IteratorEltype(::Type{SliceDuration{I}}) where {I} = IteratorEltype(I)
+length(w::SliceDuration) = length(w.itr)
+
+function Base.iterate(w::SliceDuration, state = nothing)
+    n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
+    n === nothing && return n
+    itr = w.itr
+    if w.cyclic
+        itr = Iterators.cycle(w.itr)
+    end
+    next = take_duration(
+        isnothing(state) ? itr : Iterators.rest(itr, state...),
+        w.duration,
+    )
+    return next, n[2]
+end
+
 function end_oper_time(t::TimePeriod, ts::SimpleTimes)
     return sum(duration(tt) for tt in ts if _oper(tt) <= _oper(t))
 end

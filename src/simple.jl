@@ -50,3 +50,11 @@ function Base.iterate(itr::SimpleTimes{T}, state) where {T}
     state == itr.len && return nothing
     return SimplePeriod{T}(state + 1, itr.duration[state+1]), state + 1
 end
+
+function Base.getindex(itr::SimpleTimes{T}, index) where {T}
+    return SimplePeriod{T}(index, itr.duration[index])
+end
+
+function Base.eachindex(itr::SimpleTimes{T}) where {T}
+    return Base.OneTo(itr.len)
+end

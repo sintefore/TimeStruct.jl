@@ -304,6 +304,15 @@ function Base.eltype(::Type{StratOperationalScenario{S,T}}) where {S,T}
     return OperationalPeriod
 end
 
+function Base.getindex(os::StratOperationalScenario, index)
+    mult = stripunit(os.duration * os.op_per_strat / duration(os.operational))
+    return OperationalPeriod(os.sp, os.operational[index], mult)
+end
+
+function Base.eachindex(os::StratOperationalScenario)
+    return eachindex(os.operational)
+end
+
 # Iteration through scenarios
 struct StratOpScens
     sper::StrategicPeriod
@@ -475,6 +484,16 @@ end
 Base.length(os::StratReprOpscenPeriod) = length(os.operational)
 function Base.eltype(::Type{StratReprOpscenPeriod{S,T}}) where {S,T}
     return OperationalPeriod
+end
+
+function Base.getindex(os::StratReprOpscenPeriod, index)
+    mult = stripunit(os.duration * os.op_per_strat / duration(os.operational))
+    period = ReprPeriod(os.rp, os.operational[index], mult)
+    return OperationalPeriod(os.sp, period, mult)
+end
+
+function Base.eachindex(os::StratReprOpscenPeriod)
+    return eachindex(os.operational)
 end
 
 struct StratReprOpscenPeriods{T}

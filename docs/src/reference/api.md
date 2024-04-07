@@ -66,6 +66,14 @@ strat_periods
 withprev
 ```
 
+```@docs
+slice
+```
+
+```@docs
+slice_duration
+```
+
 
 # Time profiles
 
