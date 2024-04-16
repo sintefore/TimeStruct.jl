@@ -60,7 +60,7 @@ end
 ```
 Similarly, if modelling shutdown decision with a minimum uptime,
 it is possible to reverse the original time periods and then 
-slice:
+chunk:
 ```@ex
 m = Model()
 @variable(m, shutdown[periods], Bin)
