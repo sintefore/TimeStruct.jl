@@ -28,3 +28,74 @@ collect(withprev(periods))
 
 
 
+## Iteration with chunks of time periods
+
+Sometimes it is convenient to iterate through the time periods
+as chunks of a fixed number of periods or minimum duration, e.g. in production planning
+with minimum production runs. To simplify this process
+there are several iterator wrappers that allows this kind of iteration pattern.
+
+
+The [`chunk`](@ref) function iterates through a time structure returning
+subsequences of length at most `n` starting at each time period. 
+```@repl ts
+periods = SimpleTimes(5,1)
+collect(collect(ts) for ts in chunk(periods, 3))
+```
+
+This wrapper can be used for e.g. modelling of startup modelling with a minimum
+uptime. The following example shows how this can be implemented as part of 
+a JuMP model: 
+```@ex
+using JuMP, TimeStruct
+
+periods = SimpleTimes(10,1)
+
+m = Model()
+@variable(m, startup[periods], Bin)
+
+for ts in chunk(periods, 3)
+    @constraint(m, sum(startup[t] for t in ts) <= 1)
+end
+```
+Similarly, if modelling shutdown decision with a minimum uptime,
+it is possible to reverse the original time periods and then 
+chunk:
+```@ex
+m = Model()
+@variable(m, shutdown[periods], Bin)
+
+for ts in chunk(Iterators.reverse(periods), 3)
+    @constraint(m, sum(shutdown[t] for t in ts) <= 1)
+end
+```
+
+!!! note
+    Not all time structures can be reversed. Currently, it is only supported
+    for operational time structures and operational scenarios.
+
+
+## Chunks based on duration
+
+If working with a time structure that has varying duration for its time periods,
+it can be more convenient with chunks based on their combined duration.
+
+The [`chunk_duration`](@ref) function iterates through a time structure returning
+subsequences of duration at least `dur` starting at each time period.  
+```@repl ts
+periods = SimpleTimes(5,[1, 2, 1, 1.5, 0.5, 2])
+collect(collect(ts) for ts in chunk_duration(periods, 3))
+```
+
+## Indexing of operational time structures
+
+It is possible to use indices for operational time structures, either directly
+using [`SimpleTimes`](@ref) or [`CalendarTimes`](@ref) or by accessing an
+operational scenario. 
+
+```@repl ts
+periods = TwoLevel(3, 100, SimpleTimes(10,1));
+
+scenario = first(opscenarios(periods))
+scenario[3]
+```

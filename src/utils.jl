@@ -25,6 +25,90 @@ function Base.iterate(w::WithPrev, state)
     return (isfirst(n[1]) ? nothing : state[1], n[1]), (n[1], n[2])
 end
 
+struct Chunk{I}
+    itr::I
+    ns::Int
+    cyclic::Bool
+end
+
+"""
+    chunk(iter, n; cyclic = false)
+
+Iterator wrapper that yields chunks where each chunk is an iterator over at most
+`n` consecutive time periods starting at each time period of the original iterator.
+
+It is possible to get the `n` consecutive time periods in a cyclic fashion, by
+setting `cyclic` to true.
+"""
+chunk(iter, n; cyclic = false) = Chunk(iter, n, cyclic)
+Base.length(w::Chunk) = length(w.itr)
+Base.size(w::Chunk) = size(w.itr)
+
+function Base.iterate(w::Chunk, state = nothing)
+    n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
+    n === nothing && return n
+    itr = w.itr
+    if w.cyclic
+        itr = Iterators.cycle(w.itr)
+    end
+    next = Iterators.take(
+        isnothing(state) ? itr : Iterators.rest(itr, state),
+        w.ns,
+    )
+    return next, n[2]
+end
+
+struct TakeDuration{I}
+    xs::I
+    duration::Duration
+end
+
+take_duration(xs, dur::Duration) = TakeDuration(xs, dur)
+
+IteratorSize(::Type{<:TakeDuration}) = Base.SizeUnknown()
+eltype(::Type{TakeDuration{I}}) where {I} = eltype(I)
+IteratorEltype(::Type{TakeDuration{I}}) where {I} = IteratorEltype(I)
+
+function Base.iterate(it::TakeDuration, state = (it.duration,))
+    dur, rest = state[1], Base.tail(state)
+    dur <= 0 && return nothing
+    y = iterate(it.xs, rest...)
+    y === nothing && return nothing
+    return y[1], (dur - duration(y[1]), y[2])
+end
+
+struct ChunkDuration{I}
+    itr::I
+    duration::Duration
+    cyclic::Bool
+end
+
+"""
+    chunk_duration(iter, dur)
+
+Iterator wrapper that yields chunks based on duration where each chunk is an iterator over the following
+time periods until at least `dur` time is covered or the end is reached.
+"""
+chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
+
+eltype(::Type{ChunkDuration{I}}) where {I} = eltype(I)
+IteratorEltype(::Type{ChunkDuration{I}}) where {I} = IteratorEltype(I)
+length(w::ChunkDuration) = length(w.itr)
+
+function Base.iterate(w::ChunkDuration, state = nothing)
+    n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
+    n === nothing && return n
+    itr = w.itr
+    if w.cyclic
+        itr = Iterators.cycle(w.itr)
+    end
+    next = take_duration(
+        isnothing(state) ? itr : Iterators.rest(itr, state...),
+        w.duration,
+    )
+    return next, n[2]
+end
+
 function end_oper_time(t::TimePeriod, ts::SimpleTimes)
     return sum(duration(tt) for tt in ts if _oper(tt) <= _oper(t))
 end

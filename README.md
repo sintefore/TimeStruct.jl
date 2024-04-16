@@ -1,5 +1,5 @@
 # TimeStruct.jl
-[![Build Status](https://github.com/sintefore/TimeStruct.jl/workflows/CI/badge.svg?branch=main)](https://github.com/sintefore/TimeStruct.jl/actions?query=workflow%3ACI)
+[![Build Status](https://github.com/sintefore/TimeStruct.jl/workflows/CI/badge.svg)](https://github.com/sintefore/TimeStruct.jl/actions?query=workflow%3ACI)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
 [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://sintefore.github.io/TimeStruct.jl/dev/)
 
@@ -23,7 +23,7 @@ using TimeStruct
 periods = SimpleTimes(10, 1)    # 10 periods of length 1
 income = FixedProfile(5.0)      # Fixed income profile 
 
-model = MOdel()
+model = Model()
 @varible(model, x[periods] >= 0)
 
 @constraint(model, sum(x[t] for t in periods) <= 4)
@@ -39,9 +39,9 @@ following:
   title        = {{TimeStruct.jl: Flexible time structures in optimization modelling}},
   month        = Jan,
   year         = 2024,
-  doi          = {10.5281/zenodo.10511399},
+  doi          = {10.5281/zenodo.10511398},
   publisher    = {Zenodo},
-  url          = {https://zenodo.org/records/10511399}
+  url          = {https://zenodo.org/records/10511398}
 }
 ```
 

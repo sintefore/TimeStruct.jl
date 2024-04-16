@@ -90,7 +90,7 @@ _oper(t::ScenarioPeriod) = _oper(t.period)
 _opscen(t::ScenarioPeriod) = t.sc
 
 """
-    struct OperationalScenario 
+    struct OperationalScenario
 A structure representing a single operational scenario supporting
 iteration over its time periods.
 """
@@ -105,10 +105,8 @@ probability(os::OperationalScenario) = os.probability
 duration(os::OperationalScenario) = duration(os.operational)
 
 # Iterate the time periods of an operational scenario
-function Base.iterate(os::OperationalScenario, state = nothing)
-    next =
-        isnothing(state) ? iterate(os.operational) :
-        iterate(os.operational, state)
+function Base.iterate(os::OperationalScenario, state = ())
+    next = iterate(os.operational, state...)
     next === nothing && return nothing
     return ScenarioPeriod(os.scen, os.probability, os.multiple, next[1]),
     next[2]
@@ -117,7 +115,20 @@ end
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
 
-# Iteration through scenarios 
+function Base.getindex(os::OperationalScenario, index)
+    return ScenarioPeriod(
+        os.scen,
+        os.probability,
+        os.multiple,
+        os.operational[index],
+    )
+end
+
+function Base.eachindex(os::OperationalScenario)
+    return eachindex(os.operational)
+end
+
+# Iteration through scenarios
 struct OpScens{T}
     ts::OperationalScenarios{T}
 end
@@ -188,6 +199,25 @@ function Base.iterate(ros::ReprOperationalScenario, state = nothing)
         ros.multiple_repr * ros.multiple_scen * multiple(period),
     ),
     next[2]
+end
+
+function Base.getindex(ros::ReprOperationalScenario, index)
+    period = ros.operational[index]
+    scen_per = ScenarioPeriod(
+        ros.scen,
+        ros.probability,
+        ros.multiple_scen * multiple(period),
+        period,
+    )
+    return ReprPeriod(
+        ros.rper,
+        scen_per,
+        ros.multiple_scen * multiple(scen_period),
+    )
+end
+
+function Base.eachindex(ros::ReprOperationalScenario)
+    return eachindex(ros.operational)
 end
 
 # Iteration through scenarios of a representative period
