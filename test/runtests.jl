@@ -754,20 +754,20 @@ end
 
     periods = SimpleTimes(10, 1)
 
-    per_next = collect(collect(ts) for ts in slice(periods, 5))
+    per_next = collect(collect(ts) for ts in chunk(periods, 5))
     @test length(per_next[1]) == 5
     @test length(per_next[7]) == 4
     @test length(per_next[10]) == 1
     @test per_next[1] == collect(Iterators.take(periods, 5))
 
     per_prev =
-        collect(collect(ts) for ts in slice(Iterators.reverse(periods), 5))
+        collect(collect(ts) for ts in chunk(Iterators.reverse(periods), 5))
     @test length(per_prev[1]) == 5
     @test length(per_next[7]) == 4
     @test length(per_next[10]) == 1
     @test per_prev[10] == [first(periods)]
 
-    per_cyclic = collect(collect(ts) for ts in slice(periods, 5; cyclic = true))
+    per_cyclic = collect(collect(ts) for ts in chunk(periods, 5; cyclic = true))
     for pc in per_cyclic
         @test length(pc) == 5
     end
@@ -776,7 +776,7 @@ end
     pers = [t for t in TimeStruct.take_duration(periods, 5)]
     @test sum(duration(t) for t in pers) >= 5
 
-    sdur = collect(collect(ts) for ts in slice_duration(periods, 5))
+    sdur = collect(collect(ts) for ts in chunk_duration(periods, 5))
     for s in sdur
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
     end

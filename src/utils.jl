@@ -25,26 +25,26 @@ function Base.iterate(w::WithPrev, state)
     return (isfirst(n[1]) ? nothing : state[1], n[1]), (n[1], n[2])
 end
 
-struct Slice{I}
+struct Chunk{I}
     itr::I
     ns::Int
     cyclic::Bool
 end
 
 """
-    slice(iter, n; cyclic = false)
+    chunk(iter, n; cyclic = false)
 
-Iterator wrapper that yields slices where each slice is an iterator over at most
+Iterator wrapper that yields chunks where each chunk is an iterator over at most
 `n` consecutive time periods starting at each time period of the original iterator.
 
 It is possible to get the `n` consecutive time periods in a cyclic fashion, by
 setting `cyclic` to true.
 """
-slice(iter, n; cyclic = false) = Slice(iter, n, cyclic)
-Base.length(w::Slice) = length(w.itr)
-Base.size(w::Slice) = size(w.itr)
+chunk(iter, n; cyclic = false) = Chunk(iter, n, cyclic)
+Base.length(w::Chunk) = length(w.itr)
+Base.size(w::Chunk) = size(w.itr)
 
-function Base.iterate(w::Slice, state = nothing)
+function Base.iterate(w::Chunk, state = nothing)
     n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
     n === nothing && return n
     itr = w.itr
@@ -77,25 +77,25 @@ function Base.iterate(it::TakeDuration, state = (it.duration,))
     return y[1], (dur - duration(y[1]), y[2])
 end
 
-struct SliceDuration{I}
+struct ChunkDuration{I}
     itr::I
     duration::Duration
     cyclic::Bool
 end
 
 """
-    slice_duration(iter, dur)
+    chunk_duration(iter, dur)
 
-Iterator wrapper that yields slices based on duration where each slice is an iterator over the following
+Iterator wrapper that yields chunks based on duration where each chunk is an iterator over the following
 time periods until at least `dur` time is covered or the end is reached.
 """
-slice_duration(iter, dur; cyclic = false) = SliceDuration(iter, dur, cyclic)
+chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
 
-eltype(::Type{SliceDuration{I}}) where {I} = eltype(I)
-IteratorEltype(::Type{SliceDuration{I}}) where {I} = IteratorEltype(I)
-length(w::SliceDuration) = length(w.itr)
+eltype(::Type{ChunkDuration{I}}) where {I} = eltype(I)
+IteratorEltype(::Type{ChunkDuration{I}}) where {I} = IteratorEltype(I)
+length(w::ChunkDuration) = length(w.itr)
 
-function Base.iterate(w::SliceDuration, state = nothing)
+function Base.iterate(w::ChunkDuration, state = nothing)
     n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
     n === nothing && return n
     itr = w.itr

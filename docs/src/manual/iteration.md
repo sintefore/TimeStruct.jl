@@ -28,19 +28,19 @@ collect(withprev(periods))
 
 
 
-## Iteration with slices of time periods
+## Iteration with chunks of time periods
 
 Sometimes it is convenient to iterate through the time periods
-as slices of fixed number of periods or minimum duration, e.g. in production planning
+as chunks of a fixed number of periods or minimum duration, e.g. in production planning
 with minimum production runs. To simplify this process
 there are several iterator wrappers that allows this kind of iteration pattern.
 
 
-The [`slice`](@ref) function iterates through a time structure returning
+The [`chunk`](@ref) function iterates through a time structure returning
 subsequences of length at most `n` starting at each time period. 
 ```@repl ts
 periods = SimpleTimes(5,1)
-collect(collect(ts) for ts in slice(periods, 3))
+collect(collect(ts) for ts in chunk(periods, 3))
 ```
 
 This wrapper can be used for e.g. modelling of startup modelling with a minimum
@@ -54,7 +54,7 @@ periods = SimpleTimes(10,1)
 m = Model()
 @variable(m, startup[periods], Bin)
 
-for ts in slice(periods, 3)
+for ts in chunk(periods, 3)
     @constraint(m, sum(startup[t] for t in ts) <= 1)
 end
 ```
@@ -65,7 +65,7 @@ slice:
 m = Model()
 @variable(m, shutdown[periods], Bin)
 
-for ts in slice(Iterators.reverse(periods), 3)
+for ts in chunk(Iterators.reverse(periods), 3)
     @constraint(m, sum(shutdown[t] for t in ts) <= 1)
 end
 ```
@@ -75,16 +75,16 @@ end
     for operational time structures and operational scenarios.
 
 
-## Slicing based on duration
+## Chunks based on duration
 
 If working with a time structure that has varying duration for its time periods,
-it can be 
+it can be more convenient with chunks based on their combined duration.
 
-The [`slice_duration`](@ref) function iterates through a time structure returning
+The [`chunk_duration`](@ref) function iterates through a time structure returning
 subsequences of duration at least `dur` starting at each time period.  
 ```@repl ts
 periods = SimpleTimes(5,[1, 2, 1, 1.5, 0.5, 2])
-collect(collect(ts) for ts in slice_duration(periods, 3))
+collect(collect(ts) for ts in chunk_duration(periods, 3))
 ```
 
 ## Indexing of operational time structures
