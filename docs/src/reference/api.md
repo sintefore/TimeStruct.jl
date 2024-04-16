@@ -67,11 +67,11 @@ withprev
 ```
 
 ```@docs
-slice
+chunk
 ```
 
 ```@docs
-slice_duration
+chunk_duration
 ```
 
 
