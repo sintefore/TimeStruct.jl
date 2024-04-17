@@ -91,7 +91,7 @@ for sp in strategic_periods(periods)
 end
 ```
 """
-multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration(sp)
+multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
 struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
