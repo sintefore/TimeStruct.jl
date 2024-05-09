@@ -1,7 +1,8 @@
 abstract type TimeProfile{T} end
 
 """
-    FixedProfile
+    FixedProfile(val)
+
 Time profile with a constant value for all time periods
 """
 struct FixedProfile{T} <: TimeProfile{T}
@@ -21,11 +22,13 @@ If too few values are provided, the last provided value will be
 repeated.
 """
 struct OperationalProfile{T} <: TimeProfile{T}
-    vals::Array{T}
+    vals::Vector{T}
 end
+
 function OperationalProfile(val::T, u::Unitful.Units) where {T}
     return OperationalProfile(Unitful.Quantity.(val, u))
 end
+
 function Base.getindex(op::OperationalProfile, i::TimePeriod)
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]
 end
@@ -37,7 +40,8 @@ function Base.getindex(op::OperationalProfile, period)
 end
 
 """
-    StrategicProfile
+    StrategicProfile(vals)
+
 Time profile with a separate time profile for each strategic period.
 
 If too few profiles are provided, the last given profile will be
@@ -46,6 +50,17 @@ repeated.
 struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
+
+"""
+    StrategicProfile(vals::Vector{<:Number})
+
+Create a strategic profile with a fixed value for each strategic
+period.
+"""
+function StrategicProfile(vals::Vector{<:Number})
+    return StrategicProfile([FixedProfile(v) for v in vals])
+end
+
 function Base.getindex(sp::StrategicProfile, i::TimePeriod)
     return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
 end
@@ -70,12 +85,23 @@ function StrategicProfile(vals::Vector{T}) where {T}
 end
 
 """
-    ScenarioProfile
+    ScenarioProfile(vals)
+
 Time profile with a separate time profile for each scenario
 """
 struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
+
+"""
+    ScenarioProfile(vals::Vector{<:Number})
+
+Create a scenario profile with a fixed value for each operational scenario.
+"""
+function ScenarioProfile(vals::Vector{<:Number})
+    return ScenarioProfile([FixedProfile(v) for v in vals])
+end
+
 function Base.getindex(scp::ScenarioProfile, i::TimePeriod)
     return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
 end
@@ -103,7 +129,8 @@ function ScenarioProfile(vals::Vector{Vector{T}}) where {T}
 end
 
 """
-    RepresentativeProfile
+    RepresentativeProfile(vals)
+
 Time profile with a separate time profile for each representative period.
 
 If too few profiles are provided, the last given profile will be
@@ -112,6 +139,17 @@ repeated.
 struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
+
+"""
+    RepresentativeProfile(vals::Vector{<:Number})
+
+Create a representative profile with a fixed value for each representative
+period.
+"""
+function RepresentativeProfile(vals::Vector{<:Number})
+    return RepresentativeProfile([FixedProfile(v) for v in vals])
+end
+
 function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
     return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
 end
