@@ -281,7 +281,6 @@ function Base.eachindex(os::StratOperationalScenario)
     return eachindex(os.operational)
 end
 
-
 # Iteration through scenarios
 struct StratOpScens
     sp::Int
