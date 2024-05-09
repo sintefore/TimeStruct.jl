@@ -52,6 +52,7 @@ end
 
 Base.length(os::OperationalScenario) = length(os.operational)
 Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
+
 function Base.last(sc::OperationalScenario)
     return ScenarioPeriod(
         sc.scen,
@@ -59,6 +60,19 @@ function Base.last(sc::OperationalScenario)
         sc.mult_sc,
         last(sc.operational),
     )
+end
+
+function Base.getindex(os::OperationalScenario, index)
+    return ScenarioPeriod(
+        os.scen,
+        os.probability,
+        os.multiple,
+        os.operational[index],
+    )
+end
+
+function Base.eachindex(os::OperationalScenario)
+    return eachindex(os.operational)
 end
 
 # Iteration through scenarios
@@ -248,13 +262,25 @@ function Base.iterate(os::StratOperationalScenario, state = nothing)
 end
 
 Base.length(os::StratOperationalScenario) = length(os.operational)
+
 function Base.eltype(::Type{StratOperationalScenario{T}}) where {T}
     return OperationalPeriod
 end
-function Base.last(sos::StratOperationalScenario)
-    per = last(sos.operational)
-    return OperationalPeriod(sos.sp, per, sos.mult_sp * multiple(per))
+
+function Base.last(os::StratOperationalScenario)
+    per = last(os.operational)
+    return OperationalPeriod(os.sp, per, os.mult_sp * multiple(per))
 end
+
+function Base.getindex(os::StratOperationalScenario, index)
+    per = os.operational[index]
+    return OperationalPeriod(os.sp, per, os.mult_sp * multiple(per))
+end
+
+function Base.eachindex(os::StratOperationalScenario)
+    return eachindex(os.operational)
+end
+
 
 # Iteration through scenarios
 struct StratOpScens
@@ -373,9 +399,11 @@ function Base.iterate(os::StratReprOpscenario, state = nothing)
 end
 
 Base.length(os::StratReprOpscenario) = length(os.operational)
+
 function Base.eltype(::Type{StratReprOpscenario{T}}) where {T}
     return OperationalPeriod
 end
+
 function Base.last(sro::StratReprOpscenario)
     per = last(sro.operational)
     rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
@@ -384,6 +412,16 @@ function Base.last(sro::StratReprOpscenario)
         rper,
         sro.mult_sp * sro.mult_rp * multiple(per),
     )
+end
+
+function Base.getindex(os::StratReprOpscenario, index)
+    mult = stripunit(os.duration * os.op_per_strat / duration(os.operational))
+    period = ReprPeriod(os.rp, os.operational[index], mult)
+    return OperationalPeriod(os.sp, period, mult)
+end
+
+function Base.eachindex(os::StratReprOpscenario)
+    return eachindex(os.operational)
 end
 
 struct StratReprOpscenarios
@@ -453,6 +491,14 @@ function Base.last(
 ) where {T,OP}
     period = last(ss.ts.operational)
     return ReprPeriod(ss.ts.rper, period, ss.ts.mult_rp * multiple(period))
+end
+
+function Base.getindex(ss::SingleScenario, index)
+    return ss.ts[index]
+end
+
+function Base.eachindex(ss::SingleScenario)
+    return eachindex(ss.ts)
 end
 
 probability(ss::SingleScenario) = 1.0

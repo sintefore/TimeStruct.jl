@@ -66,6 +66,14 @@ strat_periods
 withprev
 ```
 
+```@docs
+chunk
+```
+
+```@docs
+chunk_duration
+```
+
 
 # Time profiles
 

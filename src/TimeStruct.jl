@@ -4,6 +4,9 @@ import Unitful
 import Dates
 import TimeZones
 
+import .Base:
+    first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
+
 include("structures.jl")
 include("simple.jl")
 include("calendar.jl")
@@ -39,7 +42,7 @@ export opscenarios
 export repr_periods
 export strat_periods, strategic_periods
 export regular_tree, strat_nodes, scenarios
-export withprev
+export withprev, chunk, chunk_duration
 export isfirst, duration, duration_strat, multiple, probability
 export multiple_strat
 export start_time, end_time, remaining

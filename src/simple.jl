@@ -54,3 +54,11 @@ end
 function Base.last(ts::SimpleTimes)
     return SimplePeriod(ts.len, ts.duration[ts.len])
 end
+
+function Base.getindex(itr::SimpleTimes{T}, index) where {T}
+    return SimplePeriod{T}(index, itr.duration[index])
+end
+
+function Base.eachindex(itr::SimpleTimes{T}) where {T}
+    return Base.OneTo(itr.len)
+end

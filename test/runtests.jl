@@ -1014,6 +1014,52 @@ end
         nothing,
         TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1), 1.0),
     )
+
+    periods = SimpleTimes(10, 1)
+
+    per_next = collect(collect(ts) for ts in chunk(periods, 5))
+    @test length(per_next[1]) == 5
+    @test length(per_next[7]) == 4
+    @test length(per_next[10]) == 1
+    @test per_next[1] == collect(Iterators.take(periods, 5))
+
+    per_prev =
+        collect(collect(ts) for ts in chunk(Iterators.reverse(periods), 5))
+    @test length(per_prev[1]) == 5
+    @test length(per_next[7]) == 4
+    @test length(per_next[10]) == 1
+    @test per_prev[10] == [first(periods)]
+
+    per_cyclic = collect(collect(ts) for ts in chunk(periods, 5; cyclic = true))
+    for pc in per_cyclic
+        @test length(pc) == 5
+    end
+
+    periods = SimpleTimes([1, 1, 2, 2, 3, 1, 3])
+    pers = [t for t in TimeStruct.take_duration(periods, 5)]
+    @test sum(duration(t) for t in pers) >= 5
+
+    sdur = collect(collect(ts) for ts in chunk_duration(periods, 5))
+    for s in sdur
+        @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
+    end
+end
+
+@testitem "Indexing of operational structures" begin
+    using Dates
+
+    periods = SimpleTimes(10, 1)
+
+    @test periods[1] == first(periods)
+    @test periods[10] == last(periods)
+
+    year = CalendarTimes(DateTime(2024, 1, 1), 12, Month(1))
+    @test year[5] == collect(year)[5]
+
+    two_level = TwoLevel(5, 100, SimpleTimes(5, 1))
+
+    scen = first(opscenarios(two_level))
+    @test scen[1] == first(two_level)
 end
 
 @testitem "Discounting" begin

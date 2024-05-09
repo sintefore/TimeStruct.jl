@@ -119,3 +119,12 @@ function Base.last(ts::CalendarTimes)
     stop = start + ts.period
     return CalendarPeriod(start, stop, n)
 end
+
+function Base.getindex(ts::CalendarTimes, index)
+    start_time = ts.start_date + (index - 1) * ts.period
+    return CalendarPeriod(start_time, start_time + ts.period, index)
+end
+
+function Base.eachindex(ts::CalendarTimes)
+    return Base.OneTo(ts.length)
+end
