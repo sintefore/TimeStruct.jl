@@ -365,6 +365,7 @@ end
         @test start_time(sp, study_period) == start_t[y]
         @test end_time(sp, study_period) == end_t[y]
         @test remaining(sp, study_period) == 19 - start_t[y]
+        @test remaining(sp, strat_periods(study_period)) == 19 - start_t[y]
     end
 
     using Unitful
@@ -1080,7 +1081,7 @@ end
     periods = TwoLevel(10, 8760, uniform_day)
 
     @test sum(
-        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
+        objective_weight(sp, periods, disc; timeunit_to_year = 1 / 8760) for
         sp in strat_periods(periods)
     ) ≈ 8.435 atol = 1e-3
 
@@ -1088,7 +1089,7 @@ end
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
 
     @test sum(
-        objective_weight(sp, periods_unit, 0.04) for
+        objective_weight(sp, periods_unit, disc) for
         sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end

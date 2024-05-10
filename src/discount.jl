@@ -105,11 +105,18 @@ end
 function discount(
     sp::AbstractStrategicPeriod,
     ts::TimeStructure,
-    discount_rate;
+    disc::Discounter;
+    type = "start",
     timeunit_to_year = 1.0,
 )
     start_year = _to_year(_start_strat(sp, ts), timeunit_to_year)
-    return discount_start(discount_rate, start_year)
+    duration_years = _to_year(duration_strat(sp), timeunit_to_year)
+
+    if type == "start"
+        return discount_start(disc.discount_rate, start_year)
+    elseif type == "avg"
+        return discount_avg(disc.discount_rate, start_year, duration_years)
+    end
 end
 
 """
@@ -145,7 +152,8 @@ function objective_weight(
     sp::AbstractStrategicPeriod,
     ts::TimeStructure,
     discount_rate;
+    type = "start",
     timeunit_to_year = 1.0,
 )
-    return discount(sp, ts, discount_rate; timeunit_to_year)
+    return discount(sp, ts, discount_rate; type, timeunit_to_year)
 end

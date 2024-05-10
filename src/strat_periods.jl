@@ -97,6 +97,10 @@ struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
 end
 
+function remaining(sp::AbstractStrategicPeriod, sps::StratPeriods)
+    return sum(duration_strat(spp) for spp in sps if spp >= sp)
+end
+
 """
     strat_periods(ts::TimeStructure)
 
