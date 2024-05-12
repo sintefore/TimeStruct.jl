@@ -1081,7 +1081,7 @@ end
     periods = TwoLevel(10, 8760, uniform_day)
 
     @test sum(
-        objective_weight(sp, periods, disc; timeunit_to_year = 1 / 8760) for
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
         sp in strat_periods(periods)
     ) ≈ 8.435 atol = 1e-3
 
@@ -1089,7 +1089,7 @@ end
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
 
     @test sum(
-        objective_weight(sp, periods_unit, disc) for
+        objective_weight(sp, disc) for
         sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end
