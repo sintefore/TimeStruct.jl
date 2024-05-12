@@ -1089,8 +1089,7 @@ end
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
 
     @test sum(
-        objective_weight(sp, disc) for
-        sp in strat_periods(periods_unit)
+        objective_weight(sp, disc) for sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end
 
