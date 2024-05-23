@@ -58,6 +58,12 @@ function Base.length(ts::RepresentativePeriods)
     return sum(length(rpers) for rpers in ts.rep_periods)
 end
 
+function Base.last(ts::RepresentativePeriods)
+    per = last(ts.rep_periods[ts.len])
+    mult = _multiple_adj(ts, ts.len) * multiple(per)
+    return ReprPeriod(ts.len, per, mult)
+end
+
 Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 
 # A single operational time period used when iterating through

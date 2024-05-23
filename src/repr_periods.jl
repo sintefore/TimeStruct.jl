@@ -20,14 +20,6 @@ function Base.isless(
     return _rper(rp1) < _rper(rp2)
 end
 
-function Base.last(rp::AbstractRepresentativePeriod)
-    return error(
-        "last() is not supported for a representative period. If you need access
-     to the last time period it should be done within each operational scenario
-     of the representative period obtained with `opscenarios(rp)`",
-    )
-end
-
 abstract type RepresentativeIndexable end
 
 struct HasReprIndex <: RepresentativeIndexable end
@@ -61,6 +53,12 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
     next === nothing && return nothing
     mult = rp.mult_rp * multiple(next[1])
     return ReprPeriod(rp.rper, next[1], mult), next[2]
+end
+
+function Base.last(rp::RepresentativePeriod)
+    per = last(rp.operational)
+    mult = rp.mult_rp * multiple(per)
+    return ReprPeriod(rp.rper, per, mult)
 end
 
 Base.length(rp::RepresentativePeriod) = length(rp.operational)
@@ -142,6 +140,13 @@ function Base.iterate(srp::StratReprPeriod, state = nothing)
 end
 
 Base.length(srp::StratReprPeriod) = length(srp.operational)
+
+function Base.last(srp::StratReprPeriod)
+    per = last(srp.operational)
+    mult = srp.mult_sp * multiple(per)
+    return OperationalPeriod(srp.sp, per, mult)
+end
+
 function Base.eltype(::Type{StratReprPeriod{T}}) where {T}
     return OperationalPeriod
 end
@@ -175,9 +180,6 @@ function repr_periods(ts::TwoLevel)
 end
 
 Base.length(reps::StratReprPeriods) = length(reps.repr)
-
-#_multiple_rp(rpers, rper) = 1.0
-#_multiple_rp(rpers::ReprPeriods, rper) = _multiple_adj(rpers.ts, rper)
 
 function Base.iterate(reps::StratReprPeriods, state = (nothing, 1))
     next =
@@ -241,6 +243,8 @@ function Base.iterate(srp::SingleReprPeriod, state = nothing)
     end
     return iterate(srp.ts, state)
 end
+
+Base.last(srp::SingleReprPeriod) = last(srp.ts)
 
 # Default solution is to behave as a single representative period
 repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)

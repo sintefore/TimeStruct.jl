@@ -63,8 +63,13 @@ end
 
 Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
 
-function Base.last(_::OperationalScenarios)
-    return error("last() not implemented for OperationalScenarios")
+function Base.last(itr::OperationalScenarios)
+    return ScenarioPeriod(
+        itr.len,
+        itr.probability[itr.len],
+        _multiple_adj(itr, itr.len),
+        last(itr.scenarios[itr.len]),
+    )
 end
 
 # A time period with scenario number and probability

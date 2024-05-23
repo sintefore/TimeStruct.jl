@@ -24,14 +24,6 @@ function Base.isless(sp1::AbstractStrategicPeriod, sp2::AbstractStrategicPeriod)
     return _strat_per(sp1) < _strat_per(sp2)
 end
 
-function Base.last(sp::AbstractStrategicPeriod)
-    return error(
-        "last() is not supported for a strategic period. If you need access
-  to the last time period it should be done within each operational scenario
-  of the strategic period obtained with `opscenarios(sp)`",
-    )
-end
-
 abstract type StrategicIndexable end
 
 struct HasStratIndex <: StrategicIndexable end
@@ -170,6 +162,12 @@ function Base.iterate(itr::StrategicPeriod, state = nothing)
     return OperationalPeriod(itr.sp, per, mult), next[2]
 end
 
+function Base.last(itr::StrategicPeriod)
+    per = last(itr.operational)
+    mult = itr.mult_sp * multiple(per)
+    return OperationalPeriod(itr.sp, per, mult)
+end
+
 struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
     ts::SP
 end
@@ -197,6 +195,8 @@ function Base.iterate(ssp::SingleStrategicPeriod, state = nothing)
     end
     return iterate(ssp.ts, state)
 end
+
+Base.last(ssp::SingleStrategicPeriod) = last(ssp.ts)
 
 duration_strat(ssp::SingleStrategicPeriod) = _total_duration(ssp.ts)
 _strat_per(ssp::SingleStrategicPeriod) = 1

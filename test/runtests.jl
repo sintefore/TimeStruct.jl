@@ -658,14 +658,18 @@ end
     using Dates
 
     function test_last(periods)
+        @test last(periods) == last(collect(periods))
+
         @test last(strategic_periods(periods)) ==
               last(collect(strategic_periods(periods)))
         @test last(repr_periods(periods)) ==
               last(collect(repr_periods(periods)))
 
         for sp in strategic_periods(periods)
+            @test last(sp) == last(collect(sp))
             @test last(repr_periods(sp)) == last(collect(repr_periods(sp)))
             for rp in repr_periods(sp)
+                @test last(rp) == last(collect(rp))
                 for scen in opscenarios(rp)
                     @test last(scen) == last(collect(scen))
                 end
@@ -673,6 +677,7 @@ end
         end
 
         for rp in repr_periods(periods)
+            @test last(rp) == last(collect(rp))
             for scen in opscenarios(rp)
                 @test last(scen) == last(collect(scen))
             end

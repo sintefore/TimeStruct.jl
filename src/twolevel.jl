@@ -137,6 +137,12 @@ end
 
 Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 
+function Base.last(itr::TwoLevel)
+    per = last(itr.operational[itr.len])
+    mult = _multiple_adj(itr, itr.len) * multiple(per)
+    return OperationalPeriod(itr.len, per, mult)
+end
+
 """
 	struct OperationalPeriod <: TimePeriod
 Time period for iteration of a TwoLevel time structure.
