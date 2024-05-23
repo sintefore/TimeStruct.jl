@@ -31,7 +31,7 @@ end
     @test length(ts) == 6
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
-    @test duration(ts) == 24
+    @test TimeStruct._total_duration(ts) == 24
 end
 
 @testitem "SimpleTimes with units" begin
@@ -39,7 +39,7 @@ end
 
     periods = SimpleTimes([24, 24, 48, 96], u"hr")
     @test duration(first(periods)) == 24u"hr"
-    @test duration(periods) == 192u"hr"
+    @test TimeStruct._total_duration(periods) == 192u"hr"
 end
 
 @testitem "CalendarTimes" begin
@@ -54,7 +54,7 @@ end
         DateTime(2024, 2, 1),
         1,
     )
-    @test duration(year) == 366 * 24
+    @test TimeStruct._total_duration(year) == 366 * 24
 
     months = collect(year)
     @test duration(months[2]) == 29 * 24
@@ -62,13 +62,13 @@ end
     # 10 weeks with reduced length due to DST
     periods = CalendarTimes(DateTime(2023, 3, 1), tz"CET", 10, Week(1))
     dur = [duration(w) for w in periods]
-    @test duration(periods) == 10 * 168 - 1
+    @test TimeStruct._total_duration(periods) == 10 * 168 - 1
     @test dur[4] == 167
 
     # 10 weeks not affected by DST
     periods = CalendarTimes(DateTime(2023, 4, 1), tz"CET", 10, Week(1))
     dur = [duration(w) for w in periods]
-    @test duration(periods) == 10 * 168
+    @test TimeStruct._total_duration(periods) == 10 * 168
     @test dur[4] == 168
 
     hours = CalendarTimes(
@@ -77,7 +77,7 @@ end
         tz"CET",
         Hour(1),
     )
-    @test duration(hours) == 24
+    @test TimeStruct._total_duration(hours) == 24
 
     hours = CalendarTimes(
         DateTime(2023, 3, 26),
@@ -85,17 +85,17 @@ end
         tz"CET",
         Hour(1),
     )
-    @test duration(hours) == 23
+    @test TimeStruct._total_duration(hours) == 23
 
     days = CalendarTimes(Date(2023, 10, 1), Date(2023, 10, 27), Day(2))
-    @test duration(days) == 13 * 48
+    @test TimeStruct._total_duration(days) == 13 * 48
 end
 
 @testitem "OperationalScenarios" begin
     # 5 scenarios with 10 periods
     ts = OperationalScenarios(5, SimpleTimes(10, 1))
     @test length(ts) == length(collect(ts))
-    @test duration(ts) == 10
+    @test TimeStruct._total_duration(ts) == 10
 
     # Iterating through operational scenarios
     scens = opscenarios(ts)
@@ -171,9 +171,7 @@ end
         [SimpleTimes(24, 1), SimpleTimes(24, 1)],
     )
     @test length(rep) == length(collect(rep))
-    @test duration(rep) == 8760
-    per = collect(rep)
-    @test last(collect(repr_periods(rep))[2]) == per[end]
+    @test TimeStruct._total_duration(rep) == 8760
 
     # SimpleTimes as one representative period
     simple = SimpleTimes(10, 1)
@@ -296,7 +294,7 @@ end
     uniform_year = TwoLevel(monthly_hours, day)
 
     @test length(uniform_year) == 12 * 24
-    @test sum(duration(sp) for sp in strat_periods(uniform_year)) == 8760
+    @test sum(duration_strat(sp) for sp in strat_periods(uniform_year)) == 8760
     @test multiple(first(uniform_year)) == 31
 
     ops1 = collect(uniform_year)
@@ -316,7 +314,6 @@ end
     @test pers[24] < pers[25]
 
     sp = collect(strat_periods(ts))
-    @test pers[length(day)] == last(sp[1])
 
     # Test that collect is working correctly
     ops = collect(sp[1])
@@ -334,7 +331,7 @@ end
     sps = strat_periods(tsunit)
     @test length(sps) == 4
     sp = first(sps)
-    @test duration(sp) == 31u"d"
+    @test duration_strat(sp) == 31u"d"
     @test length(sp) == 24
     @test multiple(first(sp)) == 31
     @test eltype(sp) <: TimeStruct.OperationalPeriod
@@ -368,6 +365,7 @@ end
         @test start_time(sp, study_period) == start_t[y]
         @test end_time(sp, study_period) == end_t[y]
         @test remaining(sp, study_period) == 19 - start_t[y]
+        @test remaining(sp, strat_periods(study_period)) == 19 - start_t[y]
     end
 
     using Unitful
@@ -388,7 +386,7 @@ end
 
     @test length(years) == length(collect(years))
 
-    dur = [duration(sp) for sp in strat_periods(years)]
+    dur = [duration_strat(sp) for sp in strat_periods(years)]
     @test dur[2] == 366 * 24
 
     sp = first(strat_periods(years))
@@ -461,9 +459,7 @@ end
     @test typeof(first(pers)) == typeof(first(seasonal_year))
     scen = first(opscenarios(first(strat_periods(seasonal_year))))
     @test repr(scen) == "sp1-sc1"
-    @test probability(scen) == 0.1
-    @test TimeStruct._strat_per(scen) == 1
-    @test TimeStruct._opscen(scen) == 1
+    #@test probability(scen) == 0.1
     per = first(scen)
     @test repr(per) == "sp1-sc1-t1"
     @test typeof(per) <: TimeStruct.OperationalPeriod
@@ -481,8 +477,6 @@ end
     @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 1.0
-    @test TimeStruct._strat_per(scen) == 1
-    @test TimeStruct._opscen(scen) == 1
     per = first(scen)
     @test repr(per) == "sp1-t1"
     @test typeof(per) <: TimeStruct.OperationalPeriod
@@ -526,6 +520,18 @@ end
 
     total_dur = sum(probability(t) * multiple(t) * duration(t) for t in ts)
     @test total_dur ≈ 3 * 5 * 8760
+
+    pers_rp = collect(t for rp in repr_periods(ts) for t in rp)
+    @test issetequal(pers, pers_rp)
+
+    pers_rp_os = collect(
+        t for rp in repr_periods(ts) for sc in opscenarios(rp) for t in sc
+    )
+    @test issetequal(pers, pers_rp_os)
+
+    pers_os = collect(
+        t for sp in strat_periods(ts) for sc in opscenarios(sp) for t in sc
+    )
 end
 
 @testitem "SimpleTimes as TwoLevel" begin
@@ -551,6 +557,187 @@ end
     @test typeof(per) <: TimeStruct.ScenarioPeriod
 end
 
+@testitem "Iteration invariants" begin
+    using Dates
+
+    function test_invariants(periods)
+        pers = collect(t for t in periods)
+        @test sum(probability(t) * duration(t) * multiple(t) for t in pers) ≈
+              TimeStruct._total_duration(periods)
+
+        pers_rp = collect(t for rp in repr_periods(periods) for t in rp)
+        @test issetequal(pers, pers_rp)
+
+        pers_sc = collect(t for sc in opscenarios(periods) for t in sc)
+        @test issetequal(pers, pers_sc)
+
+        pers_sp = collect(t for sp in strat_periods(periods) for t in sp)
+        @test issetequal(pers, pers_sp)
+
+        pers_rp_sc = collect(
+            t for rp in repr_periods(periods) for sc in opscenarios(rp) for
+            t in sc
+        )
+        @test issetequal(pers, pers_rp_sc)
+
+        pers_sp_rp = collect(
+            t for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for t in rp
+        )
+        @test issetequal(pers, pers_sp_rp)
+
+        pers_sp_sc = collect(
+            t for sp in strat_periods(periods) for sc in opscenarios(sp) for
+            t in sc
+        )
+        @test issetequal(pers, pers_sp_sc)
+
+        pers_sp_rp_sc = collect(
+            t for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for sc in opscenarios(rp) for t in sc
+        )
+        @test issetequal(pers, pers_sp_rp_sc)
+
+        repr_pers = collect(rp for rp in repr_periods(periods))
+        repr_pers_sp = collect(
+            rp for sp in strat_periods(periods) for rp in repr_periods(sp)
+        )
+        @test issetequal(repr_pers, repr_pers_sp)
+
+        opscens = collect(sc for sc in opscenarios(periods))
+        opscens_sp = collect(
+            sc for sp in strat_periods(periods) for sc in opscenarios(sp)
+        )
+        @test issetequal(opscens, opscens_sp)
+        opscens_rp_sp = collect(
+            sc for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for sc in opscenarios(rp)
+        )
+        @test issetequal(opscens, opscens_rp_sp)
+    end
+
+    test_invariants(SimpleTimes(10, 1))
+    test_invariants(
+        CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1)),
+    )
+    test_invariants(OperationalScenarios(3, SimpleTimes(10, 1)))
+    test_invariants(
+        RepresentativePeriods(
+            2,
+            10,
+            [0.2, 0.8],
+            [SimpleTimes(10, 1), SimpleTimes(5, 1)],
+        ),
+    )
+    opscen = OperationalScenarios(
+        2,
+        [SimpleTimes(10, 1), SimpleTimes(5, 3)],
+        [0.4, 0.6],
+    )
+    repr_op = RepresentativePeriods(2, 10, [0.2, 0.8], [opscen, opscen])
+    test_invariants(repr_op)
+
+    test_invariants(TwoLevel(5, 10, SimpleTimes(10, 1)))
+    test_invariants(TwoLevel(5, 30, opscen))
+
+    repr = RepresentativePeriods(
+        2,
+        20,
+        [0.2, 0.8],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1)
+    test_invariants(two_level)
+
+    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
+    test_invariants(two_level)
+end
+
+@testitem "Last for time structures" begin
+    using Dates
+
+    function test_last(periods)
+        @test last(periods) == last(collect(periods))
+
+        @test last(strategic_periods(periods)) ==
+              last(collect(strategic_periods(periods)))
+        @test last(repr_periods(periods)) ==
+              last(collect(repr_periods(periods)))
+
+        for sp in strategic_periods(periods)
+            @test last(sp) == last(collect(sp))
+            @test last(repr_periods(sp)) == last(collect(repr_periods(sp)))
+            for rp in repr_periods(sp)
+                @test last(rp) == last(collect(rp))
+                for scen in opscenarios(rp)
+                    @test last(scen) == last(collect(scen))
+                end
+            end
+        end
+
+        for rp in repr_periods(periods)
+            @test last(rp) == last(collect(rp))
+            for scen in opscenarios(rp)
+                @test last(scen) == last(collect(scen))
+            end
+        end
+
+        for scen in opscenarios(periods)
+            @test last(scen) == last(collect(scen))
+        end
+    end
+
+    periods = SimpleTimes(24, 1)
+    test_last(periods)
+
+    periods = CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1))
+    test_last(periods)
+
+    periods = RepresentativePeriods(
+        2,
+        20,
+        [0.2, 0.8],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    test_last(periods)
+
+    opscen = OperationalScenarios(
+        2,
+        [SimpleTimes(10, 1), SimpleTimes(5, 3)],
+        [0.4, 0.6],
+    )
+    test_last(opscen)
+
+    periods = TwoLevel(2, 1, SimpleTimes(4, 1))
+    test_last(periods)
+
+    periods = TwoLevel(2, 1, opscen)
+    test_last(periods)
+
+    rep = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    test_last(rep)
+
+    periods = TwoLevel(2, 1, rep)
+    test_last(periods)
+end
+
+@testitem "Duration invariants" begin
+
+    #=
+    day = SimpleTimes(24,1)
+    @test sum(duration(sp) for sp in strat_periods(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(rp) for rp in repr_periods(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(sc) for sc in opscenarios(day)) == TimeStruct._total_duration(day)
+    @test sum(duration(rp) for sp in strat_periods(day) for rp in repr_periods(sp)) == TimeStruct._total_duration(day)
+
+    periods = TwoLevel(10, 240, day)
+    @test sum(duration(sp) for sp in strat_periods(periods)) == TimeStruct._total_duration(periods)
+    @test sum(duration(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)) == TimeStruct._total_duration(periods)
+    =#
+
+end
+
 @testitem "Profiles" begin
     using Unitful
     day = SimpleTimes(24, 1)
@@ -566,6 +753,13 @@ end
     @test sum(fpmul[t] for t in day) == 24 * 24
     fpdiv = fp / 4
     @test sum(fpdiv[t] for t in day) == 3 * 24
+
+    indices = [day...][[1, 6]]
+    @test fp[indices...] == [12, 12]
+    @test fp[indices] == [12, 12]
+
+    @test_throws ErrorException fp["dummy"]
+
     fpunit = FixedProfile(12, u"kg")
     @test fpunit[first(day)] == 12u"kg"
 
@@ -582,6 +776,11 @@ end
     @test opmul[first(day)] == 8
     opdiv = op / 4.0
     @test opdiv[first(day)] == 0.5
+
+    @test op[indices...] == [2, 1]
+    @test op[indices] == [2, 1]
+
+    @test_throws ErrorException op["dummy"]
 
     @test sum(fp[t_inv] == 12 for t_inv in strat_periods(day)) == 1
 
@@ -604,10 +803,18 @@ end
     sp3 = StrategicProfile([1u"kg", 3u"kg", 5u"kg"])
     @test sp3[p1] == 1u"kg"
 
+    indices = [ts...][[10, 20, 30]]
+    @test sp2[indices...] == [2, 12, 12]
+    @test sp2[indices] == [2, 12, 12]
+
+    @test_throws ErrorException sp1["dummy"]
+
     tsc = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
     @test sum(fp[t] for t in tsc) == 12.0 * length(tsc)
     scp = ScenarioProfile([op, 2 * op, 3 * op])
     @test sum(scp[t] for t in tsc) == 3 * (11 + 2 * 11 + 3 * 11)
+
+    @test_throws ErrorException scp["dummy"]
 
     scp2 = ScenarioProfile([[1, 1, 2], [3], [4, 5]])
     @test sum(scp2[t] for t in tsc) == 201
@@ -674,6 +881,88 @@ end
         [price1, price2, price2, price1, price2, price2],
     ])
     @test dsp[ops[4]] == 5
+end
+
+@testitem "Profiles and strategic periods" begin
+    profile = StrategicProfile([1, 2, 3])
+
+    simple = SimpleTimes(10, 1)
+    sp = first(strat_periods(simple))
+
+    @test profile[sp] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+
+    repr = RepresentativePeriods(
+        2,
+        5,
+        [0.6, 0.4],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+end
+
+@testitem "Profiles and representative periods" begin
+    profile = RepresentativeProfile([
+        FixedProfile(1),
+        FixedProfile(2),
+        FixedProfile(3),
+    ])
+
+    simple = SimpleTimes(10, 1)
+    rp = first(repr_periods(simple))
+
+    @test profile[rp] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 1, 1]
+
+    repr = RepresentativePeriods(
+        2,
+        5,
+        [0.6, 0.4],
+        [SimpleTimes(5, 1), SimpleTimes(5, 1)],
+    )
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 1, 2, 1, 2]
+
+    sprofile = StrategicProfile([profile, 2 * profile, 3 * profile])
+    vals = collect(sprofile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 2, 4, 3, 6]
+end
+
+@testitem "Profiles and operational scenarios" begin
+    profile =
+        ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+
+    simple = SimpleTimes(10, 1)
+    sc = first(opscenarios(simple))
+
+    @test profile[sc] == 1
+
+    ts = TwoLevel(3, 5, SimpleTimes(5, 1))
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 1, 1]
+
+    oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, repr)
+
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+
+    rprofile = RepresentativeProfile([profile, profile + 2])
+    sprofile = StrategicProfile([rprofile, 2 * rprofile, 3 * rprofile])
+    vals = collect(sprofile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
 end
 
 @testitem "TwoLevelTree and opscenarios" begin
@@ -815,18 +1104,17 @@ end
 
     uniform_day = SimpleTimes(24, 1)
     periods = TwoLevel(10, 8760, uniform_day)
-    disc_hour = Discounter(0.04, 1 / 8760, periods)
 
     @test sum(
-        objective_weight(sp, disc_hour) for sp in strat_periods(periods)
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
+        sp in strat_periods(periods)
     ) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
-    disc_unit = Discounter(0.04, periods_unit)
 
     @test sum(
-        objective_weight(sp, disc_unit) for sp in strat_periods(periods_unit)
+        objective_weight(sp, disc) for sp in strat_periods(periods_unit)
     ) ≈ 8.435 atol = 1e-3
 end
 
