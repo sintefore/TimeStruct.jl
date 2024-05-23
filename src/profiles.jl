@@ -11,7 +11,12 @@ end
 function FixedProfile(val::T, u::Unitful.Units) where {T}
     return FixedProfile(Unitful.Quantity(val, u))
 end
-Base.getindex(fp::FixedProfile, _) = fp.val
+function Base.getindex(
+    fp::FixedProfile,
+    _::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
+    return fp.val
+end
 
 """
     OperationalProfile
@@ -29,14 +34,11 @@ function OperationalProfile(val::T, u::Unitful.Units) where {T}
     return OperationalProfile(Unitful.Quantity.(val, u))
 end
 
-function Base.getindex(op::OperationalProfile, i::TimePeriod)
+function Base.getindex(
+    op::OperationalProfile,
+    i::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]
-end
-
-function Base.getindex(op::OperationalProfile, period)
-    return error(
-        "Type $(typeof(period)) can not be used as index for an operational profile",
-    )
 end
 
 """
@@ -61,10 +63,6 @@ function StrategicProfile(vals::Vector{<:Number})
     return StrategicProfile([FixedProfile(v) for v in vals])
 end
 
-function Base.getindex(sp::StrategicProfile, i::TimePeriod)
-    return sp.vals[_strat_per(i) > length(sp.vals) ? end : _strat_per(i)][i]
-end
-
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
     return sp.vals[_strat_per(period) > length(sp.vals) ? end :
                    _strat_per(period)][period]
@@ -76,7 +74,10 @@ function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
     )
 end
 
-function Base.getindex(sp::StrategicProfile, period::T) where {T}
+function Base.getindex(
+    sp::StrategicProfile,
+    period::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
@@ -102,10 +103,6 @@ function ScenarioProfile(vals::Vector{<:Number})
     return ScenarioProfile([FixedProfile(v) for v in vals])
 end
 
-function Base.getindex(scp::ScenarioProfile, i::TimePeriod)
-    return scp.vals[_opscen(i) > length(scp.vals) ? end : _opscen(i)][i]
-end
-
 function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
     return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][period]
 end
@@ -116,7 +113,10 @@ function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
     )
 end
 
-function Base.getindex(sp::ScenarioProfile, period::T) where {T}
+function Base.getindex(
+    sp::ScenarioProfile,
+    period::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
@@ -150,10 +150,6 @@ function RepresentativeProfile(vals::Vector{<:Number})
     return RepresentativeProfile([FixedProfile(v) for v in vals])
 end
 
-function Base.getindex(rp::RepresentativeProfile, i::TimePeriod)
-    return rp.vals[_rper(i) > length(rp.vals) ? end : _rper(i)][i]
-end
-
 function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
     return rp.vals[_rper(period) > length(rp.vals) ? end : _rper(period)][period]
 end
@@ -164,7 +160,10 @@ function _value_lookup(::NoReprIndex, rp::RepresentativeProfile, period)
     )
 end
 
-function Base.getindex(rp::RepresentativeProfile, period::T) where {T}
+function Base.getindex(
+    rp::RepresentativeProfile,
+    period::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
@@ -180,6 +179,21 @@ struct DynamicStochasticProfile{T} <: TimeProfile{T}
 end
 function Base.getindex(ssp::DynamicStochasticProfile, i::TimePeriod)
     return ssp.vals[_strat_per(i)][_branch(i)][i]
+end
+
+Base.getindex(TP::TimeProfile, inds...) = [TP[i] for i in inds]
+
+function Base.getindex(
+    TP::TimeProfile,
+    inds::Vector{T},
+) where {T<:Union{TimePeriod,TimeStructure}}
+    return [TP[i] for i in inds]
+end
+
+function Base.getindex(TP::TimeProfile, inds::Any)
+    return error(
+        "Type $(typeof(inds)) can not be used as index for a $(typeof(TP))",
+    )
 end
 
 import Base: +, -, *, /

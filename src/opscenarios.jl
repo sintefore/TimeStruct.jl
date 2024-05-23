@@ -17,6 +17,7 @@ struct NoScenarioIndex <: ScenarioIndexable end
 
 ScenarioIndexable(::Type) = NoScenarioIndex()
 ScenarioIndexable(::Type{<:AbstractOperationalScenario}) = HasScenarioIndex()
+ScenarioIndexable(::Type{<:TimePeriod}) = HasScenarioIndex()
 
 """
     struct OperationalScenario

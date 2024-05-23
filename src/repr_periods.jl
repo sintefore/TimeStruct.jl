@@ -35,6 +35,7 @@ struct NoReprIndex <: RepresentativeIndexable end
 
 RepresentativeIndexable(::Type) = NoReprIndex()
 RepresentativeIndexable(::Type{<:AbstractRepresentativePeriod}) = HasReprIndex()
+RepresentativeIndexable(::Type{<:TimePeriod}) = HasReprIndex()
 
 """
     RepresentativePeriod

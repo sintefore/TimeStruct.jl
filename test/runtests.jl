@@ -748,6 +748,13 @@ end
     @test sum(fpmul[t] for t in day) == 24 * 24
     fpdiv = fp / 4
     @test sum(fpdiv[t] for t in day) == 3 * 24
+
+    indices = [day...][[1, 6]]
+    @test fp[indices...] == [12, 12]
+    @test fp[indices] == [12, 12]
+
+    @test_throws ErrorException fp["dummy"]
+
     fpunit = FixedProfile(12, u"kg")
     @test fpunit[first(day)] == 12u"kg"
 
@@ -764,6 +771,11 @@ end
     @test opmul[first(day)] == 8
     opdiv = op / 4.0
     @test opdiv[first(day)] == 0.5
+
+    @test op[indices...] == [2, 1]
+    @test op[indices] == [2, 1]
+
+    @test_throws ErrorException op["dummy"]
 
     @test sum(fp[t_inv] == 12 for t_inv in strat_periods(day)) == 1
 
@@ -786,10 +798,18 @@ end
     sp3 = StrategicProfile([1u"kg", 3u"kg", 5u"kg"])
     @test sp3[p1] == 1u"kg"
 
+    indices = [ts...][[10, 20, 30]]
+    @test sp2[indices...] == [2, 12, 12]
+    @test sp2[indices] == [2, 12, 12]
+
+    @test_throws ErrorException sp1["dummy"]
+
     tsc = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
     @test sum(fp[t] for t in tsc) == 12.0 * length(tsc)
     scp = ScenarioProfile([op, 2 * op, 3 * op])
     @test sum(scp[t] for t in tsc) == 3 * (11 + 2 * 11 + 3 * 11)
+
+    @test_throws ErrorException scp["dummy"]
 
     scp2 = ScenarioProfile([[1, 1, 2], [3], [4, 5]])
     @test sum(scp2[t] for t in tsc) == 201

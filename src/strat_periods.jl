@@ -39,6 +39,7 @@ struct NoStratIndex <: StrategicIndexable end
 
 StrategicIndexable(::Type) = NoStratIndex()
 StrategicIndexable(::Type{<:AbstractStrategicPeriod}) = HasStratIndex()
+StrategicIndexable(::Type{<:TimePeriod}) = HasStratIndex()
 
 function start_time(
     sp::AbstractStrategicPeriod{S,T},
