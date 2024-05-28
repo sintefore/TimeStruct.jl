@@ -39,13 +39,6 @@ function _to_year(start, timeunit_to_year)
     return start * timeunit_to_year
 end
 
-function _to_year(
-    start::Unitful.Quantity{V,Unitful.𝐓},
-    timeunit_to_year,
-) where {V}
-    return Unitful.ustrip(Unitful.uconvert(Unitful.u"yr", start))
-end
-
 """
     discount(t, time_struct, discount_rate; type, timeunit_to_year)
 

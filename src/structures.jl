@@ -1,5 +1,5 @@
-# Durations can be provided as real numbers or as a Quantity with time dimension
-Duration = Union{Real,Unitful.Quantity{V,Unitful.𝐓} where {V}}
+# Durations can be provided as any number
+Duration = Number
 
 """
     abstract type TimeStructure{T}
@@ -53,6 +53,5 @@ _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 _multiple_adj(ts::TimeStructure, per) = 1.0
 
 stripunit(val) = val
-stripunit(val::Unitful.Quantity) = Unitful.ustrip(Unitful.NoUnits, val)
 
 multiple(ts::TimeStructure, t::TimePeriod) = 1.0
