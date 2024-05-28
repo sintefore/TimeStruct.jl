@@ -66,14 +66,6 @@ function TwoLevel(
     )
 end
 
-function TwoLevel(
-    duration::Vector{<:Number},
-    u::Unitful.Units,
-    oper::TimeStructure{<:Unitful.Quantity{V,Unitful.𝐓}},
-) where {V}
-    return TwoLevel(Unitful.Quantity.(duration, u), oper; op_per_strat = 1.0)
-end
-
 """
     TwoLevel(len, duration::Real, oper::RepresentativePeriods)
 
