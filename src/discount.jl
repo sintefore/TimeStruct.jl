@@ -39,8 +39,6 @@ function _to_year(start, timeunit_to_year)
     return start * timeunit_to_year
 end
 
-
-
 """
     discount(t, time_struct, discount_rate; type, timeunit_to_year)
 
