@@ -1,5 +1,14 @@
 """
-    struct TwoLevel <: TimeStructure
+    struct TwoLevel{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
+
+    TwoLevel(len::Integer, duration::Vector{S}, operational::Vector{OP}, op_per_strat::Float64) where {S<:Number, T, OP<:TimeStructure{T}}
+    TwoLevel(len::Integer, duration::S, oper::TimeStructure{T}; op_per_strat) where {S, T}
+    TwoLevel(len::Integer, oper::TimeStructure{T}; op_per_strat) where {T}
+
+    TwoLevel(duration::S, oper::Vector{OP}; op_per_strat) where {S, T, OP<:TimeStructure{T}}
+    TwoLevel(duration::Vector{S}, oper::TimeStructure{T}; op_per_strat) where {S, T}
+
+    TwoLevel(oper::Vector{<:TimeStructure{T}}; op_per_strat) where [T]
 
 A time structure with two levels of time periods.
 
@@ -7,18 +16,73 @@ On the top level it has a sequence of strategic periods of varying duration.
 For each strategic period a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 It is possible to use different time units for the two levels by providing the number
-of operational time units per strategic time unit.
+of operational time units per strategic time unit through the kewyord argument `op_per_strat`.
+
+Potential time structures are [`SimpleTimes`](@ref), [`OperationalScenarios`](@ref), or
+[`RepresentativePeriods`](@ref), as well as combinations of these.
+
+!!! danger "Usage of op_per_strat"
+    The optional keyword `op_per_strat` is important for the overall calculations.
+    If you use an hourly resolution for your operational period and yearly for investment
+    periods, then you have to specify it as `op_per_strat = 8760.0`. Not specifying it would
+    imply that you use the same unit for strategic and operational periods.
+
+!!! note "Not specifying the duration"
+    If you do not specify the field `duration`, then it is calculated given the function
+
+        _total_duration(op) / op_per_strat for op in oper
+
+    in which `oper::Vector{<:TimeStructure{T}`. The internal function `_total_duration`
+    corresponds in thgis case to the sum of the duration of all operational periods divided
+    by the value of the field `op_per_strat`.
 
 Example
 ```julia
-periods = TwoLevel(5, 8760, SimpleTimes(24, 1)) # 5 years with 24 hours of operations for each year
+# 5 years with 24 hours of operations for each year. Note that in this case we use as unit
+# `hour` for both the duration of strategic periods and operational periods
+TwoLevel(5, 8760, SimpleTimes(24, 1))
+
+# The same time structure with the unit `year` for strategic periods and unit `hour` for
+# operational periods
+TwoLevel(5, 1, SimpleTimes(24, 1); op_per_strat=8760.0)
+
+# All individual constructors
+TwoLevel(2, ones(2), [SimpleTimes(24, 1), SimpleTimes(24, 1)], op_per_strat=8760.0)
+TwoLevel(2, 1, SimpleTimes(24, 1); op_per_strat=8760.0)
+TwoLevel(1, [SimpleTimes(24, 1), SimpleTimes(24, 1)]; op_per_strat=8760.0)
+TwoLevel(ones(2), SimpleTimes(24, 1); op_per_strat=8760.0)
+
+# Constructors without duration
+TwoLevel([SimpleTimes(24, 1), SimpleTimes(24, 1)]; op_per_strat=8760.0)
+TwoLevel(2, SimpleTimes(24, 1); op_per_strat=8760.0)
 ```
 """
 struct TwoLevel{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
-    len::Int
+    len::Integer
     duration::Vector{S}
     operational::Vector{OP}
     op_per_strat::Float64
+    function TwoLevel(
+        len::Integer,
+        duration::Vector{S},
+        operational::Vector{OP},
+        op_per_strat::Float64,
+    ) where {S<:Duration,T,OP<:TimeStructure{T}}
+        if len > length(duration)
+            throw(
+                ArgumentError(
+                    "The length of `duration` cannot be less than the field `len` of `TwoLevel`.",
+                ),
+            )
+        elseif len > length(operational)
+            throw(
+                ArgumentError(
+                    "The length of `operational` cannot be less than the field `len` of `TwoLevel`.",
+                ),
+            )
+        end
+        return new{S,T,OP}(len, duration, operational, op_per_strat)
+    end
 end
 
 function TwoLevel(
@@ -42,6 +106,16 @@ function TwoLevel(
 ) where {S,T,OP<:TimeStructure{T}}
     len = length(oper)
     return TwoLevel{S,T,OP}(len, fill(duration, len), oper, op_per_strat)
+end
+
+function TwoLevel(
+    len::Integer,
+    oper::TimeStructure{T};
+    op_per_strat = 1.0,
+) where {T}
+    oper = fill(oper, len)
+    dur = [_total_duration(op) / op_per_strat for op in oper]
+    return TwoLevel(len, dur, oper, op_per_strat)
 end
 
 function TwoLevel(
@@ -140,7 +214,7 @@ end
 Time period for iteration of a TwoLevel time structure.
 """
 struct OperationalPeriod <: TimePeriod
-    sp::Int
+    sp::Integer
     period::TimePeriod
     multiple::Float64
 end
