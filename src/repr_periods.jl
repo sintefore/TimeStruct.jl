@@ -172,11 +172,7 @@ end
     Returns a collection of all representative periods for a TwoLevel time structure.
 """
 function repr_periods(ts::TwoLevel)
-    rps = StratReprPeriod[]
-    for sp in strategic_periods(ts)
-        push!(rps, repr_periods(sp)...)
-    end
-    return rps
+   return collect(Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)))
 end
 
 Base.length(reps::StratReprPeriods) = length(reps.repr)

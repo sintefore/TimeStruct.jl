@@ -934,10 +934,14 @@ end
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [1, 2, 1, 2, 1, 2]
 
+    vals2 = profile[repr_periods(ts)]
+    @test vals2 == vals
+
     sprofile = StrategicProfile([profile, 2 * profile, 3 * profile])
     vals = collect(sprofile[rp] for rp in repr_periods(ts))
     @test vals == [1, 2, 2, 4, 3, 6]
 end
+
 
 @testitem "Profiles and operational scenarios" begin
     profile =
