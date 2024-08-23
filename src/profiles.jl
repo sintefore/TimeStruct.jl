@@ -46,7 +46,7 @@ end
 
 """
     StrategicProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
-    StrategicProfile(vals::Vector{<:Number})
+    StrategicProfile(vals::Vector{<:Duration})
 
 Time profile with a separate time profile for each strategic period.
 If the input is a
@@ -64,7 +64,7 @@ profile = StrategicProfile([1, 2, 3, 4, 5])
 struct StrategicProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function StrategicProfile(vals::Vector{<:Number})
+function StrategicProfile(vals::Vector{<:Duration})
     return StrategicProfile([FixedProfile(v) for v in vals])
 end
 
@@ -88,7 +88,7 @@ end
 
 """
     ScenarioProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
-    ScenarioProfile(vals::Vector{<:Number})
+    ScenarioProfile(vals::Vector{<:Duration})
 
 Time profile with a separate time profile for each scenario.
 
@@ -105,7 +105,7 @@ profile = ScenarioProfile([1, 2, 3, 4, 5])
 struct ScenarioProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function ScenarioProfile(vals::Vector{<:Number})
+function ScenarioProfile(vals::Vector{<:Duration})
     return ScenarioProfile([FixedProfile(v) for v in vals])
 end
 
@@ -128,7 +128,7 @@ end
 
 """
     RepresentativeProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
-    RepresentativeProfile(vals::Vector{<:Number})
+    RepresentativeProfile(vals::Vector{<:Duration})
 
 Time profile with a separate time profile for each representative period.
 
@@ -145,7 +145,7 @@ profile = RepresentativeProfile([1, 2, 3, 4, 5])
 struct RepresentativeProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function RepresentativeProfile(vals::Vector{<:Number})
+function RepresentativeProfile(vals::Vector{<:Duration})
     return RepresentativeProfile([FixedProfile(v) for v in vals])
 end
 
@@ -196,59 +196,59 @@ function Base.getindex(TP::TimeProfile, inds::Any)
 end
 
 import Base: +, -, *, /
-+(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val + b)
-function +(a::OperationalProfile{T}, b::Number) where {T<:Number}
++(a::FixedProfile{T}, b::Number) where {T<:Duration} = FixedProfile(a.val + b)
+function +(a::OperationalProfile{T}, b::Number) where {T<:Duration}
     return OperationalProfile(a.vals .+ b)
 end
-function +(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function +(a::StrategicProfile{T}, b::Number) where {T<:Duration}
     return StrategicProfile(a.vals .+ b)
 end
-function +(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function +(a::ScenarioProfile{T}, b::Number) where {T<:Duration}
     return ScenarioProfile(a.vals .+ b)
 end
-function +(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function +(a::RepresentativeProfile{T}, b::Number) where {T<:Duration}
     return RepresentativeProfile(a.vals .+ b)
 end
-+(a::Number, b::TimeProfile{T}) where {T<:Number} = b + a
--(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val - b)
-function -(a::OperationalProfile{T}, b::Number) where {T<:Number}
++(a::Number, b::TimeProfile{T}) where {T<:Duration} = b + a
+-(a::FixedProfile{T}, b::Number) where {T<:Duration} = FixedProfile(a.val - b)
+function -(a::OperationalProfile{T}, b::Number) where {T<:Duration}
     return OperationalProfile(a.vals .- b)
 end
-function -(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function -(a::StrategicProfile{T}, b::Number) where {T<:Duration}
     return StrategicProfile(a.vals .- b)
 end
-function -(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function -(a::ScenarioProfile{T}, b::Number) where {T<:Duration}
     return ScenarioProfile(a.vals .- b)
 end
-function -(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function -(a::RepresentativeProfile{T}, b::Number) where {T<:Duration}
     return RepresentativeProfile(a.vals .- b)
 end
 
-*(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val .* b)
-function *(a::OperationalProfile{T}, b::Number) where {T<:Number}
+*(a::FixedProfile{T}, b::Number) where {T<:Duration} = FixedProfile(a.val .* b)
+function *(a::OperationalProfile{T}, b::Number) where {T<:Duration}
     return OperationalProfile(a.vals .* b)
 end
-function *(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function *(a::StrategicProfile{T}, b::Number) where {T<:Duration}
     return StrategicProfile(a.vals .* b)
 end
-function *(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function *(a::ScenarioProfile{T}, b::Number) where {T<:Duration}
     return ScenarioProfile(a.vals .* b)
 end
-function *(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function *(a::RepresentativeProfile{T}, b::Number) where {T<:Duration}
     return RepresentativeProfile(a.vals .* b)
 end
 
-*(a::Number, b::TimeProfile{T}) where {T<:Number} = b * a
-/(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val / b)
-function /(a::OperationalProfile{T}, b::Number) where {T<:Number}
+*(a::Number, b::TimeProfile{T}) where {T<:Duration} = b * a
+/(a::FixedProfile{T}, b::Number) where {T<:Duration} = FixedProfile(a.val / b)
+function /(a::OperationalProfile{T}, b::Number) where {T<:Duration}
     return OperationalProfile(a.vals ./ b)
 end
-function /(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function /(a::StrategicProfile{T}, b::Number) where {T<:Duration}
     return StrategicProfile(a.vals ./ b)
 end
-function /(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function /(a::ScenarioProfile{T}, b::Number) where {T<:Duration}
     return ScenarioProfile(a.vals ./ b)
 end
-function /(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function /(a::RepresentativeProfile{T}, b::Number) where {T<:Duration}
     return RepresentativeProfile(a.vals ./ b)
 end
