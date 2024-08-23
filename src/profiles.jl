@@ -5,7 +5,7 @@ abstract type TimeProfile{T} end
 
 Time profile with a constant value for all time periods
 """
-struct FixedProfile{T} <: TimeProfile{T}
+struct FixedProfile{T<:Duration} <: TimeProfile{T}
     val::T
 end
 
@@ -24,7 +24,7 @@ period.
 If too few values are provided, the last provided value will be
 repeated.
 """
-struct OperationalProfile{T} <: TimeProfile{T}
+struct OperationalProfile{T<:Duration} <: TimeProfile{T}
     vals::Vector{T}
 end
 
@@ -43,7 +43,7 @@ Time profile with a separate time profile for each strategic period.
 If too few profiles are provided, the last given profile will be
 repeated.
 """
-struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+struct StrategicProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
 
@@ -84,7 +84,7 @@ end
 
 Time profile with a separate time profile for each scenario
 """
-struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+struct ScenarioProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
 
@@ -130,7 +130,7 @@ Time profile with a separate time profile for each representative period.
 If too few profiles are provided, the last given profile will be
 repeated.
 """
-struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
+struct RepresentativeProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
 
@@ -168,7 +168,7 @@ function Base.getindex(ssp::StrategicStochasticProfile, i::TimePeriod)
     return ssp.vals[_strat_per(i)][_branch(i)]
 end
 
-struct DynamicStochasticProfile{T} <: TimeProfile{T}
+struct DynamicStochasticProfile{T<:Duration} <: TimeProfile{T}
     vals::Vector{<:Vector{<:TimeProfile{T}}}
 end
 function Base.getindex(ssp::DynamicStochasticProfile, i::TimePeriod)

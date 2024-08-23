@@ -883,6 +883,16 @@ end
     @test dsp[ops[4]] == 5
 end
 
+@testitem "Profiles constructors" begin
+    # Checking the input type
+    @test_throws MethodError FixedProfile("wrong_input")
+    @test_throws MethodError OperationalProfile("wrong_input")
+    @test_throws MethodError ScenarioProfile("wrong_input")
+    @test_throws MethodError RepresentativeProfile("wrong_input")
+    @test_throws MethodError StrategicProfile("wrong_input")
+    @test_throws MethodError StrategicProfile("StrategicStochasticProfile")
+end
+
 @testitem "Profiles and strategic periods" begin
     profile = StrategicProfile([1, 2, 3])
 
