@@ -816,7 +816,7 @@ end
 
     @test_throws ErrorException scp["dummy"]
 
-    scp2 = ScenarioProfile([[1, 1, 2], [3], [4, 5]])
+    scp2 = ScenarioProfile([OperationalProfile([1, 1, 2]), FixedProfile(3), OperationalProfile([4, 5])])
     @test sum(scp2[t] for t in tsc) == 201
 
     ssp = StrategicProfile([scp, scp2])

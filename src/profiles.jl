@@ -75,10 +75,6 @@ function Base.getindex(
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
-function StrategicProfile(vals::Vector{T}) where {T}
-    return StrategicProfile([FixedProfile{T}(v) for v in vals])
-end
-
 """
     ScenarioProfile(vals)
 
@@ -112,14 +108,6 @@ function Base.getindex(
     period::T,
 ) where {T<:Union{TimePeriod,TimeStructure}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
-end
-
-function ScenarioProfile(vals::Vector{Vector{T}}) where {T}
-    v = Vector{OperationalProfile{T}}()
-    for scv in vals
-        push!(v, OperationalProfile{T}(scv))
-    end
-    return ScenarioProfile(v)
 end
 
 """
