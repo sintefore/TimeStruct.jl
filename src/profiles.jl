@@ -1,9 +1,14 @@
 abstract type TimeProfile{T} end
 
 """
-    FixedProfile(val)
+    FixedProfile(val<:Duration)
 
-Time profile with a constant value for all time periods
+Time profile with a constant value for all time periods.
+
+## Example
+```julia
+profile = FixedProfile(5)
+```
 """
 struct FixedProfile{T<:Duration} <: TimeProfile{T}
     val::T
@@ -17,12 +22,16 @@ function Base.getindex(
 end
 
 """
-    OperationalProfile
-Time profile with a value that varies with the operational time
-period.
+    OperationalProfile(vals::Vector{T}) where {T<:Duration}
 
-If too few values are provided, the last provided value will be
-repeated.
+Time profile with a value that varies with the operational time period.
+
+If too few values are provided, the last provided value will be repeated.
+
+## Example
+```julia
+profile = OperationalProfile([1, 2, 3, 4, 5])
+```
 """
 struct OperationalProfile{T<:Duration} <: TimeProfile{T}
     vals::Vector{T}
@@ -36,23 +45,25 @@ function Base.getindex(
 end
 
 """
-    StrategicProfile(vals)
+    StrategicProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
+    StrategicProfile(vals::Vector{<:Number})
 
 Time profile with a separate time profile for each strategic period.
+If the input is a
 
-If too few profiles are provided, the last given profile will be
-repeated.
+If too few profiles are provided, the last given profile will be repeated.
+
+## Example
+```julia
+# Varying values in each strategic period
+profile = StrategicProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4, 5])])
+ # The same value in each strategic period
+profile = StrategicProfile([1, 2, 3, 4, 5])
+```
 """
 struct StrategicProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-
-"""
-    StrategicProfile(vals::Vector{<:Number})
-
-Create a strategic profile with a fixed value for each strategic
-period.
-"""
 function StrategicProfile(vals::Vector{<:Number})
     return StrategicProfile([FixedProfile(v) for v in vals])
 end
@@ -76,19 +87,24 @@ function Base.getindex(
 end
 
 """
-    ScenarioProfile(vals)
+    ScenarioProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
+    ScenarioProfile(vals::Vector{<:Number})
 
-Time profile with a separate time profile for each scenario
+Time profile with a separate time profile for each scenario.
+
+If too few profiles are provided, the last given profile will be repeated.
+
+## Example
+```julia
+# Varying values in each strategic period
+profile = ScenarioProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4, 5])])
+ # The same value in each strategic period
+profile = ScenarioProfile([1, 2, 3, 4, 5])
+```
 """
 struct ScenarioProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-
-"""
-    ScenarioProfile(vals::Vector{<:Number})
-
-Create a scenario profile with a fixed value for each operational scenario.
-"""
 function ScenarioProfile(vals::Vector{<:Number})
     return ScenarioProfile([FixedProfile(v) for v in vals])
 end
@@ -111,23 +127,24 @@ function Base.getindex(
 end
 
 """
-    RepresentativeProfile(vals)
+    RepresentativeProfile(vals::Vector{P}) where {T<:Duration, P<:TimeProfile{T}}
+    RepresentativeProfile(vals::Vector{<:Number})
 
 Time profile with a separate time profile for each representative period.
 
-If too few profiles are provided, the last given profile will be
-repeated.
+If too few profiles are provided, the last given profile will be repeated.
+
+## Example
+```julia
+# Varying values in each strategic period
+profile = RepresentativeProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4, 5])])
+ # The same value in each strategic period
+profile = RepresentativeProfile([1, 2, 3, 4, 5])
+```
 """
 struct RepresentativeProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-
-"""
-    RepresentativeProfile(vals::Vector{<:Number})
-
-Create a representative profile with a fixed value for each representative
-period.
-"""
 function RepresentativeProfile(vals::Vector{<:Number})
     return RepresentativeProfile([FixedProfile(v) for v in vals])
 end
