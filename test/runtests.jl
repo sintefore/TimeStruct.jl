@@ -942,7 +942,6 @@ end
     @test vals == [1, 2, 2, 4, 3, 6]
 end
 
-
 @testitem "Profiles and operational scenarios" begin
     profile =
         ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
