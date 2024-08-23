@@ -32,6 +32,8 @@ end
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test TimeStruct._total_duration(ts) == 24
+
+    @test_throws ArgumentError SimpleTimes(15, [4, 4, 4, 6, 3, 3])
 end
 
 @testitem "SimpleTimes with units" begin
