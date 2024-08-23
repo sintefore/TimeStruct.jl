@@ -49,7 +49,6 @@ end
     StrategicProfile(vals::Vector{<:Duration})
 
 Time profile with a separate time profile for each strategic period.
-If the input is a
 
 If too few profiles are provided, the last given profile will be repeated.
 
@@ -96,9 +95,9 @@ If too few profiles are provided, the last given profile will be repeated.
 
 ## Example
 ```julia
-# Varying values in each strategic period
+# Varying values in each operational scenario
 profile = ScenarioProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4, 5])])
- # The same value in each strategic period
+ # The same value in each operational scenario
 profile = ScenarioProfile([1, 2, 3, 4, 5])
 ```
 """
@@ -136,9 +135,9 @@ If too few profiles are provided, the last given profile will be repeated.
 
 ## Example
 ```julia
-# Varying values in each strategic period
+# Varying values in each representative period
 profile = RepresentativeProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4, 5])])
- # The same value in each strategic period
+ # The same value in each representative period
 profile = RepresentativeProfile([1, 2, 3, 4, 5])
 ```
 """
