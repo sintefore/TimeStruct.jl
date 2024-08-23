@@ -1,13 +1,62 @@
 """
-    struct OperationalScenarios <: TimeStructure
+    struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
+
+    OperationalScenarios(len::Int64, scenarios::Vector{OP}, probability::Vector{Float64}) where {T, OP<:TimeStructure{T}
+    OperationalScenarios(len::Integer, oper::TimeStructure{T})
+
+    OperationalScenarios(oper::Vector{<:TimeStructure{T}}, prob::Vector)
+    OperationalScenarios(oper::Vector{<:TimeStructure{T}})
 
 Time structure that have multiple scenarios where each scenario has its own time structure
-and an associated probability. Note that all scenarios must use the same type for the duration.
+and an associated probability. These scenarios are in general represented as
+[`SimpleTimes`](@ref).
+
+!!! note
+    - All scenarios must use the same type for the duration, _.i.e._, either Integer or Float.
+    - If the `probability` is not specified, it assigns the same probability to each scenario.
+    - It is possible that `sum(probability)` is larger or smaller than 1. This can lead to
+      problems in your application. Hence, it is advised to scale it. We provide currently a
+      warning as it would correspond to a breaking change.
+
+## Example
+The following examples create a time structure with 2 operational scenarios corresponding to
+a single day with equal probability.
+```julia
+day = SimpleTimes(24, 1)
+OperationalScenarios(2, day)
+OperationalScenarios([day, day], [0.5, 0.5])
+OperationalScenarios([day, day])
+```
 """
 struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
-    len::Int
+    len::Integer
     scenarios::Vector{OP}
     probability::Vector{Float64}
+    function OperationalScenarios(
+        len::Integer,
+        scenarios::Vector{OP},
+        probability::Vector{Float64},
+    ) where {T,OP<:TimeStructure{T}}
+        if len > length(scenarios)
+            throw(
+                ArgumentError(
+                    "The length of `scenarios` cannot be less than the field `len` of `OperationalScenarios`.",
+                ),
+            )
+        elseif len > length(probability)
+            throw(
+                ArgumentError(
+                    "The length of `probability` cannot be less than the field `len` of `OperationalScenarios`.",
+                ),
+            )
+        elseif sum(probability) > 1 || sum(probability) < 1
+            @warn(
+                "The sum of the probablity vector is given by $(sum(probability)). " *
+                "This can lead to unexpected behaviour."
+            )
+        end
+        return new{T,OP}(len, scenarios, probability)
+    end
 end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
     return OperationalScenarios(len, fill(oper, len), fill(1.0 / len, len))
@@ -74,13 +123,18 @@ end
 
 # A time period with scenario number and probability
 struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
-    sc::Int
+    sc::Integer
     prob::Float64
     multiple::Float64
     period::P
 end
 
-function ScenarioPeriod(scenario::Int, prob::Number, multiple::Number, period)
+function ScenarioPeriod(
+    scenario::Integer,
+    prob::Number,
+    multiple::Number,
+    period,
+)
     return ScenarioPeriod(
         scenario,
         Base.convert(Float64, prob),

@@ -163,6 +163,14 @@ end
         end
     end
     @test length(pers) == length(ts)
+
+    @test_throws ArgumentError OperationalScenarios(2, [day, week], [1.0])
+    @test_throws ArgumentError OperationalScenarios(2, [day], [0.5, 0.5])
+
+    msg =
+        "The sum of the probablity vector is given by $(2.0). " *
+        "This can lead to unexpected behaviour."
+    @test_logs (:warn, msg) OperationalScenarios([day, day], [0.5, 1.5])
 end
 
 @testitem "RepresentativePeriods" begin
