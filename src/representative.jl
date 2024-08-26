@@ -39,7 +39,8 @@ RepresentativePeriods(2, 8760, SimpleTimes(24, 1))
 RepresentativePeriods(8760, [SimpleTimes(24, 1), SimpleTimes(24,1)])
 ```
 """
-struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
+struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
+       TimeStructure{T}
     len::Integer
     duration::S
     period_share::Vector{Float64}

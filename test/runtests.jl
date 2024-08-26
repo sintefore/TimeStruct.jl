@@ -686,11 +686,11 @@ end
         [0.2, 0.8],
         [SimpleTimes(5, 1), SimpleTimes(5, 1)],
     )
-    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1)
+    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1.0)
     test_invariants(two_level)
 
     repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
-    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
+    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1.0)
     test_invariants(two_level)
 end
 

@@ -105,7 +105,7 @@ function TwoLevel(
     op_per_strat = 1.0,
 ) where {S,T,OP<:TimeStructure{T}}
     len = length(oper)
-    return TwoLevel{S,T,OP}(len, fill(duration, len), oper, op_per_strat)
+    return TwoLevel(len, fill(duration, len), oper, op_per_strat)
 end
 
 function TwoLevel(
