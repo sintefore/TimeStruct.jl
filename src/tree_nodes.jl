@@ -39,3 +39,13 @@ function Base.iterate(itr::StratNode, state = nothing)
 end
 
 multiple_strat(sp::StratNode, t) = multiple(t) / duration_strat(sp)
+
+abstract type StrategicTreeIndexable end
+
+struct HasStratTreeIndex <: StrategicTreeIndexable end
+struct NoStratTreeIndex <: StrategicTreeIndexable end
+
+StrategicTreeIndexable(::Type) = NoStratTreeIndex()
+StrategicTreeIndexable(::Type{<:AbstractTreeNode}) = HasStratTreeIndex()
+StrategicTreeIndexable(::Type{<:TimePeriod}) = HasStratTreeIndex()
+StrategicIndexable(::Type{<:AbstractTreeNode}) = HasStratIndex()

@@ -165,18 +165,52 @@ function Base.getindex(
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
-struct StrategicStochasticProfile{T} <: TimeProfile{T}
-    vals::Vector{Vector{T}}
+
+"""
+    StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T<:Duration, P<:TimeProfile{T}}
+    StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
+
+Time profile with a separate time profile for each strategic node in a [`TwoLevelTree`](@ref)
+structure.
+
+If too few profiles are provided, the last given profile will be repeated, both for strategic
+periods and branches within a strategic period.
+
+## Example
+```julia
+ # The same value in each strategic period and branch
+profile = StrategicStochasticProfile([[1], [21, 22]])
+# Varying values in each strategic period and branch
+profile = StrategicStochasticProfile([
+    [OperationalProfile([11, 12])],
+    [OperationalProfile([21, 22]), OperationalProfile([31, 32])]
+])
+```
+"""
+struct StrategicStochasticProfile{T<:Duration,P<:TimeProfile{T}} <: TimeProfile{T}
+    vals::Vector{<:Vector{P}}
 end
-function Base.getindex(ssp::StrategicStochasticProfile, i::TimePeriod)
-    return ssp.vals[_strat_per(i)][_branch(i)]
+function StrategicStochasticProfile(vals::Vector{<:Vector{<:Duration}})
+    return StrategicStochasticProfile([[FixedProfile(v_2) for v_2 in v_1] for v_1 in vals])
 end
 
-struct DynamicStochasticProfile{T<:Number} <: TimeProfile{T}
-    vals::Vector{<:Vector{<:TimeProfile{T}}}
+function _value_lookup(::HasStratTreeIndex, ssp::StrategicStochasticProfile, period)
+    sp_prof = ssp.vals[_strat_per(period) > length(ssp.vals) ? end : _strat_per(period)]
+    branch_prof = sp_prof[_branch(period) > length(sp_prof) ? end : _branch(period)]
+    return branch_prof[period]
 end
-function Base.getindex(ssp::DynamicStochasticProfile, i::TimePeriod)
-    return ssp.vals[_strat_per(i)][_branch(i)][i]
+
+function _value_lookup(::NoStratTreeIndex, ssp::StrategicStochasticProfile, period)
+    return error(
+        "Type $(typeof(period)) can not be used as index for a strategic stochastic profile",
+    )
+end
+
+function Base.getindex(
+    ssp::StrategicStochasticProfile,
+    period::T,
+) where {T<:Union{TimePeriod,TimeStructure}}
+    return _value_lookup(StrategicTreeIndexable(T), ssp, period)
 end
 
 Base.getindex(TP::TimeProfile, inds...) = [TP[i] for i in inds]

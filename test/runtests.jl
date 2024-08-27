@@ -923,7 +923,7 @@ end
     price1 = OperationalProfile([1, 2, 2, 5, 6])
     price2 = FixedProfile(4)
 
-    dsp = TimeStruct.DynamicStochasticProfile([
+    dsp = TimeStruct.StrategicStochasticProfile([
         [price1],
         [price1, price2, price2],
         [price1, price2, price2, price1, price2, price2],

@@ -15,12 +15,13 @@ include("twolevel.jl")
 include("strat_periods.jl")
 include("repr_periods.jl")
 include("opscenarios.jl")
-include("profiles.jl")
 include("utils.jl")
 include("discount.jl")
 
 include("tree_nodes.jl")
 include("twoleveltree.jl")
+
+include("profiles.jl")
 
 export TimeStructure
 export SimpleTimes
@@ -36,7 +37,6 @@ export OperationalProfile
 export ScenarioProfile
 export StrategicProfile
 export StrategicStochasticProfile
-export DynamicStochasticProfile
 export RepresentativeProfile
 
 export opscenarios
