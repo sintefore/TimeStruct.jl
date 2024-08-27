@@ -1,7 +1,7 @@
 """
     struct TwoLevel{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-    TwoLevel(len::Integer, duration::Vector{S}, operational::Vector{OP}, op_per_strat::Float64) where {S<:Number, T, OP<:TimeStructure{T}}
+    TwoLevel(len::Integer, duration::Vector{S}, operational::Vector{OP}, op_per_strat::Float64) where {S<:Duration, T, OP<:TimeStructure{T}}
     TwoLevel(len::Integer, duration::S, oper::TimeStructure{T}; op_per_strat) where {S, T}
     TwoLevel(len::Integer, oper::TimeStructure{T}; op_per_strat) where {T}
 

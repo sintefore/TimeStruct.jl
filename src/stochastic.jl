@@ -130,12 +130,7 @@ struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
     period::P
 end
 
-function ScenarioPeriod(
-    scenario::Int,
-    prob::Number,
-    multiple::Number,
-    period,
-)
+function ScenarioPeriod(scenario::Int, prob::Number, multiple::Number, period)
     return ScenarioPeriod(
         scenario,
         Base.convert(Float64, prob),

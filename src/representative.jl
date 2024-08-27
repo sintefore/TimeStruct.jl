@@ -70,7 +70,12 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
                 "This can lead to unexpected behaviour."
             )
         end
-        return new{S,T,OP}(len, duration, convert(Vector{Float64}, period_share), rep_periods)
+        return new{S,T,OP}(
+            len,
+            duration,
+            convert(Vector{Float64}, period_share),
+            rep_periods,
+        )
     end
 end
 function RepresentativePeriods(
