@@ -1,7 +1,7 @@
 """
     struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-    OperationalScenarios(len::Int64, scenarios::Vector{OP}, probability::Vector{Float64}) where {T, OP<:TimeStructure{T}
+    OperationalScenarios(len::Integer, scenarios::Vector{OP}, probability::Vector{<:Real}) where {T, OP<:TimeStructure{T}
     OperationalScenarios(len::Integer, oper::TimeStructure{T})
 
     OperationalScenarios(oper::Vector{<:TimeStructure{T}}, prob::Vector)
@@ -15,8 +15,9 @@ and an associated probability. These scenarios are in general represented as
     - All scenarios must use the same type for the duration, _.i.e._, either Integer or Float.
     - If the `probability` is not specified, it assigns the same probability to each scenario.
     - It is possible that `sum(probability)` is larger or smaller than 1. This can lead to
-      problems in your application. Hence, it is advised to scale it. We provide currently a
-      warning as it would correspond to a breaking change.
+      problems in your application. Hence, it is advised to scale it. Currently, a warning
+      will be given if the period shares do not sum to one as an automatic scaling will
+      correspond to a breaking change.
 
 ## Example
 The following examples create a time structure with 2 operational scenarios corresponding to
@@ -29,13 +30,13 @@ OperationalScenarios([day, day])
 ```
 """
 struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
-    len::Integer
+    len::Int
     scenarios::Vector{OP}
     probability::Vector{Float64}
     function OperationalScenarios(
         len::Integer,
         scenarios::Vector{OP},
-        probability::Vector{Float64},
+        probability::Vector{<:Real},
     ) where {T,OP<:TimeStructure{T}}
         if len > length(scenarios)
             throw(
@@ -55,7 +56,7 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
                 "This can lead to unexpected behaviour."
             )
         end
-        return new{T,OP}(len, scenarios, probability)
+        return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability))
     end
 end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
@@ -123,14 +124,14 @@ end
 
 # A time period with scenario number and probability
 struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
-    sc::Integer
+    sc::Int
     prob::Float64
     multiple::Float64
     period::P
 end
 
 function ScenarioPeriod(
-    scenario::Integer,
+    scenario::Int,
     prob::Number,
     multiple::Number,
     period,

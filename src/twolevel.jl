@@ -18,8 +18,9 @@ operational decisions. Iterating the structure will go through all operational p
 It is possible to use different time units for the two levels by providing the number
 of operational time units per strategic time unit through the kewyord argument `op_per_strat`.
 
-Potential time structures are [`SimpleTimes`](@ref), [`OperationalScenarios`](@ref), or
-[`RepresentativePeriods`](@ref), as well as combinations of these.
+Potential time structures are [`SimpleTimes`](@ref), [`CalendarTimes`](@ref),
+[`OperationalScenarios`](@ref), or [`RepresentativePeriods`](@ref), as well as combinations
+of these.
 
 !!! danger "Usage of op_per_strat"
     The optional keyword `op_per_strat` is important for the overall calculations.
@@ -33,7 +34,7 @@ Potential time structures are [`SimpleTimes`](@ref), [`OperationalScenarios`](@r
         _total_duration(op) / op_per_strat for op in oper
 
     in which `oper::Vector{<:TimeStructure{T}`. The internal function `_total_duration`
-    corresponds in thgis case to the sum of the duration of all operational periods divided
+    corresponds in this case to the sum of the duration of all operational periods divided
     by the value of the field `op_per_strat`.
 
 Example
@@ -58,7 +59,7 @@ TwoLevel(2, SimpleTimes(24, 1); op_per_strat=8760.0)
 ```
 """
 struct TwoLevel{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
-    len::Integer
+    len::Int
     duration::Vector{S}
     operational::Vector{OP}
     op_per_strat::Float64
@@ -214,7 +215,7 @@ end
 Time period for iteration of a TwoLevel time structure.
 """
 struct OperationalPeriod <: TimePeriod
-    sp::Integer
+    sp::Int
     period::TimePeriod
     multiple::Float64
 end

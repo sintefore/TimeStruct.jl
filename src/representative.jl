@@ -1,11 +1,11 @@
 """
     struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-    RepresentativePeriods(len::Integer, duration::S, period_share::Vector{Float64}, rep_periods::Vector{OP}) where {S<:Duration, T, OP<:TimeStructure{T}}
+    RepresentativePeriods(len::Integer, duration::S, period_share::Vector{<:Real}, rep_periods::Vector{OP}) where {S<:Duration, T, OP<:TimeStructure{T}}
     RepresentativePeriods(len::Integer, duration::S, rep_periods::TimeStructure{T}) where {S<:Duration, T}
 
-    RepresentativePeriods(duration::S, period_share::Vector{Float64}, rep_periods::Vector{<:TimeStructure{T}}) where {S<:Duration, T}
-    RepresentativePeriods(duration::S, period_share::Vector{Float64}, rep_periods::TimeStructure{T}) where {S<:Duration, T}
+    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::Vector{<:TimeStructure{T}}) where {S<:Duration, T}
+    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::TimeStructure{T}) where {S<:Duration, T}
 
     RepresentativePeriods(duration::S, rep_periods::Vector{<:TimeStructure{T}}) where {S<:Duration, T}
 
@@ -23,10 +23,11 @@ is attributed to it.
     - If the field `period_share` is not specified, it assigns the same probability to each
       representative period.
     - It is possible that `sum(period_share)` is larger or smaller than 1. This can lead to
-      problems in your application. Hence, it is advised to scale it. We provide currently a
-      warning as it would correspond to a breaking change.
+      problems in your application. Hence, it is advised to scale it. Currently, a warning
+      will be given if the period shares do not sum to one as an automatic scaling will
+      correspond to a breaking change.
     - If you include [`OperationalScenarios`](@ref) in your time structure, it is important
-      that you the scenarios are within the representative periods, and note the other way.
+      that the scenarios are within the representative periods, and not the other way.
 
 ### Example
 ```julia
@@ -41,14 +42,14 @@ RepresentativePeriods(8760, [SimpleTimes(24, 1), SimpleTimes(24,1)])
 """
 struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
        TimeStructure{T}
-    len::Integer
+    len::Int
     duration::S
     period_share::Vector{Float64}
     rep_periods::Vector{OP}
     function RepresentativePeriods(
         len::Integer,
         duration::S,
-        period_share::Vector{Float64},
+        period_share::Vector{<:Real},
         rep_periods::Vector{OP},
     ) where {S<:Duration,T,OP<:TimeStructure{T}}
         if len > length(period_share)
@@ -69,7 +70,7 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
                 "This can lead to unexpected behaviour."
             )
         end
-        return new{S,T,OP}(len, duration, period_share, rep_periods)
+        return new{S,T,OP}(len, duration, convert(Vector{Float64}, period_share), rep_periods)
     end
 end
 function RepresentativePeriods(
@@ -86,7 +87,7 @@ function RepresentativePeriods(
 end
 function RepresentativePeriods(
     duration::S,
-    period_share::Vector{Float64},
+    period_share::Vector{<:Real},
     rep_periods::Vector{<:TimeStructure{T}},
 ) where {S<:Duration,T}
     return RepresentativePeriods(
@@ -98,7 +99,7 @@ function RepresentativePeriods(
 end
 function RepresentativePeriods(
     duration::S,
-    period_share::Vector{Float64},
+    period_share::Vector{<:Real},
     rep_periods::TimeStructure{T},
 ) where {S<:Duration,T}
     return RepresentativePeriods(
@@ -167,7 +168,7 @@ Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
 # A single operational time period used when iterating through
 # a represenative period
 struct ReprPeriod{T} <: TimePeriod
-    rp::Integer
+    rp::Int
     period::T
     mult::Float64
 end

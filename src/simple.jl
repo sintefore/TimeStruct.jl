@@ -5,8 +5,10 @@
     SimpleTimes(len::Integer, duration::Number)
     SimpleTimes(dur::Vector{T}) where {T<:Number}
 
-A simple time structure conisisting of consecutive time periods of varying duration.
-`SimpleTimes` is always the lowest level in a `TimeStruct` time structure.
+A simple time structure consisting of consecutive time periods of varying duration.
+`SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
+
+An alternative for `SimpleTimes` is [`CalendarTimes`](@ref)
 
 ## Example
 ```julia
@@ -15,7 +17,7 @@ varying = SimpleTimes([2, 2, 2, 4, 10]) # 5 periods of varying length
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
-    len::Integer
+    len::Int
     duration::Vector{T}
     function SimpleTimes(len::Integer, duration::Vector{T}) where {T}
         if len > length(duration)
@@ -44,7 +46,7 @@ _total_duration(st::SimpleTimes) = sum(st.duration)
 A single time period returned when iterating through a SimpleTimes structure
 """
 struct SimplePeriod{T<:Number} <: TimePeriod
-    op::Integer
+    op::Int
     duration::T
 end
 
