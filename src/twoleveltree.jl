@@ -287,3 +287,14 @@ function opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
     )
     return opscens
 end
+
+"""
+    repr_periods(ts::TwoLevelTree{T,OP})
+
+Returns a collection of all representative periods for a [`TwoLevelTree`](@ref) time structure.
+"""
+function repr_periods(ts::TwoLevelTree{T,OP}) where {T,OP}
+    return collect(
+        Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)),
+    )
+end

@@ -109,8 +109,6 @@ function Base.iterate(os::StratNodeOperationalScenario, state = nothing)
     next[2]
 end
 
-
-# Iteration through scenarios
 """
     struct StratNodeOpScens
 
@@ -137,8 +135,8 @@ Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
 
 Iterator that iterates over operational scenarios for a specific strategic node in the tree.
 """
-function opscenarios(sper::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeOpScens(sper, opscenarios(sper.operational))
+function opscenarios(sn::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return StratNodeOpScens(sn, opscenarios(sn.operational))
 end
 
 function Base.iterate(ops::StratNodeOpScens, state = (nothing, 1))
@@ -156,6 +154,114 @@ function Base.iterate(ops::StratNodeOpScens, state = (nothing, 1))
         mult_scen(next[1]),
         ops.prob_branch,
         probability(next[1]),
+        next[1],
+    ),
+    (next[2], scen + 1)
+end
+
+
+"""
+    struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+
+A structure representing a single representative period of a strategic node supporting
+iteration over its time periods.
+"""
+struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+    sp::Int
+    branch::Int
+    rp::Int
+    mult_sp::Float64
+    mult_rp::Float64
+    prob_branch::Float64
+    operational::OP
+end
+
+function Base.show(io::IO, srp::StratNodeReprPeriod)
+    return print(io, "sp$(srp.sp)-br$(srp.branch)-sc$(srp.rp)")
+end
+
+probability(srp::StratNodeReprPeriod) = srp.prob_branch
+multiple(srp::StratNodeReprPeriod, t::OperationalPeriod) = t.multiple / srp.mult_sp
+_rper(srp::StratNodeReprPeriod) = srp.rp
+_branch(srp::StratNodeReprPeriod) = srp.branch
+_strat_per(srp::StratNodeReprPeriod) = srp.sp
+
+StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
+StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
+
+Base.length(snrp::StratNodeReprPeriod) = length(snrp.operational)
+Base.eltype(_::StratNodeReprPeriod) = TreePeriod
+
+function Base.last(srp::StratNodeReprPeriod)
+    per = last(srp.operational)
+    return OperationalPeriod(srp.sp, per, srp.mult_sp * multiple(per))
+end
+
+function Base.getindex(srp::StratNodeReprPeriod, index)
+    per = srp.operational[index]
+    mult = srp.mult_sp * multiple(per)
+    return TreePeriod(srp.sp, srp.branch, probability_branch(srp), mult, per)
+end
+
+function Base.eachindex(srp::StratNodeReprPeriod)
+    return eachindex(srp.operational)
+end
+
+# Iterate the time periods of a StratOperationalScenario
+function Base.iterate(srp::StratNodeReprPeriod, state = nothing)
+    next =
+        isnothing(state) ? iterate(srp.operational) :
+        iterate(srp.operational, state)
+    isnothing(next) && return nothing
+
+    return TreePeriod(srp.sp, srp.branch, srp.prob_branch, srp.mult_sp * multiple(next[1]), next[1]),
+    next[2]
+end
+
+"""
+    struct StratNodeReprPeriods
+
+Type for iterating through the individual operational scenarios of a [`StratNode`](@ref).
+It is automatically created through the function [`repr_periods`](@ref).
+"""
+struct StratNodeReprPeriods
+    sp::Int
+    branch::Int
+    mult_sp::Float64
+    prob_branch::Float64
+    repr::Any
+end
+
+function StratNodeReprPeriods(n::StratNode{S,T,OP}, repr) where {S,T,OP<:TimeStructure{T}}
+    return StratNodeReprPeriods(_strat_per(n), _branch(n), n.mult_sp, probability_branch(n), repr)
+end
+
+Base.length(ops::StratNodeReprPeriods) = length(ops.repr)
+Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
+
+"""
+    repr_periods(sp::StratNode{S,T,OP})
+
+Iterator that iterates over operational scenarios for a specific strategic node in the tree.
+"""
+function repr_periods(sn::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return StratNodeReprPeriods(sn, repr_periods(sn.operational))
+end
+
+function Base.iterate(ops::StratNodeReprPeriods, state = (nothing, 1))
+    next =
+        isnothing(state[1]) ? iterate(ops.repr) :
+        iterate(ops.repr, state[1])
+    isnothing(next) && return nothing
+
+    scen = state[2]
+    return StratNodeReprPeriod(
+        ops.sp,
+        ops.branch,
+        scen,
+        ops.mult_sp,
+        mult_repr(next[1]),
+        ops.prob_branch,
         next[1],
     ),
     (next[2], scen + 1)

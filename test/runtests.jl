@@ -967,6 +967,42 @@ end
     ) == 50
 end
 
+@testitem "TwoLevelTree and repr_periods" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        RepresentativePeriods(2, 1, SimpleTimes(5, 1)),
+    )
+
+    ops1 = collect(regtree)
+    ops2 = [
+        t for sp in strat_periods(regtree) for sc in repr_periods(sp) for t in sc
+    ]
+    @test length(ops1) == length(ops2)
+    for (i, op) in enumerate(ops1)
+        @test op == ops2[i]
+    end
+
+    @test sum(length(repr_periods(sp)) for sp in strat_periods(regtree)) == 20
+    @test sum(
+        length(rper) for sp in strat_periods(regtree) for rper in repr_periods(sp)
+    ) == 100
+
+    sregtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    ops1 = collect(sregtree)
+    ops2 = [
+        t for sp in strat_periods(sregtree) for rper in repr_periods(sp) for
+        t in rper
+    ]
+    @test length(ops1) == length(ops2)
+    @test ops1 == ops2
+
+    @test sum(length(repr_periods(sp)) for sp in strat_periods(sregtree)) == 10
+    @test sum(
+        length(rper) for sp in strat_periods(sregtree) for rper in repr_periods(sp)
+    ) == 50
+end
+
 @testitem "Strategic scenarios with operational scenarios" begin
     regtree = TimeStruct.regular_tree(
         5,
