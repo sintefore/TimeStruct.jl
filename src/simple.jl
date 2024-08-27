@@ -1,16 +1,35 @@
 """
-    struct SimpleTimes <: TimeStructure
-A simple time structure conisisting of consecutive time periods of varying duration
+    struct SimpleTimes{T} <: TimeStructure{T}
+
+    SimpleTimes(len::Integer, duration::Vector{T}) where {T}
+    SimpleTimes(len::Integer, duration::Number)
+    SimpleTimes(dur::Vector{T}) where {T<:Number}
+
+A simple time structure consisting of consecutive time periods of varying duration.
+`SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
+
+An alternative for `SimpleTimes` is [`CalendarTimes`](@ref)
 
 ## Example
 ```julia
 uniform = SimpleTimes(5, 1.0) # 5 periods of equal length
-varying = SimpleTimes([2, 2, 2, 4, 10])
+varying = SimpleTimes([2, 2, 2, 4, 10]) # 5 periods of varying length
 ```
 """
 struct SimpleTimes{T} <: TimeStructure{T}
     len::Int
     duration::Vector{T}
+    function SimpleTimes(len::Integer, duration::Vector{T}) where {T}
+        if len > length(duration)
+            throw(
+                ArgumentError(
+                    "The length of `duration` cannot be less than the length `len` of `SimpleTimes`.",
+                ),
+            )
+        else
+            new{T}(len, duration)
+        end
+    end
 end
 function SimpleTimes(len::Integer, duration::Number)
     return SimpleTimes(len, fill(duration, len))

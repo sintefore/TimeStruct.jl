@@ -32,6 +32,8 @@ end
     @test first(ts) == TimeStruct.SimplePeriod(1, 4)
     @test duration(first(ts)) == 4
     @test TimeStruct._total_duration(ts) == 24
+
+    @test_throws ArgumentError SimpleTimes(15, [4, 4, 4, 6, 3, 3])
 end
 
 @testitem "SimpleTimes with units" begin
@@ -161,6 +163,14 @@ end
         end
     end
     @test length(pers) == length(ts)
+
+    # Testing the internal constructor
+    @test_throws ArgumentError OperationalScenarios(2, [day, week], [1.0])
+    @test_throws ArgumentError OperationalScenarios(2, [day], [0.5, 0.5])
+    msg =
+        "The sum of the probablity vector is given by $(2.0). " *
+        "This can lead to unexpected behaviour."
+    @test_logs (:warn, msg) OperationalScenarios([day, day], [0.5, 1.5])
 end
 
 @testitem "RepresentativePeriods" begin
@@ -178,6 +188,36 @@ end
     pers = [t for rp in repr_periods(simple) for t in rp]
     @test pers == collect(simple)
     @test sum(duration(t) * multiple(t) for t in pers) == 10
+
+    # Testing the internal constructor
+    day = SimpleTimes(24, 1)
+    @test_throws ArgumentError RepresentativePeriods(2, 8760, [1.0], [day, day])
+    @test_throws ArgumentError RepresentativePeriods(2, 8760, [0.5, 0.5], [day])
+    msg =
+        "The sum of the `period_share` vector is given by $(2.0). " *
+        "This can lead to unexpected behaviour."
+    @test_logs (:warn, msg) RepresentativePeriods(8760, [0.5, 1.5], [day, day])
+
+    # Testing of the external constructors providing the same case
+    ts_1 = RepresentativePeriods(2, 8760, [0.5, 0.5], [day, day])
+    ts_2 = RepresentativePeriods(2, 8760, day)
+    ts_3 = RepresentativePeriods(8760, [0.5, 0.5], [day, day])
+    ts_4 = RepresentativePeriods(8760, [day, day])
+    ts_5 = RepresentativePeriods(8760, [0.5, 0.5], day)
+
+    fields = fieldnames(typeof(ts_1))
+    @test sum(
+        getfield(ts_1, field) == getfield(ts_2, field) for field in fields
+    ) == length(fields)
+    @test sum(
+        getfield(ts_1, field) == getfield(ts_3, field) for field in fields
+    ) == length(fields)
+    @test sum(
+        getfield(ts_1, field) == getfield(ts_4, field) for field in fields
+    ) == length(fields)
+    @test sum(
+        getfield(ts_1, field) == getfield(ts_5, field) for field in fields
+    ) == length(fields)
 end
 
 @testitem "RepresentativePeriods with units" begin
@@ -646,11 +686,11 @@ end
         [0.2, 0.8],
         [SimpleTimes(5, 1), SimpleTimes(5, 1)],
     )
-    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1)
+    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1.0)
     test_invariants(two_level)
 
     repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
-    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1)
+    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1.0)
     test_invariants(two_level)
 end
 
