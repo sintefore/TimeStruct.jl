@@ -931,6 +931,72 @@ end
     @test dsp[ops[4]] == 5
 end
 
+@testitem "TwoLevelTree and opscenarios" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+
+    ops1 = collect(regtree)
+    ops2 = [
+        t for sp in strat_periods(regtree) for sc in opscenarios(sp) for t in sc
+    ]
+    @test length(ops1) == length(ops2)
+    for (i, op) in enumerate(ops1)
+        @test op == ops2[i]
+    end
+
+    @test sum(length(opscenarios(sp)) for sp in strat_periods(regtree)) == 30
+    @test sum(
+        length(sc) for sp in strat_periods(regtree) for sc in opscenarios(sp)
+    ) == 150
+
+    sregtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    ops1 = collect(sregtree)
+    ops2 = [
+        t for sp in strat_periods(sregtree) for sc in opscenarios(sp) for
+        t in sc
+    ]
+    @test length(ops1) == length(ops2)
+    @test ops1 == ops2
+
+    @test sum(length(opscenarios(sp)) for sp in strat_periods(sregtree)) == 10
+    @test sum(
+        length(sc) for sp in strat_periods(sregtree) for sc in opscenarios(sp)
+    ) == 50
+end
+
+@testitem "Strategic scenarios with operational scenarios" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+
+    @test length(TimeStruct.strategic_scenarios(regtree)) == 6
+
+    for sc in TimeStruct.strategic_scenarios(regtree)
+        @test length(sc) == length(collect(sc))
+
+        for (prev_sp, sp) in withprev(sc)
+            if !isnothing(prev_sp)
+                @test TimeStruct._strat_per(prev_sp) + 1 ==
+                      TimeStruct._strat_per(sp)
+            end
+        end
+    end
+end
+
+@testitem "TwoLevel as a tree" begin
+    two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+
+    scens = TimeStruct.strategic_scenarios(two_level)
+    @test length(scens) == 1
+    sps = collect(sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc))
+    @test length(sps) == 5
+end
+
 @testitem "Profiles constructors" begin
     # Checking the input type
     @test_throws MethodError FixedProfile("wrong_input")
@@ -1024,72 +1090,6 @@ end
     sprofile = StrategicProfile([rprofile, 2 * rprofile, 3 * rprofile])
     vals = collect(sprofile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
-end
-
-@testitem "TwoLevelTree and opscenarios" begin
-    regtree = TimeStruct.regular_tree(
-        5,
-        [3, 2],
-        OperationalScenarios(3, SimpleTimes(5, 1)),
-    )
-
-    ops1 = collect(regtree)
-    ops2 = [
-        t for sp in strat_periods(regtree) for sc in opscenarios(sp) for t in sc
-    ]
-    @test length(ops1) == length(ops2)
-    for (i, op) in enumerate(ops1)
-        @test op == ops2[i]
-    end
-
-    @test sum(length(opscenarios(sp)) for sp in strat_periods(regtree)) == 30
-    @test sum(
-        length(sc) for sp in strat_periods(regtree) for sc in opscenarios(sp)
-    ) == 150
-
-    sregtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
-    ops1 = collect(sregtree)
-    ops2 = [
-        t for sp in strat_periods(sregtree) for sc in opscenarios(sp) for
-        t in sc
-    ]
-    @test length(ops1) == length(ops2)
-    @test ops1 == ops2
-
-    @test sum(length(opscenarios(sp)) for sp in strat_periods(sregtree)) == 10
-    @test sum(
-        length(sc) for sp in strat_periods(sregtree) for sc in opscenarios(sp)
-    ) == 50
-end
-
-@testitem "Strategic scenarios with operational scenarios" begin
-    regtree = TimeStruct.regular_tree(
-        5,
-        [3, 2],
-        OperationalScenarios(3, SimpleTimes(5, 1)),
-    )
-
-    @test length(strategic_scenarios(regtree)) == 6
-
-    for sc in strategic_scenarios(regtree)
-        @test length(sc) == length(collect(sc))
-
-        for (prev_sp, sp) in withprev(sc)
-            if !isnothing(prev_sp)
-                @test TimeStruct._strat_per(prev_sp) + 1 ==
-                      TimeStruct._strat_per(sp)
-            end
-        end
-    end
-end
-
-@testitem "TwoLevel as a tree" begin
-    two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
-
-    scens = TimeStruct.strategic_scenarios(two_level)
-    @test length(scens) == 1
-    sps = collect(sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc))
-    @test length(sps) == 5
 end
 
 @testitem "Iteration utilities" begin

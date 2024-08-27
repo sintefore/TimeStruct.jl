@@ -129,7 +129,7 @@ Base.last(scen::StrategicScenario) = last(scen.nodes)
 function Base.iterate(scs::StrategicScenario, state = nothing)
     next = isnothing(state) ? iterate(scs.nodes) : iterate(scs.nodes, state)
     isnothing(next) && return nothing
-    return next[1].strat_node, next[2]
+    return next[1], next[2]
 end
 
 """
@@ -273,4 +273,17 @@ function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T, OP}
     n = iterate(w.itr, state[2])
     n === nothing && return n
     return (n[1].parent, n[1]), (n[1], n[2])
+end
+
+
+"""
+    opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
+
+Returns a collection of all operational scenarios for a [`TwoLevelTree`](@ref) time structure.
+"""
+function opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
+    return collect(
+        Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
+    )
+    return opscens
 end
