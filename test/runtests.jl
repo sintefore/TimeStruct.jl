@@ -884,6 +884,8 @@ end
     @test length(ops) == 5 * 10
     ops2 = collect(regtree)
     @test ops == ops2
+    ops3 = [t for sp in strategic_periods(regtree) for t in sp]
+    @test ops == ops3
 
     op = ops[31]
     @test TimeStruct._opscen(op) == 1
@@ -892,20 +894,20 @@ end
     @test TimeStruct._oper(op) == 1
     @test duration(op) == 1
     @test probability(op) == 1 / 6
-    @test typeof(op) == eltype(typeof(regtree))
+    @test op isa eltype(typeof(regtree))
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(probability(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(TimeStruct.probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
     node = nodes[2]
     @test length(node) == 5
-    @test typeof(first(node)) == eltype(typeof(node))
+    @test first(node) isa eltype(typeof(node))
 
     leaves = TimeStruct.leaves(regtree)
     @test length(leaves) == TimeStruct.nleaves(regtree)
 
-    scens = collect(TimeStruct.scenarios(regtree))
+    scens = collect(TimeStruct.strategic_scenarios(regtree))
     @test length(scens[2].nodes) == regtree.len
     @test scens[3].nodes[1] == regtree.nodes[1]
 
@@ -1060,16 +1062,16 @@ end
     ) == 50
 end
 
-@testitem "Strategic scenarios" begin
+@testitem "Strategic scenarios with operational scenarios" begin
     regtree = TimeStruct.regular_tree(
         5,
         [3, 2],
         OperationalScenarios(3, SimpleTimes(5, 1)),
     )
 
-    @test length(scenarios(regtree)) == 6
+    @test length(strategic_scenarios(regtree)) == 6
 
-    for sc in scenarios(regtree)
+    for sc in strategic_scenarios(regtree)
         @test length(sc) == length(collect(sc))
 
         for (prev_sp, sp) in withprev(sc)
@@ -1084,9 +1086,9 @@ end
 @testitem "TwoLevel as a tree" begin
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
 
-    scens = scenarios(two_level)
+    scens = TimeStruct.strategic_scenarios(two_level)
     @test length(scens) == 1
-    sps = collect(sp for sc in scenarios(two_level) for sp in strat_periods(sc))
+    sps = collect(sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc))
     @test length(sps) == 5
 end
 
