@@ -248,9 +248,10 @@ although the meaining remains unchanged.
 struct StratTreeNodes{T, OP}
     ts::TwoLevelTree{T, OP}
 end
-strat_periods(ts::TwoLevelTree) = StratTreeNodes(ts)
-Base.length(sps::StratTreeNodes) = length(sps.ts.nodes)
 
+# Adding methods to existing Julia functions
+Base.length(sps::StratTreeNodes) = length(sps.ts.nodes)
+Base.eltype(_::Type{StratTreeNodes{T, OP}}) where{T, OP} = OP
 function Base.iterate(stps::StratTreeNodes, state = nothing)
     next = isnothing(state) ? 1 : state + 1
     next == length(stps) + 1 && return nothing
@@ -275,13 +276,28 @@ function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T, OP}
     return (n[1].parent, n[1]), (n[1], n[2])
 end
 
+"""
+    strat_periods(ts::TwoLevelTree)
+
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strat_periods` returns a
+[`StratTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
+
+These are equivalent of a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
+"""
+strat_periods(ts::TwoLevelTree) = StratTreeNodes(ts)
 
 """
-    opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
+    opscenarios(ts::TwoLevelTree)
 
-Returns a collection of all operational scenarios for a [`TwoLevelTree`](@ref) time structure.
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), `opscenarios` returns an `Array` of
+all [`StratNodeOperationalScenario`](@ref)s or [`StratNodeReprOpscenario`](@ref)s types,
+dependening on whether the [`TwoLevelTree`](@ref) includes [`RepresentativePeriods`](@ref)
+or not.
+
+These are equivalent of a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
+structure.
 """
-function opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
+function opscenarios(ts::TwoLevelTree)
     return collect(
         Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
     )
@@ -289,11 +305,14 @@ function opscenarios(ts::TwoLevelTree{T,OP}) where {T,OP}
 end
 
 """
-    repr_periods(ts::TwoLevelTree{T,OP})
+    repr_periods(ts::TwoLevelTree)
 
-Returns a collection of all representative periods for a [`TwoLevelTree`](@ref) time structure.
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), `repr_periods` returns an `Array` of
+all [`StratNodeReprPeriod`](@ref)s.
+
+These are equivalent of a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
-function repr_periods(ts::TwoLevelTree{T,OP}) where {T,OP}
+function repr_periods(ts::TwoLevelTree)
     return collect(
         Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)),
     )
