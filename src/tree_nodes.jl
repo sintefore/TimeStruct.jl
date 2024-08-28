@@ -73,7 +73,7 @@ function Base.iterate(n::StratNode, state = nothing)
 end
 
 """
-    struct StratNodeOperationalScenario{T} <: AbstractOperationalScenario{T}
+    struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
 
 A structure representing a single operational scenario for a strategic node supporting
 iteration over its time periods. It is created through iterating through
@@ -82,7 +82,7 @@ iteration over its time periods. It is created through iterating through
 It is equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
 structure when utilizing a [`TwolevelTree`](@ref).
 """
-struct StratNodeOperationalScenario{T} <: AbstractOperationalScenario{T}
+struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     scen::Int
@@ -90,7 +90,7 @@ struct StratNodeOperationalScenario{T} <: AbstractOperationalScenario{T}
     mult_scen::Float64
     prob_branch::Float64
     prob_scen::Float64
-    operational::TimeStructure{T}
+    operational::OP
 end
 
 _opscen(osc::StratNodeOperationalScenario) = osc.scen
@@ -108,27 +108,7 @@ StrategicIndexable(::Type{<:StratNodeOperationalScenario}) = HasStratIndex()
 function Base.show(io::IO, osc::StratNodeOperationalScenario)
     return print(io, "sp$(osc.sp)-br$(osc.branch)-sc$(osc.scen)")
 end
-Base.length(osc::StratNodeOperationalScenario) = length(osc.operational)
 Base.eltype(_::StratNodeOperationalScenario) = TreePeriod
-function Base.last(osc::StratNodeOperationalScenario)
-    per = last(osc.operational)
-    return TreePeriod(osc, per)
-end
-function Base.getindex(osc::StratNodeOperationalScenario, index)
-    per = osc.operational[index]
-    return TreePeriod(osc, per)
-end
-function Base.eachindex(osc::StratNodeOperationalScenario)
-    return eachindex(osc.operational)
-end
-function Base.iterate(osc::StratNodeOperationalScenario, state = nothing)
-    next =
-        isnothing(state) ? iterate(osc.operational) :
-        iterate(osc.operational, state)
-    isnothing(next) && return nothing
-
-    return TreePeriod(osc, next[1]), next[2]
-end
 
 """
     struct StratNodeOpScens <: AbstractTreeStructure
@@ -209,27 +189,7 @@ StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
 function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(rp.sp)-br$(rp.branch)-rp$(rp.rp)")
 end
-Base.length(snrp::StratNodeReprPeriod) = length(snrp.operational)
 Base.eltype(_::StratNodeReprPeriod) = TreePeriod
-function Base.last(rp::StratNodeReprPeriod)
-    per = last(rp.operational)
-    return TreePeriod(rp, per)
-end
-function Base.getindex(rp::StratNodeReprPeriod, index)
-    per = rp.operational[index]
-    return TreePeriod(rp, per)
-end
-function Base.eachindex(rp::StratNodeReprPeriod)
-    return eachindex(rp.operational)
-end
-function Base.iterate(rp::StratNodeReprPeriod, state = nothing)
-    next =
-        isnothing(state) ? iterate(rp.operational) :
-        iterate(rp.operational, state)
-    isnothing(next) && return nothing
-
-    return TreePeriod(rp, next[1]), next[2]
-end
 
 """
     struct StratNodeReprPeriods <: AbstractTreeStructure
@@ -278,7 +238,7 @@ Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
 A structure representing a single operational scenario for a representative period in A
 [`TwoLevelTree`](@ref) structure supporting iteration over its time periods.
 """
-struct StratNodeReprOpscenario{T} <: AbstractOperationalScenario{T}
+struct StratNodeReprOpscenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     rp::Int
@@ -287,7 +247,7 @@ struct StratNodeReprOpscenario{T} <: AbstractOperationalScenario{T}
     mult_rp::Float64
     prob_branch::Float64
     prob_scen::Float64
-    operational::TimeStructure{T}
+    operational::OP
 end
 
 _opscen(osc::StratNodeReprOpscenario) = osc.opscen
@@ -309,31 +269,7 @@ ScenarioIndexable(::Type{<:StratNodeReprOpscenario}) = HasScenarioIndex()
 function Base.show(io::IO, osc::StratNodeReprOpscenario)
     return print(io, "sp$(osc.sp)-br$(osc.branch)-rp$(osc.rp)-sc$(osc.opscen)")
 end
-Base.length(osc::StratNodeReprOpscenario) = length(osc.operational)
 Base.eltype(_::StratNodeReprOpscenario) = TreePeriod
-function Base.last(osc::StratNodeReprOpscenario)
-    per = last(osc.operational)
-    return TreePeriod(osc, per)
-end
-
-function Base.getindex(osc::StratNodeReprOpscenario, index)
-    per = osc.operational[index]
-    return TreePeriod(osc, per)
-end
-
-function Base.eachindex(osc::StratNodeReprOpscenario)
-    return eachindex(osc.operational)
-end
-
-# Iterate the time periods of a StratNodeReprOpscenario
-function Base.iterate(osc::StratNodeReprOpscenario, state = nothing)
-    next =
-        isnothing(state) ? iterate(osc.operational) :
-        iterate(osc.operational, state)
-    isnothing(next) && return nothing
-
-    return TreePeriod(osc, next[1]), next[2]
-end
 
 """
     struct StratNodeReprOpscenarios <: AbstractTreeStructure
@@ -384,3 +320,28 @@ function strat_node_period(oscs::StratNodeReprOpscenarios, next, state)
 end
 
 Base.eltype(_::StratNodeReprOpscenarios) = StratNodeReprOpscenario
+
+# All introduced subtypes require the same procedures for the iteration and indexing.
+# Hence, all introduced types use the same functions.
+TreeStructure = Union{StratNodeOperationalScenario, StratNodeReprPeriod, StratNodeReprOpscenario}
+Base.length(ts::TreeStructure) = length(ts.operational)
+function Base.last(ts::TreeStructure)
+    per = last(ts.operational)
+    return TreePeriod(ts, per)
+end
+
+function Base.getindex(ts::TreeStructure, index)
+    per = ts.operational[index]
+    return TreePeriod(ts, per)
+end
+function Base.eachindex(ts::TreeStructure)
+    return eachindex(ts.operational)
+end
+function Base.iterate(ts::TreeStructure, state = nothing)
+    next =
+        isnothing(state) ? iterate(ts.operational) :
+        iterate(ts.operational, state)
+    isnothing(next) && return nothing
+
+    return TreePeriod(ts, next[1]), next[2]
+end
