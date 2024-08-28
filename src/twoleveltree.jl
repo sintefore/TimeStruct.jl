@@ -110,6 +110,25 @@ function Base.iterate(itr::TwoLevelTree, state)
     (i, next[2])
 end
 
+# Convenient constructors for the individual types
+function TreePeriod(n::StratNode, per::P) where {P<:Union{TimePeriod, TimeStructure}}
+    mult = n.mult_sp * multiple(per)
+    return TreePeriod(n.sp, n.branch, n.prob_branch, mult, per)
+end
+function TreePeriod(osc::StratNodeOperationalScenario, per::P) where {P<:Union{TimePeriod, AbstractOperationalScenario}}
+    mult = osc.mult_sp * multiple(per)
+    return TreePeriod(osc.sp, osc.branch, osc.prob_branch, mult, per)
+end
+function TreePeriod(rp::StratNodeReprPeriod, per::P) where {P<:Union{TimePeriod, AbstractRepresentativePeriod}}
+    mult = rp.mult_sp * multiple(per)
+    return TreePeriod(rp.sp, rp.branch, rp.prob_branch, mult, per)
+end
+function TreePeriod(osc::StratNodeReprOpscenario, per::P) where {P<:Union{TimePeriod, AbstractOperationalScenario}}
+    rper = ReprPeriod(osc.rp, per, osc.mult_rp * multiple(per))
+    mult = osc.mult_sp * osc.mult_rp * multiple(per)
+    return TreePeriod(osc.sp, osc.branch, osc.prob_branch, mult, rper)
+end
+
 """
     struct StrategicScenario
 
