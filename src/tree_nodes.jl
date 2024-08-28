@@ -5,6 +5,23 @@ Abstract base type for all tree nodes within a [`TwoLevelTree`](@ref) type.
 """
 abstract type AbstractTreeNode{T} <: TimeStructure{T} end
 
+"""
+    AbstractTreeStructure
+
+Abstract base type for all tree timestructures within a [`TwoLevelTree`](@ref) type.
+"""
+abstract type AbstractTreeStructure end
+
+Base.length(oscs::AbstractTreeStructure) = length(_oper_struct(oscs))
+function Base.iterate(oscs::AbstractTreeStructure, state = (nothing, 1))
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(oscs)) :
+        iterate(_oper_struct(oscs), state[1])
+    isnothing(next) && return nothing
+
+    return strat_node_period(oscs, next[1], state[2]), (next[2], state[2] + 1)
+end
+
 abstract type StrategicTreeIndexable end
 struct HasStratTreeIndex <: StrategicTreeIndexable end
 struct NoStratTreeIndex <: StrategicTreeIndexable end
@@ -114,12 +131,12 @@ function Base.iterate(osc::StratNodeOperationalScenario, state = nothing)
 end
 
 """
-    struct StratNodeOpScens
+    struct StratNodeOpScens <: AbstractTreeStructure
 
 Type for iterating through the individual operational scenarios of a [`StratNode`](@ref).
 It is automatically created through the function [`opscenarios`](@ref).
 """
-struct StratNodeOpScens
+struct StratNodeOpScens <: AbstractTreeStructure
     sp::Int
     branch::Int
     mult_sp::Float64
@@ -141,28 +158,21 @@ function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return StratNodeOpScens(n, opscenarios(n.operational))
 end
 
-Base.length(oscs::StratNodeOpScens) = length(oscs.opscens)
-Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
-function Base.iterate(oscs::StratNodeOpScens, state = (nothing, 1))
-    next =
-        isnothing(state[1]) ? iterate(oscs.opscens) :
-        iterate(oscs.opscens, state[1])
-    isnothing(next) && return nothing
-
-    scen = state[2]
+_oper_struct(oscs::StratNodeOpScens) = oscs.opscens
+function strat_node_period(oscs::StratNodeOpScens, next, state)
     return StratNodeOperationalScenario(
         oscs.sp,
         oscs.branch,
-        scen,
+        state,
         oscs.mult_sp,
-        mult_scen(next[1]),
+        mult_scen(next),
         oscs.prob_branch,
-        probability(next[1]),
-        next[1],
-    ),
-    (next[2], scen + 1)
+        probability(next),
+        next,
+    )
 end
 
+Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
 
 """
     struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
@@ -197,7 +207,7 @@ StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
 
 # Adding methods to existing Julia functions
 function Base.show(io::IO, rp::StratNodeReprPeriod)
-    return print(io, "sp$(rp.sp)-br$(rp.branch)-sc$(rp.rp)")
+    return print(io, "sp$(rp.sp)-br$(rp.branch)-rp$(rp.rp)")
 end
 Base.length(snrp::StratNodeReprPeriod) = length(snrp.operational)
 Base.eltype(_::StratNodeReprPeriod) = TreePeriod
@@ -222,12 +232,12 @@ function Base.iterate(rp::StratNodeReprPeriod, state = nothing)
 end
 
 """
-    struct StratNodeReprPeriods
+    struct StratNodeReprPeriods <: AbstractTreeStructure
 
 Type for iterating through the individual presentative periods of a [`StratNode`](@ref).
 It is automatically created through the function [`repr_periods`](@ref).
 """
-struct StratNodeReprPeriods
+struct StratNodeReprPeriods <: AbstractTreeStructure
     sp::Int
     branch::Int
     mult_sp::Float64
@@ -247,27 +257,20 @@ Iterator that iterates over operational scenarios for a specific strategic node 
 function repr_periods(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return StratNodeReprPeriods(n, repr_periods(n.operational))
 end
-
-Base.length(rps::StratNodeReprPeriods) = length(rps.repr)
-Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
-function Base.iterate(rps::StratNodeReprPeriods, state = (nothing, 1))
-    next =
-        isnothing(state[1]) ? iterate(rps.repr) :
-        iterate(rps.repr, state[1])
-    isnothing(next) && return nothing
-
-    scen = state[2]
+_oper_struct(rps::StratNodeReprPeriods) = rps.repr
+function strat_node_period(rps::StratNodeReprPeriods, next, state)
     return StratNodeReprPeriod(
         rps.sp,
         rps.branch,
-        scen,
+        state,
         rps.mult_sp,
-        mult_repr(next[1]),
+        mult_repr(next),
         rps.prob_branch,
-        next[1],
-    ),
-    (next[2], scen + 1)
+        next,
+    )
 end
+
+Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
 
 """
     struct StratNodeReprOpscenario{T} <: AbstractOperationalScenario{T}
@@ -333,13 +336,13 @@ function Base.iterate(osc::StratNodeReprOpscenario, state = nothing)
 end
 
 """
-    struct StratNodeReprOpscenarios
+    struct StratNodeReprOpscenarios <: AbstractTreeStructure
 
 Type for iterating through the individual operational scenarios of a
 [`StratNodeReprPeriod`](@ref). It is automatically created through the function
 [`opscenarios`](@ref).
 """
-struct StratNodeReprOpscenarios
+struct StratNodeReprOpscenarios <: AbstractTreeStructure
     sp::Int
     branch::Int
     rp::Int
@@ -356,7 +359,8 @@ end
 """
     opscenarios(sp::StratNodeReprPeriod{T,RepresentativePeriod{T,OP}})
 
-Iterator that iterates over operational scenarios for a specific strategic node in the tree.
+Iterator that iterates over operational scenarios for a specific representative period of
+a strategic node in the tree.
 """
 function opscenarios(
     rp::StratNodeReprPeriod{T,RepresentativePeriod{T,OP}},
@@ -364,25 +368,19 @@ function opscenarios(
     return StratNodeReprOpscenarios(rp, opscenarios(rp.operational.operational))
 end
 
-Base.length(oscs::StratNodeReprOpscenarios) = length(oscs.opscens)
-Base.eltype(_::StratNodeReprOpscenarios) = StratNodeReprOpscenario
-function Base.iterate(oscs::StratNodeReprOpscenarios, state = (nothing, 1))
-    next =
-        isnothing(state[1]) ? iterate(oscs.opscens) :
-        iterate(oscs.opscens, state[1])
-    isnothing(next) && return nothing
-
-    scen = state[2]
+_oper_struct(oscs::StratNodeReprOpscenarios) = oscs.opscens
+function strat_node_period(oscs::StratNodeReprOpscenarios, next, state)
     return StratNodeReprOpscenario(
         oscs.sp,
         oscs.branch,
         oscs.rp,
-        scen,
+        state,
         oscs.mult_sp,
         oscs.mult_rp,
         oscs.prob_branch,
-        probability(next[1]),
-        next[1],
-    ),
-    (next[2], scen + 1)
+        probability(next),
+        next,
+    )
 end
+
+Base.eltype(_::StratNodeReprOpscenarios) = StratNodeReprOpscenario

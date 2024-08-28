@@ -79,22 +79,12 @@ function Base.isless(t1::TreePeriod, t2::TreePeriod)
     return t1.period < t2.period
 end
 
-# Iterate through all time periods as OperationalPeriods
-function Base.iterate(itr::TwoLevelTree)
-    spn = itr.nodes[1]
-    next = iterate(spn.operational)
-    next === nothing && return nothing
-    per = next[1]
-
-    mult = _multiple_adj(itr, 1) * multiple(per)
-    return TreePeriod(spn.sp, spn.branch, probability_branch(spn), mult, per),
-    (1, next[2])
-end
-
-function Base.iterate(itr::TwoLevelTree, state)
+function Base.iterate(itr::TwoLevelTree, state = (1, nothing))
     i = state[1]
     spn = itr.nodes[i]
-    next = iterate(spn.operational, state[2])
+    next =
+        isnothing(state[2]) ? iterate(spn.operational) :
+        iterate(spn.operational, state[2])
     if next === nothing
         i = i + 1
         if i > length(itr.nodes)
@@ -255,7 +245,7 @@ function regular_tree(
 end
 
 """
-    struct StratTreeNodes{T, OP}
+    struct StratTreeNodes{T, OP} <: AbstractTreeStructure
 
 Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](@ref).
 It is automatically created through the function [`strat_periods`](@ref), and hence,
@@ -264,7 +254,7 @@ It is automatically created through the function [`strat_periods`](@ref), and he
 Iterating through `StratTreeNodes` using the WithPrev iterator changes the behaviour,
 although the meaining remains unchanged.
 """
-struct StratTreeNodes{T, OP}
+struct StratTreeNodes{T, OP} <: AbstractTreeStructure
     ts::TwoLevelTree{T, OP}
 end
 
@@ -276,12 +266,6 @@ function Base.iterate(stps::StratTreeNodes, state = nothing)
     next == length(stps) + 1 && return nothing
     return stps.ts.nodes[next], next
 end
-# function Base.iterate(stps::StratTreeNodes)
-#     return stps.ts.nodes[state], 1
-# end
-# function Base.iterate(stps::StratTreeNodes, state)
-#     return stps.ts.nodes[state + 1], state + 1
-# end
 
 function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}) where {T, OP}
     n = iterate(w.itr)
@@ -320,7 +304,11 @@ function opscenarios(ts::TwoLevelTree)
     return collect(
         Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
     )
-    return opscens
+end
+function opscenarios(ts::TwoLevelTree{T,StratNode{S,T,OP}}) where {S,T,OP<:RepresentativePeriods}
+    return collect(
+        Iterators.flatten(opscenarios(rp) for sp in strategic_periods(ts) for rp in repr_periods(sp)),
+    )
 end
 
 """
