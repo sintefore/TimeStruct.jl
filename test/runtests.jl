@@ -183,14 +183,54 @@ end
         [0.4, 0.6],
         [SimpleTimes(24, 1), SimpleTimes(24, 1)],
     )
-    @test length(rep) == length(collect(rep))
+
+    # Test of direct functions of `RepresentativePeriods`
+    rps = collect(rep)
+    @test length(rep) == length(rps)
     @test TimeStruct._total_duration(rep) == 8760
+    @test TimeStruct._multiple_adj(rep, 1) == 8760 * 0.4 / 24
+    @test last(rep) == rps[end]
+    @test eltype(rep) == TimeStruct.ReprPeriod{TimeStruct.SimplePeriod{Int}}
+
+    # Test of direct functions of `ReprPeriod`
+    @test isfirst(rps[1])
+    @test !isfirst(rps[end])
+    @test duration(rps[15]) == 1
+    @test multiple(rps[1]) == 8760 * 0.4 / 24
+    @test multiple(rps[25]) == 8760 * 0.6 / 24
+    @test probability(rps[1]) == 1
+    @test rps[1] < rps[2]
+    @test rps[1] < rps[25]
+
+    # Test of direct functions of `ReprPeriods`
+    rpers = repr_periods(rep)
+    @test eltype(rpers) ==
+          TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}}
+    @test last(rpers) == collect(rpers)[end]
+    @test length(rpers) == 2
+    index = eachindex(rpers)
+    @test sum(rpers[idx] == collect(rpers)[idx] for idx in index) == 2
+
+    # Test of direct functions of `RepresentativePeriod`
+    rp = rpers[index[2]]
+    @test TimeStruct._rper(rp) == 2
+    @test TimeStruct.mult_repr(rp) == 8760 * 0.6 / 24
+    @test eltype(rp) == TimeStruct.ReprPeriod{TimeStruct.SimplePeriod{Int64}}
+    @test length(rp) == 24
+    index = eachindex(rp)
+    @test sum(rp[idx] == collect(rp)[idx] for idx in index) == 24
+    @test last(rp) == rp[24]
 
     # SimpleTimes as one representative period
     simple = SimpleTimes(10, 1)
-    pers = [t for rp in repr_periods(simple) for t in rp]
+    rpers = repr_periods(simple)
+    pers = [t for rp in rpers for t in rp]
     @test pers == collect(simple)
+    @test last(pers) == last(simple)
     @test sum(duration(t) * multiple(t) for t in pers) == 10
+    @test length(rpers) == 1
+    @test eltype(rpers) == TimeStruct.SingleReprPeriod{Int64,SimpleTimes{Int64}}
+    @test last(rpers) == collect(rpers)[1]
 
     # Testing the internal constructor
     day = SimpleTimes(24, 1)

@@ -111,7 +111,9 @@ function Base.length(itr::OperationalScenarios)
     return sum(length(itr.scenarios[sc]) for sc in 1:itr.len)
 end
 
-Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
+function Base.eltype(::Type{OperationalScenarios{T,OP}}) where {T,OP}
+    return ScenarioPeriod{eltype(OP)}
+end
 
 function Base.last(itr::OperationalScenarios)
     return ScenarioPeriod(

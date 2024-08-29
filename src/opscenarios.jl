@@ -185,7 +185,7 @@ Iterator that iterates over operational scenarios in a `RepresentativePeriod` ti
 function opscenarios(
     rep::RepresentativePeriod{T,OperationalScenarios{T,OP}},
 ) where {T,OP}
-    return RepOpScens(rep.rper, rep.mult_rp, rep.operational)
+    return RepOpScens(_rper(rep), mult_repr(rep), rep.operational)
 end
 
 Base.length(ros::RepOpScens) = length(ros.op_scens)
@@ -372,8 +372,10 @@ _opscen(sro::StratReprOpscenario) = sro.opscen
 _strat_per(sro::StratReprOpscenario) = sro.sp
 _rper(sro::StratReprOpscenario) = sro.rp
 
+mult_repr(sro::StratReprOpscenario) = sro.mult_rp
+
 function Base.show(io::IO, srop::StratReprOpscenario)
-    return print(io, "sp$(srop.sp)-rp$(srop.rp)-sc$(srop.opscen)")
+    return print(io, "sp$(srop.sp)-rp$(_rper(srop))-sc$(srop.opscen)")
 end
 
 StrategicIndexable(::Type{<:StratReprOpscenario}) = HasStratIndex()
@@ -389,11 +391,11 @@ function Base.iterate(os::StratReprOpscenario, state = nothing)
         iterate(os.operational, state)
     isnothing(next) && return nothing
 
-    period = ReprPeriod(os.rp, next[1], os.mult_rp * multiple(next[1]))
+    period = ReprPeriod(_rper(os), next[1], mult_repr(os) * multiple(next[1]))
     return OperationalPeriod(
         os.sp,
         period,
-        os.mult_sp * os.mult_rp * multiple(next[1]),
+        os.mult_sp * mult_repr(os) * multiple(next[1]),
     ),
     next[2]
 end
@@ -406,17 +408,17 @@ end
 
 function Base.last(sro::StratReprOpscenario)
     per = last(sro.operational)
-    rper = ReprPeriod(sro.rp, per, sro.mult_rp * multiple(per))
+    rper = ReprPeriod(_rper(sro), per, mult_repr(sro) * multiple(per))
     return OperationalPeriod(
         sro.sp,
         rper,
-        sro.mult_sp * sro.mult_rp * multiple(per),
+        sro.mult_sp * mult_repr(sro) * multiple(per),
     )
 end
 
 function Base.getindex(os::StratReprOpscenario, index)
     mult = stripunit(os.duration * os.op_per_strat / duration(os.operational))
-    period = ReprPeriod(os.rp, os.operational[index], mult)
+    period = ReprPeriod(_rper(os), os.operational[index], mult)
     return OperationalPeriod(os.sp, period, mult)
 end
 
@@ -450,10 +452,10 @@ function Base.iterate(srop::StratReprOpscenarios, state = (nothing, 1))
     scen = state[2]
     return StratReprOpscenario(
         srop.srp.sp,
-        srop.srp.rp,
+        _rper(srop.srp),
         scen,
         srop.srp.mult_sp,
-        srop.srp.mult_rp,
+        mult_repr(srop.srp),
         probability(next[1]),
         next[1],
     ),
@@ -490,7 +492,7 @@ function Base.last(
     ss::SingleScenario{T,RepresentativePeriod{T,OP}},
 ) where {T,OP}
     period = last(ss.ts.operational)
-    return ReprPeriod(ss.ts.rper, period, ss.ts.mult_rp * multiple(period))
+    return ReprPeriod(_rper(ss.ts), period, mult_repr(ss.ts) * multiple(period))
 end
 
 function Base.getindex(ss::SingleScenario, index)

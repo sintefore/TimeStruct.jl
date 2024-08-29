@@ -126,68 +126,70 @@ function RepresentativePeriods(
     )
 end
 
-_total_duration(ts::RepresentativePeriods) = ts.duration
+_total_duration(rpers::RepresentativePeriods) = rpers.duration
 
-function _multiple_adj(ts::RepresentativePeriods, rper)
+function _multiple_adj(rpers::RepresentativePeriods, rp)
     mult =
-        _total_duration(ts) * ts.period_share[rper] /
-        _total_duration(ts.rep_periods[rper])
+        _total_duration(rpers) * rpers.period_share[rp] /
+        _total_duration(rpers.rep_periods[rp])
     return stripunit(mult)
 end
 
-# Iteration through all time periods for the representative periods
-function Base.iterate(ts::RepresentativePeriods)
-    rp = 1
-    next = iterate(ts.rep_periods[rp])
-    next === nothing && return nothing
-    mult = _multiple_adj(ts, rp) * multiple(next[1])
-    return ReprPeriod(rp, next[1], mult), (rp, next[2])
-end
-
-function Base.iterate(ts::RepresentativePeriods, state)
-    rp = state[1]
-    next = iterate(ts.rep_periods[rp], state[2])
+function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
+    rp = state[2]
+    next =
+        isnothing(state[1]) ? iterate(rpers.rep_periods[rp]) :
+        iterate(rpers.rep_periods[rp], state[1])
     if next === nothing
         rp = rp + 1
-        if rp > ts.len
+        if rp > rpers.len
             return nothing
         end
-        next = iterate(ts.rep_periods[rp])
+        next = iterate(rpers.rep_periods[rp])
     end
-    mult = _multiple_adj(ts, rp) * multiple(next[1])
-    return ReprPeriod(rp, next[1], mult), (rp, next[2])
+    return ReprPeriod(rpers, next[1], rp), (next[2], rp)
 end
 
-function Base.length(ts::RepresentativePeriods)
-    return sum(length(rpers) for rpers in ts.rep_periods)
+function Base.length(rpers::RepresentativePeriods)
+    return sum(length(rp) for rp in rpers.rep_periods)
 end
 
-function Base.last(ts::RepresentativePeriods)
-    per = last(ts.rep_periods[ts.len])
-    mult = _multiple_adj(ts, ts.len) * multiple(per)
-    return ReprPeriod(ts.len, per, mult)
+function Base.last(rpers::RepresentativePeriods)
+    per = last(rpers.rep_periods[rpers.len])
+    return ReprPeriod(rpers, per, rpers.len)
 end
 
-Base.eltype(::Type{RepresentativePeriods}) = ReprPeriod
+function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
+    return ReprPeriod{eltype(OP)}
+end
 
-# A single operational time period used when iterating through
-# a represenative period
-struct ReprPeriod{T} <: TimePeriod
+"""
+	ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
+
+Time period for a single operational period. It is created through iterating through a
+[`RepresentativePeriods`](@ref) time structure. It is as well created as period within
+[`OperationalPeriod`](@ref) when the time structure includes [`RepresentativePeriods`](@ref).
+"""
+struct ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
     rp::Int
-    period::T
+    period::P
     mult::Float64
 end
+_oper(t::ReprPeriod) = _oper(t.period)
+_opscen(t::ReprPeriod) = _opscen(t.period)
+_rper(t::ReprPeriod) = t.rp
+
+isfirst(t::ReprPeriod) = isfirst(t.period)
+duration(t::ReprPeriod) = duration(t.period)
+multiple(t::ReprPeriod) = t.mult
+probability(t::ReprPeriod) = probability(t.period)
 
 Base.show(io::IO, rp::ReprPeriod) = print(io, "rp$(rp.rp)-$(rp.period)")
 function Base.isless(t1::ReprPeriod, t2::ReprPeriod)
     return t1.rp < t2.rp || (t1.rp == t2.rp && t1.period < t2.period)
 end
 
-isfirst(t::ReprPeriod) = isfirst(t.period)
-duration(t::ReprPeriod) = duration(t.period)
-probability(t::ReprPeriod) = probability(t.period)
-multiple(t::ReprPeriod) = t.mult
-
-_oper(t::ReprPeriod) = _oper(t.period)
-_opscen(t::ReprPeriod) = _opscen(t.period)
-_rper(t::ReprPeriod) = t.rp
+function ReprPeriod(rpers::RepresentativePeriods, per::TimePeriod, rp::Int)
+    mult = _multiple_adj(rpers, rp) * multiple(per)
+    return ReprPeriod(rp, per, mult)
+end
