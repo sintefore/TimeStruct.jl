@@ -205,7 +205,7 @@ end
     # Test of direct functions of `ReprPeriods`
     rpers = repr_periods(rep)
     @test eltype(rpers) ==
-          TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}}
+          TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}}
     @test last(rpers) == collect(rpers)[end]
     @test length(rpers) == 2
     index = eachindex(rpers)
@@ -215,7 +215,7 @@ end
     rp = rpers[index[2]]
     @test TimeStruct._rper(rp) == 2
     @test TimeStruct.mult_repr(rp) == 8760 * 0.6 / 24
-    @test eltype(rp) == TimeStruct.ReprPeriod{TimeStruct.SimplePeriod{Int64}}
+    @test eltype(rp) == TimeStruct.ReprPeriod{TimeStruct.SimplePeriod{Int}}
     @test length(rp) == 24
     index = eachindex(rp)
     @test sum(rp[idx] == collect(rp)[idx] for idx in index) == 24
@@ -229,7 +229,7 @@ end
     @test last(pers) == last(simple)
     @test sum(duration(t) * multiple(t) for t in pers) == 10
     @test length(rpers) == 1
-    @test eltype(rpers) == TimeStruct.SingleReprPeriod{Int64,SimpleTimes{Int64}}
+    @test eltype(rpers) == TimeStruct.SingleReprPeriod{Int,SimpleTimes{Int}}
     @test last(rpers) == collect(rpers)[1]
 
     # Testing the internal constructor
