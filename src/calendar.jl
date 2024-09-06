@@ -1,36 +1,29 @@
 
 """
-    struct CalendarTimes <: TimeStructure
+    struct CalendarTimes{T} <: TimeStructure{T}
+
+    CalendarTimes(start_date, length, period)
+    CalendarTimes(start_date, end_date, period)
+    CalendarTimes(start_date, timezone, length, period)
+    CalendarTimes(start_date, end_date, timezone, period)
 
 A time structure that iterates flexible calendar periods using calendar arithmetic.
+This time structure can be used at the lowest level of time structures similar
+to [`SimpleTimes`](@ref).
 
 ## Example
 ```julia
 ts = CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1))
-ts_zoned = CalendarTimes(TimeZones.ZonedDateTime(Dates.DateTime(2023, 1, 1), tz"CET"), 52, Dates.Week(1))
+ts_zoned = CalendarTimes(Dates.DateTime(2023, 1, 1), tz"CET", 52, Dates.Week(1))
 ```
 """
 struct CalendarTimes{T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}} <:
        TimeStructure{Float64}
     start_date::T
-    length::Integer
+    length::Int
     period::Dates.Period
 end
 
-"""
-    CalendarTimes(start_date, end_date, period)
-
-Construct a CalendarTimes with time periods of length `period` with the first period
-starting at `start_date` and the last period ending at or before `end_date`
-
-## Example
-```jldoctest
-julia> using TimeStruct, Dates
-
-julia> ts = CalendarTimes(DateTime(2023, 1, 1), DateTime(2025, 1, 1), Month(3))
-CalendarTimes{DateTime}(DateTime("2023-01-01T00:00:00"), 8, Month(3))
-```
-"""
 function CalendarTimes(
     start_date::Union{Dates.Date,Dates.DateTime},
     end_date::Union{Dates.Date,Dates.DateTime},
@@ -44,11 +37,10 @@ function CalendarTimes(
     end
     return CalendarTimes(Dates.DateTime(start_date), length, period)
 end
-
 function CalendarTimes(
     start_date::Union{Dates.Date,Dates.DateTime},
     zone::TimeZones.TimeZone,
-    length,
+    length::Integer,
     period::Dates.Period,
 )
     return CalendarTimes(
@@ -87,7 +79,7 @@ with duration measured in hours (by default).
 struct CalendarPeriod{T} <: TimePeriod
     start_dt::T
     stop_dt::T
-    op::Integer
+    op::Int
 end
 
 function duration(t::CalendarPeriod; dfunc = Dates.Hour)
