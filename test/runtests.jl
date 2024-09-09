@@ -204,8 +204,7 @@ end
 
     # Test of direct functions of `ReprPeriods`
     rpers = repr_periods(rep)
-    @test eltype(rpers) ==
-          TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}}
+    @test eltype(rpers) == TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}}
     @test last(rpers) == collect(rpers)[end]
     @test length(rpers) == 2
     index = eachindex(rpers)

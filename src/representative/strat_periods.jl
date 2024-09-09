@@ -3,7 +3,7 @@
     StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
-time periods. It is created through iterating through [`StratReprPeriods`](@ref).
+time periods. It is created when iterating through [`StratReprPeriods`](@ref).
 """
 struct StratReprPeriod{T,OP<:TimeStructure{T}} <:
        AbstractRepresentativePeriod{T}
@@ -58,7 +58,7 @@ end
 """
     StratReprPeriods{OP}
 
-Iterator for iterating through the individual representative periods of a
+Type for iterating through the individual representative periods of a
 [`StrategicPeriod`](@ref) time structure. It is automatically created through the function
 [`repr_periods`](@ref).
 """

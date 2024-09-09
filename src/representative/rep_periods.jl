@@ -59,7 +59,7 @@ Base.last(rp::SingleReprPeriod) = last(rp.ts)
 """
     SingleReprPeriodWrapper{T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-Iterator for iterating through the individual representative periods of a time structure
+Type for iterating through the individual representative periods of a time structure
 without [`RepresentativePeriods`](@ref). It is automatically created through the function
 [`repr_periods`](@ref).
 """
@@ -104,7 +104,7 @@ end
     RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
-time periods. It is created through iterating through [`ReprPeriods`](@ref).
+time periods. It is created when iterating through [`ReprPeriods`](@ref).
 """
 struct RepresentativePeriod{T,OP<:TimeStructure{T}} <:
        AbstractRepresentativePeriod{T}
@@ -156,7 +156,7 @@ end
 """
     ReprPeriods{T,OP}
 
-Iterator for iterating through the individual representative periods of a
+Type for iterating through the individual representative periods of a
 [`RepresentativePeriods`](@ref) time structure. It is automatically created through the
 function [`repr_periods`](@ref).
 """
