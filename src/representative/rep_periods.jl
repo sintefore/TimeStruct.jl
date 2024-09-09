@@ -3,7 +3,7 @@
     AbstractRepresentativePeriod{T} <: TimeStructure{T}
 
 Abstract type used for time structures that represent a representative period.
-These periods is obtained when iterating through the representative periods of a time
+These periods are obtained when iterating through the representative periods of a time
 structure declared using the function [`repr_period`](@ref.)
 """
 abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T} end
@@ -34,7 +34,7 @@ RepresentativeIndexable(::Type{<:TimePeriod}) = HasReprIndex()
     SingleReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
-time periods. It is created through iterating through [`SingleReprPeriodWrapper`](@ref).
+time periods. It is created when iterating through [`SingleReprPeriodWrapper`](@ref).
 """
 struct SingleReprPeriod{T,OP<:TimeStructure{T}} <:
        AbstractRepresentativePeriod{T}
@@ -59,7 +59,7 @@ Base.last(rp::SingleReprPeriod) = last(rp.ts)
 """
     SingleReprPeriodWrapper{T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-Iterator for iterating through the individual presentative periods of a time structure
+Iterator for iterating through the individual representative periods of a time structure
 without [`RepresentativePeriods`](@ref). It is automatically created through the function
 [`repr_periods`](@ref).
 """
@@ -70,9 +70,9 @@ end
 """
     repr_periods(ts::TimeStructure)
 
-This function returns an iterator for iterating through the individual representative
+This function returns a type for iterating through the individual representative
 periods of a `TimeStructure`. The type of the iterator is dependent on the type of the
-input `TimeStructure`,
+input `TimeStructure`.
 
 When the `TimeStructure` is a `TimeStructure`, `repr_periods` returns a
 [`SingleReprPeriodWrapper`](@ref). This coresponds to the default behavior.
@@ -156,7 +156,7 @@ end
 """
     ReprPeriods{T,OP}
 
-Iterator for iterating through the individual presentative periods of a
+Iterator for iterating through the individual representative periods of a
 [`RepresentativePeriods`](@ref) time structure. It is automatically created through the
 function [`repr_periods`](@ref).
 """

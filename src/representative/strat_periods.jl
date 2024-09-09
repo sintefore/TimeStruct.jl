@@ -58,7 +58,7 @@ end
 """
     StratReprPeriods{OP}
 
-Iterator for iterating through the individual presentative periods of a
+Iterator for iterating through the individual representative periods of a
 [`StrategicPeriod`](@ref) time structure. It is automatically created through the function
 [`repr_periods`](@ref).
 """
