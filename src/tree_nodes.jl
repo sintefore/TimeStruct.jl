@@ -1,9 +1,9 @@
 """
-    AbstractTreeNode{T} <: TimeStructure{T}
+    AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T}
 
 Abstract base type for all tree nodes within a [`TwoLevelTree`](@ref) type.
 """
-abstract type AbstractTreeNode{T} <: TimeStructure{T} end
+abstract type AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T} end
 
 """
     AbstractTreeStructure
@@ -29,10 +29,9 @@ struct NoStratTreeIndex <: StrategicTreeIndexable end
 StrategicTreeIndexable(::Type) = NoStratTreeIndex()
 StrategicTreeIndexable(::Type{<:AbstractTreeNode}) = HasStratTreeIndex()
 StrategicTreeIndexable(::Type{<:TimePeriod}) = HasStratTreeIndex()
-StrategicIndexable(::Type{<:AbstractTreeNode}) = HasStratIndex()
 
 """
-    struct StratNode{S, T, OP<:TimeStructure{T}} <: AbstractTreeNode{T}
+    struct StratNode{S, T, OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
 
 A structure representing a single strategic node of a [`TwolevelTree`](@ref). It is created
 through iterating through [`StratTreeNodes`](@ref).
@@ -40,7 +39,7 @@ through iterating through [`StratTreeNodes`](@ref).
 It is equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
 utilizing a [`TwolevelTree`](@ref).
 """
-struct StratNode{S, T, OP<:TimeStructure{T}} <: AbstractTreeNode{T}
+struct StratNode{S,T,OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
     sp::Int
     branch::Int
     duration::S
@@ -82,7 +81,8 @@ iteration over its time periods. It is created through iterating through
 It is equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
 structure when utilizing a [`TwolevelTree`](@ref).
 """
-struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
+struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <:
+       AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     scen::Int
@@ -101,7 +101,9 @@ probability(osc::StratNodeOperationalScenario) = osc.prob_branch * prob_scen
 probability_branch(osc::StratNodeOperationalScenario) = osc.prob_branch
 mult_scen(osc::StratNodeOperationalScenario) = osc.mult_scen
 
-StrategicTreeIndexable(::Type{<:StratNodeOperationalScenario}) = HasStratTreeIndex()
+function StrategicTreeIndexable(::Type{<:StratNodeOperationalScenario})
+    return HasStratTreeIndex()
+end
 StrategicIndexable(::Type{<:StratNodeOperationalScenario}) = HasStratIndex()
 
 # Adding methods to existing Julia functions
@@ -124,8 +126,17 @@ struct StratNodeOpScens <: AbstractTreeStructure
     opscens::Any
 end
 
-function StratNodeOpScens(n::StratNode{S,T,OP}, opscens) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeOpScens(_strat_per(n), _branch(n), n.mult_sp, probability_branch(n), opscens)
+function StratNodeOpScens(
+    n::StratNode{S,T,OP},
+    opscens,
+) where {S,T,OP<:TimeStructure{T}}
+    return StratNodeOpScens(
+        _strat_per(n),
+        _branch(n),
+        n.mult_sp,
+        probability_branch(n),
+        opscens,
+    )
 end
 
 """
@@ -163,7 +174,8 @@ A structure representing a single representative period of a [`StrategicNode`](@
 It is equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
 utilizing a [`TwolevelTree`](@ref).
 """
-struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <:
+       AbstractRepresentativePeriod{T}
     sp::Int
     branch::Int
     rp::Int
@@ -173,14 +185,15 @@ struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeri
     operational::OP
 end
 
-
 _rper(rp::StratNodeReprPeriod) = rp.rp
 _branch(rp::StratNodeReprPeriod) = rp.branch
 _strat_per(rp::StratNodeReprPeriod) = rp.sp
 
 probability(rp::StratNodeReprPeriod) = rp.prob_branch
 probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
-multiple(rp::StratNodeReprPeriod, t::OperationalPeriod) = t.multiple / rp.mult_sp
+function multiple(rp::StratNodeReprPeriod, t::OperationalPeriod)
+    return t.multiple / rp.mult_sp
+end
 
 StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
@@ -205,8 +218,17 @@ struct StratNodeReprPeriods <: AbstractTreeStructure
     repr::Any
 end
 
-function StratNodeReprPeriods(n::StratNode{S,T,OP}, repr) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeReprPeriods(_strat_per(n), _branch(n), n.mult_sp, probability_branch(n), repr)
+function StratNodeReprPeriods(
+    n::StratNode{S,T,OP},
+    repr,
+) where {S,T,OP<:TimeStructure{T}}
+    return StratNodeReprPeriods(
+        _strat_per(n),
+        _branch(n),
+        n.mult_sp,
+        probability_branch(n),
+        repr,
+    )
 end
 
 """
@@ -238,7 +260,8 @@ Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
 A structure representing a single operational scenario for a representative period in A
 [`TwoLevelTree`](@ref) structure supporting iteration over its time periods.
 """
-struct StratNodeReprOpscenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
+struct StratNodeReprOpscenario{T,OP<:TimeStructure{T}} <:
+       AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     rp::Int
@@ -288,8 +311,19 @@ struct StratNodeReprOpscenarios <: AbstractTreeStructure
     opscens::Any
 end
 
-function StratNodeReprOpscenarios(rp::StratNodeReprPeriod{T,OP}, opscens) where {T,OP<:TimeStructure{T}}
-    return StratNodeReprOpscenarios(_strat_per(rp), _branch(rp), _rper(rp), rp.mult_sp, rp.mult_rp, probability_branch(rp), opscens)
+function StratNodeReprOpscenarios(
+    rp::StratNodeReprPeriod{T,OP},
+    opscens,
+) where {T,OP<:TimeStructure{T}}
+    return StratNodeReprOpscenarios(
+        _strat_per(rp),
+        _branch(rp),
+        _rper(rp),
+        rp.mult_sp,
+        rp.mult_rp,
+        probability_branch(rp),
+        opscens,
+    )
 end
 
 """
@@ -323,7 +357,11 @@ Base.eltype(_::StratNodeReprOpscenarios) = StratNodeReprOpscenario
 
 # All introduced subtypes require the same procedures for the iteration and indexing.
 # Hence, all introduced types use the same functions.
-TreeStructure = Union{StratNodeOperationalScenario, StratNodeReprPeriod, StratNodeReprOpscenario}
+TreeStructure = Union{
+    StratNodeOperationalScenario,
+    StratNodeReprPeriod,
+    StratNodeReprOpscenario,
+}
 Base.length(ts::TreeStructure) = length(ts.operational)
 function Base.last(ts::TreeStructure)
     per = last(ts.operational)

@@ -882,20 +882,15 @@ end
 # Function for testing all iterators. Can be beneficial for all other tests as well
 @testmodule TwoLevelTreeTest begin
     using TimeStruct, Test
-    function fun(regtree, n_sp, n_op; n_sc=nothing, n_rp=nothing)
+    function fun(regtree, n_sp, n_op; n_sc = nothing, n_rp = nothing)
         sps = strat_periods(regtree)
         ops1 = collect(regtree)
-        ops2 = [
-            t for sp in sps for t in sp
-        ]
-        ops3 = [
-            t for sp in sps for sc in opscenarios(sp) for t in sc
-        ]
-        ops4 = [
-            t for sp in sps for sc in repr_periods(sp) for t in sc
-        ]
+        ops2 = [t for sp in sps for t in sp]
+        ops3 = [t for sp in sps for sc in opscenarios(sp) for t in sc]
+        ops4 = [t for sp in sps for sc in repr_periods(sp) for t in sc]
         ops5 = [
-            t for sp in sps for rp in repr_periods(sp) for sc in opscenarios(rp) for t in sc
+            t for sp in sps for rp in repr_periods(sp) for
+            sc in opscenarios(rp) for t in sc
         ]
         @test length(ops1) == n_op
         @test length(ops1) == length(ops2)
@@ -919,29 +914,22 @@ end
         @test length(sps) == n_sp
 
         @test sum(length(repr_periods(sp)) for sp in sps) == n_rp
-        @test sum(
-            length(rp) for rp in repr_periods(regtree)
-        ) == n_op
-        @test sum(
-            length(rp) for sp in sps for rp in repr_periods(sp)
-        ) == n_op
+        @test sum(length(rp) for rp in repr_periods(regtree)) == n_op
+        @test sum(length(rp) for sp in sps for rp in repr_periods(sp)) == n_op
 
         @test sum(length(opscenarios(sp)) for sp in sps) == n_sc
+        @test sum(length(sc) for sc in opscenarios(regtree)) == n_op
+        @test sum(length(sc) for sp in sps for sc in opscenarios(sp)) == n_op
         @test sum(
-            length(sc) for sc in opscenarios(regtree)
-        ) == n_op
-        @test sum(
-            length(sc) for sp in sps for sc in opscenarios(sp)
-        ) == n_op
-        @test sum(
-            length(sc) for sp in sps for rp in repr_periods(sp) for sc in opscenarios(rp)
+            length(sc) for sp in sps for rp in repr_periods(sp) for
+            sc in opscenarios(rp)
         ) == n_op
 
         return ops1
     end
 end
 
-@testitem "TwoLevelTree with SimpleTimes" setup=[TwoLevelTreeTest] begin
+@testitem "TwoLevelTree with SimpleTimes" setup = [TwoLevelTreeTest] begin
     regtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
     n_sp = 10
     n_op = n_sp * 5
@@ -958,7 +946,9 @@ end
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(TimeStruct.probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(
+            TimeStruct.probability_branch(n) for n in nodes if n.sp == sp
+        ) ≈ 1.0
     end
     node = nodes[2]
     @test length(node) == 5
@@ -991,7 +981,7 @@ end
     @test dsp[ops[4]] == 5
 end
 
-@testitem "TwoLevelTree with OperationalScenarios" setup=[TwoLevelTreeTest] begin
+@testitem "TwoLevelTree with OperationalScenarios" setup = [TwoLevelTreeTest] begin
     regtree = TimeStruct.regular_tree(
         5,
         [3, 2],
@@ -1003,7 +993,7 @@ end
     TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_sc)
 end
 
-@testitem "TwoLevelTree with RepresentativePeriods" setup=[TwoLevelTreeTest] begin
+@testitem "TwoLevelTree with RepresentativePeriods" setup = [TwoLevelTreeTest] begin
     regtree = TimeStruct.regular_tree(
         5,
         [3, 2],
@@ -1015,7 +1005,8 @@ end
     TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_rp)
 end
 
-@testitem "TwoLevelTree with RepresentativePeriods and OperationalScenarios" setup=[TwoLevelTreeTest] begin
+@testitem "TwoLevelTree with RepresentativePeriods and OperationalScenarios" setup =
+    [TwoLevelTreeTest] begin
     regtree = TimeStruct.regular_tree(
         5,
         [3, 2],
@@ -1054,7 +1045,10 @@ end
 
     scens = TimeStruct.strategic_scenarios(two_level)
     @test length(scens) == 1
-    sps = collect(sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc))
+    sps = collect(
+        sp for sc in TimeStruct.strategic_scenarios(two_level) for
+        sp in strat_periods(sc)
+    )
     @test length(sps) == 5
 end
 

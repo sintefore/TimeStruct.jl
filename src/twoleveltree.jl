@@ -7,15 +7,18 @@ Time structure allowing for a tree structure for the strategic level.
 For each strategic node in the tree a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 """
-mutable struct TwoLevelTree{T, OP<:AbstractTreeNode{T}} <: TimeStructure{T}
+mutable struct TwoLevelTree{T,OP<:AbstractTreeNode{T}} <: TimeStructure{T}
     len::Int
     root::Any
     nodes::Vector{OP}
     op_per_strat::Float64
 end
 
-function TwoLevelTree{T, OP}(nodes::Vector{OP}, op_per_strat) where {T, OP<:AbstractTreeNode{T}}
-    return TwoLevelTree{T, OP}(0, nothing, nodes, op_per_strat)
+function TwoLevelTree{T,OP}(
+    nodes::Vector{OP},
+    op_per_strat,
+) where {T,OP<:AbstractTreeNode{T}}
+    return TwoLevelTree{T,OP}(0, nothing, nodes, op_per_strat)
 end
 
 function Base.length(itr::TwoLevelTree)
@@ -31,7 +34,9 @@ function _multiple_adj(itr::TwoLevelTree, n)
 end
 strat_nodes(tree::TwoLevelTree) = tree.nodes
 
-children(n::StratNode, ts::TwoLevelTree) = [c for c in ts.nodes if c.parent == n]
+function children(n::StratNode, ts::TwoLevelTree)
+    return [c for c in ts.nodes if c.parent == n]
+end
 nchildren(n::StratNode, ts::TwoLevelTree) = count(c -> c.parent == n, ts.nodes)
 
 branches(tree::TwoLevelTree, sp) = count(n -> n.sp == sp, tree.nodes)
@@ -101,19 +106,31 @@ function Base.iterate(itr::TwoLevelTree, state = (1, nothing))
 end
 
 # Convenient constructors for the individual types
-function TreePeriod(n::StratNode, per::P) where {P<:Union{TimePeriod, TimeStructure}}
+function TreePeriod(
+    n::StratNode,
+    per::P,
+) where {P<:Union{TimePeriod,TimeStructure}}
     mult = n.mult_sp * multiple(per)
     return TreePeriod(n.sp, n.branch, n.prob_branch, mult, per)
 end
-function TreePeriod(osc::StratNodeOperationalScenario, per::P) where {P<:Union{TimePeriod, AbstractOperationalScenario}}
+function TreePeriod(
+    osc::StratNodeOperationalScenario,
+    per::P,
+) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
     mult = osc.mult_sp * multiple(per)
     return TreePeriod(osc.sp, osc.branch, osc.prob_branch, mult, per)
 end
-function TreePeriod(rp::StratNodeReprPeriod, per::P) where {P<:Union{TimePeriod, AbstractRepresentativePeriod}}
+function TreePeriod(
+    rp::StratNodeReprPeriod,
+    per::P,
+) where {P<:Union{TimePeriod,AbstractRepresentativePeriod}}
     mult = rp.mult_sp * multiple(per)
     return TreePeriod(rp.sp, rp.branch, rp.prob_branch, mult, per)
 end
-function TreePeriod(osc::StratNodeReprOpscenario, per::P) where {P<:Union{TimePeriod, AbstractOperationalScenario}}
+function TreePeriod(
+    osc::StratNodeReprOpscenario,
+    per::P,
+) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
     rper = ReprPeriod(osc.rp, per, osc.mult_rp * multiple(per))
     mult = osc.mult_sp * osc.mult_rp * multiple(per)
     return TreePeriod(osc.sp, osc.branch, osc.prob_branch, mult, rper)
@@ -155,7 +172,6 @@ strategic_scenarios(ts::TwoLevelTree) = StrategicScenarios(ts)
 # TODO: Should be replaced with a single wrapper as it is the case for the other scenarios
 strategic_scenarios(two_level::TwoLevel{S,T}) where {S,T} = [two_level]
 
-
 Base.length(scens::StrategicScenarios) = nleaves(scens.ts)
 function Base.iterate(scs::StrategicScenarios, state = 1)
     if state > nleaves(scs.ts)
@@ -188,18 +204,25 @@ Iterative addition of nodes.
 """
 # Add nodes iteratively in a depth first manner
 function add_node(
-    tree::TwoLevelTree{T, StratNode{S, T, OP}},
+    tree::TwoLevelTree{T,StratNode{S,T,OP}},
     parent,
     sp,
     duration::S,
     branch_prob,
     branching,
     oper::OP,
-) where {S, T, OP<:TimeStructure{T}}
-    prob_branch =
-        branch_prob * (isnothing(parent) ? 1.0 : parent.prob_branch)
+) where {S,T,OP<:TimeStructure{T}}
+    prob_branch = branch_prob * (isnothing(parent) ? 1.0 : parent.prob_branch)
     mult_sp = duration * tree.op_per_strat / _total_duration(oper)
-    node = StratNode{S, T, OP}(sp, branches(tree, sp) + 1, duration, prob_branch, mult_sp, parent, oper)
+    node = StratNode{S,T,OP}(
+        sp,
+        branches(tree, sp) + 1,
+        duration,
+        prob_branch,
+        mult_sp,
+        parent,
+        oper,
+    )
     push!(tree.nodes, node)
     if isnothing(parent)
         tree.root = node
@@ -235,9 +258,12 @@ function regular_tree(
     duration::S,
     branching::Vector,
     ts::OP;
-    op_per_strat::Real=1.0,
-) where {S, T, OP<:TimeStructure{T}}
-    tree = TwoLevelTree{T, StratNode{S, T, OP}}(Vector{StratNode{S, T, OP}}(), op_per_strat)
+    op_per_strat::Real = 1.0,
+) where {S,T,OP<:TimeStructure{T}}
+    tree = TwoLevelTree{T,StratNode{S,T,OP}}(
+        Vector{StratNode{S,T,OP}}(),
+        op_per_strat,
+    )
     tree.len = length(branching) + 1
     add_node(tree, nothing, 1, duration, 1.0, branching, ts)
 
@@ -254,26 +280,26 @@ It is automatically created through the function [`strat_periods`](@ref), and he
 Iterating through `StratTreeNodes` using the WithPrev iterator changes the behaviour,
 although the meaining remains unchanged.
 """
-struct StratTreeNodes{T, OP} <: AbstractTreeStructure
-    ts::TwoLevelTree{T, OP}
+struct StratTreeNodes{T,OP} <: AbstractTreeStructure
+    ts::TwoLevelTree{T,OP}
 end
 
 # Adding methods to existing Julia functions
 Base.length(sps::StratTreeNodes) = length(sps.ts.nodes)
-Base.eltype(_::Type{StratTreeNodes{T, OP}}) where{T, OP} = OP
+Base.eltype(_::Type{StratTreeNodes{T,OP}}) where {T,OP} = OP
 function Base.iterate(stps::StratTreeNodes, state = nothing)
     next = isnothing(state) ? 1 : state + 1
     next == length(stps) + 1 && return nothing
     return stps.ts.nodes[next], next
 end
 
-function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}) where {T, OP}
+function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}) where {T,OP}
     n = iterate(w.itr)
     n === nothing && return n
     return (nothing, n[1]), (n[1], n[2])
 end
 
-function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T, OP}
+function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T,OP}
     n = iterate(w.itr, state[2])
     n === nothing && return n
     return (n[1].parent, n[1]), (n[1], n[2])
@@ -305,9 +331,14 @@ function opscenarios(ts::TwoLevelTree)
         Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
     )
 end
-function opscenarios(ts::TwoLevelTree{T,StratNode{S,T,OP}}) where {S,T,OP<:RepresentativePeriods}
+function opscenarios(
+    ts::TwoLevelTree{T,StratNode{S,T,OP}},
+) where {S,T,OP<:RepresentativePeriods}
     return collect(
-        Iterators.flatten(opscenarios(rp) for sp in strategic_periods(ts) for rp in repr_periods(sp)),
+        Iterators.flatten(
+            opscenarios(rp) for sp in strategic_periods(ts) for
+            rp in repr_periods(sp)
+        ),
     )
 end
 
