@@ -14,7 +14,7 @@ to [`SimpleTimes`](@ref).
 ## Example
 ```julia
 ts = CalendarTimes(Dates.DateTime(2023, 1, 1), 12, Dates.Month(1))
-ts_zoned = CalendarTimes(Dates.DateTime(2023, 1, 1), tz"CET", 52, Dates.Week(1))
+ts_zoned = CalendarTimes(Dates.DateTime(2023, 1, 1), tz"Europe/Berlin", 52, Dates.Week(1))
 ```
 """
 struct CalendarTimes{T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}} <:
