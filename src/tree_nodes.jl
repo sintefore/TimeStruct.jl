@@ -148,6 +148,9 @@ When the `TimeStructure` is a [`StratNode`](@ref), `opscenarios` returns a
 function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return StratNodeOpScens(n, opscenarios(n.operational))
 end
+function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:RepresentativePeriods}
+    return collect(Iterators.flatten(opscenarios(rp) for rp in repr_periods(n)))
+end
 
 _oper_struct(oscs::StratNodeOpScens) = oscs.opscens
 function strat_node_period(oscs::StratNodeOpScens, next, state)
@@ -335,7 +338,22 @@ a strategic node in the tree.
 function opscenarios(
     rp::StratNodeReprPeriod{T,RepresentativePeriod{T,OP}},
 ) where {T,OP}
+    if _strat_per(rp) == 1 && _rper(rp) == 1
+    end
     return StratNodeReprOpscenarios(rp, opscenarios(rp.operational.operational))
+end
+function opscenarios(
+    rp::StratNodeReprPeriod{T,SingleReprPeriod{T,OP}},
+) where {T,OP}
+    if _strat_per(rp) == 1 && _rper(rp) == 1
+    end
+    return StratNodeOpScens(
+        _strat_per(rp),
+        _branch(rp),
+        rp.mult_sp,
+        probability_branch(rp),
+        opscenarios(rp.operational.ts),
+    )
 end
 
 _oper_struct(oscs::StratNodeReprOpscenarios) = oscs.opscens

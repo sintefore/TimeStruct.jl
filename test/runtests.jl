@@ -882,28 +882,7 @@ end
 # Function for testing all iterators. Can be beneficial for all other tests as well
 @testmodule TwoLevelTreeTest begin
     using TimeStruct, Test
-    function fun(regtree, n_sp, n_op; n_sc = nothing, n_rp = nothing)
-        sps = strat_periods(regtree)
-        ops1 = collect(regtree)
-        ops2 = [t for sp in sps for t in sp]
-        ops3 = [t for sp in sps for sc in opscenarios(sp) for t in sc]
-        ops4 = [t for sp in sps for sc in repr_periods(sp) for t in sc]
-        ops5 = [
-            t for sp in sps for rp in repr_periods(sp) for
-            sc in opscenarios(rp) for t in sc
-        ]
-        @test length(ops1) == n_op
-        @test length(ops1) == length(ops2)
-        @test length(ops1) == length(ops3)
-        @test length(ops1) == length(ops4)
-        @test length(ops1) == length(ops5)
-        for (i, op) in enumerate(ops1)
-            @test op == ops2[i]
-            @test op == ops3[i]
-            @test op == ops4[i]
-            @test op == ops5[i]
-        end
-
+    function fun(ts, n_sp, n_op; n_sc = nothing, n_rp = nothing)
         if isnothing(n_rp)
             n_rp = n_sp
         end
@@ -911,21 +890,70 @@ end
             n_sc = n_rp
         end
 
-        @test length(sps) == n_sp
+        # Test the invariants for operational periods
+        sps = strat_periods(ts)
+        ops_inv = Array{Any}(nothing, 8)
+        ops_inv[1] = collect(ts)
+        ops_inv[2] = [t for sp in sps for t in sp]
 
-        @test sum(length(repr_periods(sp)) for sp in sps) == n_rp
-        @test sum(length(rp) for rp in repr_periods(regtree)) == n_op
-        @test sum(length(rp) for sp in sps for rp in repr_periods(sp)) == n_op
+        ops_inv[3] = [t for rp in repr_periods(ts) for t in rp]
+        ops_inv[4] = [t for sp in sps for rp in repr_periods(sp) for t in rp]
 
-        @test sum(length(opscenarios(sp)) for sp in sps) == n_sc
-        @test sum(length(sc) for sc in opscenarios(regtree)) == n_op
-        @test sum(length(sc) for sp in sps for sc in opscenarios(sp)) == n_op
-        @test sum(
-            length(sc) for sp in sps for rp in repr_periods(sp) for
-            sc in opscenarios(rp)
-        ) == n_op
+        ops_inv[5] = [t for sc in opscenarios(ts) for t in sc]
+        ops_inv[6] = [t for sp in sps for sc in opscenarios(sp) for t in sc]
+        ops_inv[7] =
+            [t for rp in repr_periods(ts) for sc in opscenarios(rp) for t in sc]
+        ops_inv[8] = [
+            t for sp in sps for rp in repr_periods(sp) for
+            sc in opscenarios(rp) for t in sc
+        ]
 
-        return ops1
+        for ops in ops_inv
+            @test length(ops) == n_op
+        end
+        for (i, op) in enumerate(ops_inv[1])
+            for ops in ops_inv[2:end]
+                @test op == ops[i]
+            end
+        end
+
+        # Test the invariants for operational scenarios
+        oscs_inv = Array{Any}(nothing, 4)
+        oscs_inv[1] = [osc for osc in opscenarios(ts)]
+        oscs_inv[2] = [osc for sp in sps for osc in opscenarios(sp)]
+
+        oscs_inv[3] =
+            [osc for rp in repr_periods(ts) for osc in opscenarios(rp)]
+        oscs_inv[4] = [
+            osc for sp in sps for rp in repr_periods(sp) for
+            osc in opscenarios(rp)
+        ]
+
+        for oscs in oscs_inv
+            @test length(oscs) == n_sc
+        end
+        for (i, osc) in enumerate(oscs_inv[1])
+            for oscs in oscs_inv[2:end]
+                @test osc === oscs[i]
+            end
+        end
+
+        # Test the invariants for representative periods
+        rps_inv = Array{Any}(nothing, 2)
+
+        rps_inv[1] = [rp for rp in repr_periods(ts)]
+        rps_inv[2] = [rp for sp in sps for rp in repr_periods(sp)]
+
+        for rps in rps_inv
+            @test length(rps) == n_rp
+        end
+        for (i, rp) in enumerate(rps_inv[1])
+            for rps in rps_inv[2:end]
+                @test rp == rps[i]
+            end
+        end
+
+        return ops_inv[1]
     end
 end
 
