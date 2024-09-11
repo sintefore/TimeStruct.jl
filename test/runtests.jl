@@ -62,13 +62,15 @@ end
     @test duration(months[2]) == 29 * 24
 
     # 10 weeks with reduced length due to DST
-    periods = CalendarTimes(DateTime(2023, 3, 1), tz"Europe/Berlin", 10, Week(1))
+    periods =
+        CalendarTimes(DateTime(2023, 3, 1), tz"Europe/Berlin", 10, Week(1))
     dur = [duration(w) for w in periods]
     @test TimeStruct._total_duration(periods) == 10 * 168 - 1
     @test dur[4] == 167
 
     # 10 weeks not affected by DST
-    periods = CalendarTimes(DateTime(2023, 4, 1), tz"Europe/Berlin", 10, Week(1))
+    periods =
+        CalendarTimes(DateTime(2023, 4, 1), tz"Europe/Berlin", 10, Week(1))
     dur = [duration(w) for w in periods]
     @test TimeStruct._total_duration(periods) == 10 * 168
     @test dur[4] == 168
