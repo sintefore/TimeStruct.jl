@@ -166,7 +166,7 @@ function Base.getindex(
 end
 
 """
-    StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T<:Duration, P<:TimeProfile{T}}
+    StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T<:Number, P<:TimeProfile{T}}
     StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
 
 Time profile with a separate time profile for each strategic node in a [`TwoLevelTree`](@ref)
@@ -186,11 +186,11 @@ profile = StrategicStochasticProfile([
 ])
 ```
 """
-struct StrategicStochasticProfile{T<:Duration,P<:TimeProfile{T}} <:
+struct StrategicStochasticProfile{T<:Number,P<:TimeProfile{T}} <:
        TimeProfile{T}
     vals::Vector{<:Vector{P}}
 end
-function StrategicStochasticProfile(vals::Vector{<:Vector{<:Duration}})
+function StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
     return StrategicStochasticProfile([
         [FixedProfile(v_2) for v_2 in v_1] for v_1 in vals
     ])

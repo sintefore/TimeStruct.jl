@@ -12,14 +12,14 @@ Abstract base type for all tree timestructures within a [`TwoLevelTree`](@ref) t
 """
 abstract type AbstractTreeStructure end
 
-Base.length(oscs::AbstractTreeStructure) = length(_oper_struct(oscs))
-function Base.iterate(oscs::AbstractTreeStructure, state = (nothing, 1))
+Base.length(ats::AbstractTreeStructure) = length(_oper_struct(ats))
+function Base.iterate(ats::AbstractTreeStructure, state = (nothing, 1))
     next =
-        isnothing(state[1]) ? iterate(_oper_struct(oscs)) :
-        iterate(_oper_struct(oscs), state[1])
+        isnothing(state[1]) ? iterate(_oper_struct(ats)) :
+        iterate(_oper_struct(ats), state[1])
     isnothing(next) && return nothing
 
-    return strat_node_period(oscs, next[1], state[2]), (next[2], state[2] + 1)
+    return strat_node_period(ats, next[1], state[2]), (next[2], state[2] + 1)
 end
 
 abstract type StrategicTreeIndexable end
@@ -126,19 +126,6 @@ struct StratNodeOpScens <: AbstractTreeStructure
     opscens::Any
 end
 
-function StratNodeOpScens(
-    n::StratNode{S,T,OP},
-    opscens,
-) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeOpScens(
-        _strat_per(n),
-        _branch(n),
-        n.mult_sp,
-        probability_branch(n),
-        opscens,
-    )
-end
-
 """
     opscenarios(sp::StratNode{S,T,OP})
 
@@ -146,7 +133,13 @@ When the `TimeStructure` is a [`StratNode`](@ref), `opscenarios` returns a
 [`StratNodeOpScens`](@ref) used for iterating through the individual operational scenarios
 """
 function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeOpScens(n, opscenarios(n.operational))
+    return StratNodeOpScens(
+        _strat_per(n),
+        _branch(n),
+        n.mult_sp,
+        probability_branch(n),
+        opscenarios(n.operational),
+    )
 end
 function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:RepresentativePeriods}
     return collect(Iterators.flatten(opscenarios(rp) for rp in repr_periods(n)))
@@ -221,27 +214,21 @@ struct StratNodeReprPeriods <: AbstractTreeStructure
     repr::Any
 end
 
-function StratNodeReprPeriods(
-    n::StratNode{S,T,OP},
-    repr,
-) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeReprPeriods(
-        _strat_per(n),
-        _branch(n),
-        n.mult_sp,
-        probability_branch(n),
-        repr,
-    )
-end
-
 """
     repr_periods(sp::StratNode{S,T,OP})
 
 Iterator that iterates over operational scenarios for a specific strategic node in the tree.
 """
 function repr_periods(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeReprPeriods(n, repr_periods(n.operational))
+    return StratNodeReprPeriods(
+        _strat_per(n),
+        _branch(n),
+        n.mult_sp,
+        probability_branch(n),
+        repr_periods(n.operational),
+    )
 end
+
 _oper_struct(rps::StratNodeReprPeriods) = rps.repr
 function strat_node_period(rps::StratNodeReprPeriods, next, state)
     return StratNodeReprPeriod(
@@ -340,7 +327,15 @@ function opscenarios(
 ) where {T,OP}
     if _strat_per(rp) == 1 && _rper(rp) == 1
     end
-    return StratNodeReprOpscenarios(rp, opscenarios(rp.operational.operational))
+    return StratNodeReprOpscenarios(
+        _strat_per(rp),
+        _branch(rp),
+        _rper(rp),
+        rp.mult_sp,
+        rp.mult_rp,
+        probability_branch(rp),
+        opscenarios(rp.operational.operational),
+    )
 end
 function opscenarios(
     rp::StratNodeReprPeriod{T,SingleReprPeriod{T,OP}},
