@@ -33,7 +33,7 @@ You can also make the time structure for a specific time zone as shown in the fo
 example with 3 days in the end of March with a transition to summer time on the second day:
 ```@repl ts
 using TimeZones
-periods = CalendarTimes(DateTime(2023, 3, 25), tz"CET", 3, Day(1));
+periods = CalendarTimes(DateTime(2023, 3, 25), tz"Europe/Berlin", 3, Day(1));
 duration.(periods)
 ```
 
