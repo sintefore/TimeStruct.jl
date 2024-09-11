@@ -186,8 +186,7 @@ profile = StrategicStochasticProfile([
 ])
 ```
 """
-struct StrategicStochasticProfile{T<:Number,P<:TimeProfile{T}} <:
-       TimeProfile{T}
+struct StrategicStochasticProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
 end
 function StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})

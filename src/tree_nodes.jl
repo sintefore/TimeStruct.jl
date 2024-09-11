@@ -1,14 +1,14 @@
 """
     AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T}
 
-Abstract base type for all tree nodes within a [`TwoLevelTree`](@ref) type.
+Abstract base type for all tree nodes within a [`TwoLevelTree`] type.
 """
 abstract type AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T} end
 
 """
     AbstractTreeStructure
 
-Abstract base type for all tree timestructures within a [`TwoLevelTree`](@ref) type.
+Abstract base type for all tree timestructures within a [`TwoLevelTree`] type.
 """
 abstract type AbstractTreeStructure end
 
@@ -33,11 +33,11 @@ StrategicTreeIndexable(::Type{<:TimePeriod}) = HasStratTreeIndex()
 """
     struct StratNode{S, T, OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
 
-A structure representing a single strategic node of a [`TwolevelTree`](@ref). It is created
+A structure representing a single strategic node of a [`TwolevelTree`]. It is created
 through iterating through [`StratTreeNodes`](@ref).
 
 It is equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
-utilizing a [`TwolevelTree`](@ref).
+utilizing a [`TwolevelTree`].
 """
 struct StratNode{S,T,OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
     sp::Int
@@ -79,7 +79,7 @@ iteration over its time periods. It is created through iterating through
 [`StratNodeOpScens`](@ref).
 
 It is equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
-structure when utilizing a [`TwolevelTree`](@ref).
+structure when utilizing a [`TwolevelTree`].
 """
 struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <:
        AbstractOperationalScenario{T}
@@ -164,11 +164,11 @@ Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
 """
     struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
-A structure representing a single representative period of a [`StrategicNode`](@ref) of a
-[`TwolevelTree`](@ref). It is created through iterating through [`StratNodeReprPeriods`](@ref).
+A structure representing a single representative period of a [`StratNode`](@ref) of a
+[`TwolevelTree`]. It is created through iterating through [`StratNodeReprPeriods`](@ref).
 
-It is equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
-utilizing a [`TwolevelTree`](@ref).
+It is equivalent to a [`StratReprPeriod`] of a [`TwoLevel`](@ref) time structure when
+utilizing a [`TwolevelTree`].
 """
 struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <:
        AbstractRepresentativePeriod{T}
@@ -248,7 +248,7 @@ Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
     struct StratNodeReprOpscenario{T} <: AbstractOperationalScenario{T}
 
 A structure representing a single operational scenario for a representative period in A
-[`TwoLevelTree`](@ref) structure supporting iteration over its time periods.
+[`TwoLevelTree`] structure supporting iteration over its time periods.
 """
 struct StratNodeReprOpscenario{T,OP<:TimeStructure{T}} <:
        AbstractOperationalScenario{T}

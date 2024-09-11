@@ -162,15 +162,30 @@ end
     struct StrategicScenarios
 
 Type for iteration through the individual strategic scenarios represented as
-[`StrategicScenario`](@ref).
+[`StrategicScenario`].
 """
 struct StrategicScenarios
     ts::TwoLevelTree
 end
+
+"""
+    strategic_scenarios(ts::TwoLevelTree)
+
+This function returns a type for iterating through the individual strategic scenarios of a
+`TwoLevelTree`. The type of the iterator is dependent on the type of the
+input `TimeStructure`.
+
+When the `TimeStructure` is a `TimeStructure`, `strategic_scenarios` returns a
+"""
+strategic_scenarios(two_level::TwoLevel) = [two_level]
+
+"""
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strategic_scenarios` returns the
+iterator `StrategicScenarios`.
+"""
 strategic_scenarios(ts::TwoLevelTree) = StrategicScenarios(ts)
 # Allow a TwoLevel structure to be used as a tree with one scenario
 # TODO: Should be replaced with a single wrapper as it is the case for the other scenarios
-strategic_scenarios(two_level::TwoLevel{S,T}) where {S,T} = [two_level]
 
 Base.length(scens::StrategicScenarios) = nleaves(scens.ts)
 function Base.iterate(scs::StrategicScenarios, state = 1)
@@ -277,7 +292,7 @@ Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](
 It is automatically created through the function [`strat_periods`](@ref), and hence,
 [`strategic_periods`](@ref).
 
-Iterating through `StratTreeNodes` using the WithPrev iterator changes the behaviour,
+Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behaviour,
 although the meaining remains unchanged.
 """
 struct StratTreeNodes{T,OP} <: AbstractTreeStructure
@@ -305,30 +320,25 @@ function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T,OP}
     return (n[1].parent, n[1]), (n[1], n[2])
 end
 
-"""
-    strat_periods(ts::TwoLevelTree)
-
-When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strat_periods` returns a
+"""When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strat_periods` returns a
 [`StratTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
 
-These are equivalent of a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
+These are equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
 strat_periods(ts::TwoLevelTree) = StratTreeNodes(ts)
 
 """
-    opscenarios(ts::TwoLevelTree)
-
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `opscenarios` returns an `Array` of
 all [`StratNodeOperationalScenario`](@ref)s or [`StratNodeReprOpscenario`](@ref)s types,
 dependening on whether the [`TwoLevelTree`](@ref) includes [`RepresentativePeriods`](@ref)
 or not.
 
-These are equivalent of a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
+These are equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
 structure.
 """
 function opscenarios(ts::TwoLevelTree)
     return collect(
-        Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
+        Iterators.flatten(opscenarios(sp) for sp in strat_periods(ts)),
     )
 end
 function opscenarios(
@@ -336,22 +346,20 @@ function opscenarios(
 ) where {S,T,OP<:RepresentativePeriods}
     return collect(
         Iterators.flatten(
-            opscenarios(rp) for sp in strategic_periods(ts) for
+            opscenarios(rp) for sp in strat_periods(ts) for
             rp in repr_periods(sp)
         ),
     )
 end
 
 """
-    repr_periods(ts::TwoLevelTree)
-
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `repr_periods` returns an `Array` of
-all [`StratNodeReprPeriod`](@ref)s.
+all [`StratNodeReprPeriod`]s.
 
-These are equivalent of a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
+These are equivalent to a [`StratReprPeriod`] of a [`TwoLevel`](@ref) time structure.
 """
 function repr_periods(ts::TwoLevelTree)
     return collect(
-        Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)),
+        Iterators.flatten(repr_periods(sp) for sp in strat_periods(ts)),
     )
 end
