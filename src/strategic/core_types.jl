@@ -172,6 +172,7 @@ function _multiple_adj(ts::TwoLevel, sp)
     return stripunit(mult)
 end
 
+# Add basic functions of iterators
 function Base.length(ts::TwoLevel)
     return sum(length(op) for op in ts.operational)
 end
@@ -189,12 +190,12 @@ function Base.iterate(ts::TwoLevel, state = (nothing, 1))
     end
     return OperationalPeriod(ts, next[1], sp), (next[2], sp)
 end
+Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 function Base.last(ts::TwoLevel)
     per = last(ts.operational[ts.len])
     return OperationalPeriod(ts, per, ts.len)
 end
 
-Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 
 """
 	struct OperationalPeriod <: TimePeriod

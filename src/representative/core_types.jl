@@ -135,6 +135,10 @@ function _multiple_adj(rpers::RepresentativePeriods, rp)
     return stripunit(mult)
 end
 
+# Add basic functions of iterators
+function Base.length(rpers::RepresentativePeriods)
+    return sum(length(rp) for rp in rpers.rep_periods)
+end
 function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
     rp = state[2]
     next =
@@ -149,19 +153,14 @@ function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
     end
     return ReprPeriod(rpers, next[1], rp), (next[2], rp)
 end
-
-function Base.length(rpers::RepresentativePeriods)
-    return sum(length(rp) for rp in rpers.rep_periods)
+function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
+    return ReprPeriod{eltype(OP)}
 end
-
 function Base.last(rpers::RepresentativePeriods)
     per = last(rpers.rep_periods[rpers.len])
     return ReprPeriod(rpers, per, rpers.len)
 end
 
-function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
-    return ReprPeriod{eltype(OP)}
-end
 
 """
 	ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
