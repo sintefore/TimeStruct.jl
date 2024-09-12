@@ -205,4 +205,10 @@ _strat_per(ssp::SingleStrategicPeriod) = 1
 strat_periods(ts::TimeStructure) = SingleStrategicPeriodWrapper(ts)
 
 # Allow strategic_periods() in addition to strat_periods()
+
+"""
+    strategic_periods(ts)
+
+Internal convenience constructor for [`strat_periods`](@ref).
+"""
 strategic_periods(ts) = strat_periods(ts)

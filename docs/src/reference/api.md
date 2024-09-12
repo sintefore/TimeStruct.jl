@@ -1,7 +1,7 @@
+
 ```@meta
 CurrentModule = TimeStruct
 ```
-
 # Available time structures
 
 ```@docs
@@ -28,12 +28,16 @@ OperationalScenarios
 TwoLevel
 ```
 
+```@docs
+TwoLevelTree
+regular_tree
+```
+
 # Properties of time periods
 
 ```@docs
 duration
 ```
-
 
 ```@docs
 isfirst
@@ -42,7 +46,6 @@ isfirst
 ```@docs
 multiple
 ```
-
 
 ```@docs
 probability
@@ -60,6 +63,11 @@ opscenarios
 
 ```@docs
 strat_periods
+strategic_periods
+```
+
+```@docs
+strategic_scenarios
 ```
 
 ```@docs
@@ -95,6 +103,10 @@ ScenarioProfile
 
 ```@docs
 StrategicProfile
+```
+
+```@docs
+StrategicStochasticProfile
 ```
 
 # Discounting

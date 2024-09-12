@@ -1,3 +1,4 @@
+using TestItems
 using TestItemRunner
 using TimeStruct
 using Aqua
@@ -878,12 +879,89 @@ end
     @test sum(sspdiv[t] for t in tsc) == 200 / 0.5
 end
 
-@testitem "TwoLevelTree" begin
+# Function for testing all iterators. Can be beneficial for all other tests as well
+@testmodule TwoLevelTreeTest begin
+    using TimeStruct, Test
+    function fun(ts, n_sp, n_op; n_sc = nothing, n_rp = nothing)
+        if isnothing(n_rp)
+            n_rp = n_sp
+        end
+        if isnothing(n_sc)
+            n_sc = n_rp
+        end
+
+        # Test the invariants for operational periods
+        sps = strat_periods(ts)
+        ops_inv = Array{Any}(nothing, 8)
+        ops_inv[1] = collect(ts)
+        ops_inv[2] = [t for sp in sps for t in sp]
+
+        ops_inv[3] = [t for rp in repr_periods(ts) for t in rp]
+        ops_inv[4] = [t for sp in sps for rp in repr_periods(sp) for t in rp]
+
+        ops_inv[5] = [t for sc in opscenarios(ts) for t in sc]
+        ops_inv[6] = [t for sp in sps for sc in opscenarios(sp) for t in sc]
+        ops_inv[7] =
+            [t for rp in repr_periods(ts) for sc in opscenarios(rp) for t in sc]
+        ops_inv[8] = [
+            t for sp in sps for rp in repr_periods(sp) for
+            sc in opscenarios(rp) for t in sc
+        ]
+
+        for ops in ops_inv
+            @test length(ops) == n_op
+        end
+        for (i, op) in enumerate(ops_inv[1])
+            for ops in ops_inv[2:end]
+                @test op == ops[i]
+            end
+        end
+
+        # Test the invariants for operational scenarios
+        oscs_inv = Array{Any}(nothing, 4)
+        oscs_inv[1] = [osc for osc in opscenarios(ts)]
+        oscs_inv[2] = [osc for sp in sps for osc in opscenarios(sp)]
+
+        oscs_inv[3] =
+            [osc for rp in repr_periods(ts) for osc in opscenarios(rp)]
+        oscs_inv[4] = [
+            osc for sp in sps for rp in repr_periods(sp) for
+            osc in opscenarios(rp)
+        ]
+
+        for oscs in oscs_inv
+            @test length(oscs) == n_sc
+        end
+        for (i, osc) in enumerate(oscs_inv[1])
+            for oscs in oscs_inv[2:end]
+                @test osc === oscs[i]
+            end
+        end
+
+        # Test the invariants for representative periods
+        rps_inv = Array{Any}(nothing, 2)
+
+        rps_inv[1] = [rp for rp in repr_periods(ts)]
+        rps_inv[2] = [rp for sp in sps for rp in repr_periods(sp)]
+
+        for rps in rps_inv
+            @test length(rps) == n_rp
+        end
+        for (i, rp) in enumerate(rps_inv[1])
+            for rps in rps_inv[2:end]
+                @test rp == rps[i]
+            end
+        end
+
+        return ops_inv[1]
+    end
+end
+
+@testitem "TwoLevelTree with SimpleTimes" setup = [TwoLevelTreeTest] begin
     regtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
-    ops = [t for n in TimeStruct.strat_nodes(regtree) for t in n]
-    @test length(ops) == 5 * 10
-    ops2 = collect(regtree)
-    @test ops == ops2
+    n_sp = 10
+    n_op = n_sp * 5
+    ops = TwoLevelTreeTest.fun(regtree, n_sp, n_op)
 
     op = ops[31]
     @test TimeStruct._opscen(op) == 1
@@ -892,20 +970,22 @@ end
     @test TimeStruct._oper(op) == 1
     @test duration(op) == 1
     @test probability(op) == 1 / 6
-    @test typeof(op) == eltype(typeof(regtree))
+    @test op isa eltype(typeof(regtree))
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(probability(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(
+            TimeStruct.probability_branch(n) for n in nodes if n.sp == sp
+        ) ≈ 1.0
     end
     node = nodes[2]
     @test length(node) == 5
-    @test typeof(first(node)) == eltype(typeof(node))
+    @test first(node) isa eltype(typeof(node))
 
     leaves = TimeStruct.leaves(regtree)
     @test length(leaves) == TimeStruct.nleaves(regtree)
 
-    scens = collect(TimeStruct.scenarios(regtree))
+    scens = collect(TimeStruct.strategic_scenarios(regtree))
     @test length(scens[2].nodes) == regtree.len
     @test scens[3].nodes[1] == regtree.nodes[1]
 
@@ -921,12 +1001,83 @@ end
     price1 = OperationalProfile([1, 2, 2, 5, 6])
     price2 = FixedProfile(4)
 
-    dsp = TimeStruct.DynamicStochasticProfile([
+    dsp = TimeStruct.StrategicStochasticProfile([
         [price1],
         [price1, price2, price2],
         [price1, price2, price2, price1, price2, price2],
     ])
     @test dsp[ops[4]] == 5
+end
+
+@testitem "TwoLevelTree with OperationalScenarios" setup = [TwoLevelTreeTest] begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+    n_sp = 10
+    n_sc = n_sp * 3
+    n_op = n_sc * 5
+    TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_sc)
+end
+
+@testitem "TwoLevelTree with RepresentativePeriods" setup = [TwoLevelTreeTest] begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        RepresentativePeriods(2, 1, SimpleTimes(5, 1)),
+    )
+    n_sp = 10
+    n_rp = n_sp * 2
+    n_op = n_rp * 5
+    TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_rp)
+end
+
+@testitem "TwoLevelTree with RepresentativePeriods and OperationalScenarios" setup =
+    [TwoLevelTreeTest] begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
+    )
+    n_sp = 10
+    n_rp = n_sp * 2
+    n_sc = n_rp * 3
+    n_op = n_sc * 5
+    TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_sc, n_rp)
+end
+
+@testitem "Strategic scenarios with operational scenarios" begin
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        OperationalScenarios(3, SimpleTimes(5, 1)),
+    )
+
+    @test length(TimeStruct.strategic_scenarios(regtree)) == 6
+
+    for sc in TimeStruct.strategic_scenarios(regtree)
+        @test length(sc) == length(collect(sc))
+
+        for (prev_sp, sp) in withprev(sc)
+            if !isnothing(prev_sp)
+                @test TimeStruct._strat_per(prev_sp) + 1 ==
+                      TimeStruct._strat_per(sp)
+            end
+        end
+    end
+end
+
+@testitem "TwoLevel as a tree" begin
+    two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+
+    scens = TimeStruct.strategic_scenarios(two_level)
+    @test length(scens) == 1
+    sps = collect(
+        sp for sc in TimeStruct.strategic_scenarios(two_level) for
+        sp in strat_periods(sc)
+    )
+    @test length(sps) == 5
 end
 
 @testitem "Profiles constructors" begin
@@ -1022,72 +1173,6 @@ end
     sprofile = StrategicProfile([rprofile, 2 * rprofile, 3 * rprofile])
     vals = collect(sprofile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
-end
-
-@testitem "TwoLevelTree and opscenarios" begin
-    regtree = TimeStruct.regular_tree(
-        5,
-        [3, 2],
-        OperationalScenarios(3, SimpleTimes(5, 1)),
-    )
-
-    ops1 = collect(regtree)
-    ops2 = [
-        t for sp in strat_periods(regtree) for sc in opscenarios(sp) for t in sc
-    ]
-    @test length(ops1) == length(ops2)
-    for (i, op) in enumerate(ops1)
-        @test op == ops2[i]
-    end
-
-    @test sum(length(opscenarios(sp)) for sp in strat_periods(regtree)) == 30
-    @test sum(
-        length(sc) for sp in strat_periods(regtree) for sc in opscenarios(sp)
-    ) == 150
-
-    sregtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
-    ops1 = collect(sregtree)
-    ops2 = [
-        t for sp in strat_periods(sregtree) for sc in opscenarios(sp) for
-        t in sc
-    ]
-    @test length(ops1) == length(ops2)
-    @test ops1 == ops2
-
-    @test sum(length(opscenarios(sp)) for sp in strat_periods(sregtree)) == 10
-    @test sum(
-        length(sc) for sp in strat_periods(sregtree) for sc in opscenarios(sp)
-    ) == 50
-end
-
-@testitem "Strategic scenarios" begin
-    regtree = TimeStruct.regular_tree(
-        5,
-        [3, 2],
-        OperationalScenarios(3, SimpleTimes(5, 1)),
-    )
-
-    @test length(scenarios(regtree)) == 6
-
-    for sc in scenarios(regtree)
-        @test length(sc) == length(collect(sc))
-
-        for (prev_sp, sp) in withprev(sc)
-            if !isnothing(prev_sp)
-                @test TimeStruct._strat_per(prev_sp) + 1 ==
-                      TimeStruct._strat_per(sp)
-            end
-        end
-    end
-end
-
-@testitem "TwoLevel as a tree" begin
-    two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
-
-    scens = scenarios(two_level)
-    @test length(scens) == 1
-    sps = collect(sp for sc in scenarios(two_level) for sp in strat_periods(sc))
-    @test length(sps) == 5
 end
 
 @testitem "Iteration utilities" begin

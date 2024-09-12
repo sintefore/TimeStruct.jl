@@ -10,7 +10,15 @@ pages = [
         "Discounting" => "manual/discount.md",
     ],
     "API reference" => "reference/api.md",
+    "Internal reference" => "reference/internal.md",
 ]
+
+DocMeta.setdocmeta!(
+    TimeStruct,
+    :DocTestSetup,
+    :(using TimeStruct);
+    recursive = true,
+)
 
 Documenter.makedocs(
     sitename = "TimeStruct",
