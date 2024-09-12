@@ -66,45 +66,28 @@ function CalendarTimes(
     return CalendarTimes(first, length, period)
 end
 
-Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
-Base.length(ts::CalendarTimes) = ts.length
-
 _total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
 
-"""
-    struct CalendarPeriod <: TimePeriod
-A single time period returned when iterating through a CalendarTimes structure
-with duration measured in hours (by default).
-"""
-struct CalendarPeriod{T} <: TimePeriod
-    start_dt::T
-    stop_dt::T
-    op::Int
-end
-
-function duration(t::CalendarPeriod; dfunc = Dates.Hour)
-    return Dates.value(dfunc(t.stop_dt - t.start_dt))
-end
-isfirst(t::CalendarPeriod) = t.op == 1
-multiple(t::CalendarPeriod) = 1
-_oper(t::CalendarPeriod) = t.op
-start_date(t::CalendarPeriod) = t.start_dt
-
-Base.isless(t1::CalendarPeriod, t2::CalendarPeriod) = t1.op < t2.op
-Base.show(io::IO, t::CalendarPeriod) = print(io, "ct$(t.op)")
-
+# Add basic functions of iterators
+Base.length(ts::CalendarTimes) = ts.length
 function Base.iterate(ts::CalendarTimes)
     return CalendarPeriod(ts.start_date, ts.start_date + ts.period, 1),
     (1, ts.start_date)
 end
-
 function Base.iterate(ts::CalendarTimes, state)
     state[1] == ts.length && return nothing
     start_time = state[2] + ts.period
     return CalendarPeriod(start_time, start_time + ts.period, state[1] + 1),
     (state[1] + 1, start_time)
 end
-
+Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
+function Base.getindex(ts::CalendarTimes, index)
+    start_time = ts.start_date + (index - 1) * ts.period
+    return CalendarPeriod(start_time, start_time + ts.period, index)
+end
+function Base.eachindex(ts::CalendarTimes)
+    return Base.OneTo(ts.length)
+end
 function Base.last(ts::CalendarTimes)
     n = ts.length
     start = ts.start_date + (n - 1) * ts.period
@@ -112,11 +95,26 @@ function Base.last(ts::CalendarTimes)
     return CalendarPeriod(start, stop, n)
 end
 
-function Base.getindex(ts::CalendarTimes, index)
-    start_time = ts.start_date + (index - 1) * ts.period
-    return CalendarPeriod(start_time, start_time + ts.period, index)
+"""
+    struct CalendarPeriod <: TimePeriod
+
+Time period for a single operational period. It is created through iterating through a
+[`CalendarTimes`](@ref) time structure with duration measured in hours (by default).
+"""
+struct CalendarPeriod{T} <: TimePeriod
+    start_dt::T
+    stop_dt::T
+    op::Int
 end
 
-function Base.eachindex(ts::CalendarTimes)
-    return Base.OneTo(ts.length)
+_oper(t::CalendarPeriod) = t.op
+
+isfirst(t::CalendarPeriod) = t.op == 1
+function duration(t::CalendarPeriod; dfunc = Dates.Hour)
+    return Dates.value(dfunc(t.stop_dt - t.start_dt))
 end
+multiple(t::CalendarPeriod) = 1
+start_date(t::CalendarPeriod) = t.start_dt
+
+Base.show(io::IO, t::CalendarPeriod) = print(io, "ct$(t.op)")
+Base.isless(t1::CalendarPeriod, t2::CalendarPeriod) = t1.op < t2.op
