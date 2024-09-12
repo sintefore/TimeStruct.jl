@@ -2,23 +2,20 @@
 """
     AbstractStrategicPeriod{S,T} <: TimeStructure{T}
 
-Abstract base type for all strategic periods returned
-when iterating through the periods using the
-`strat_periods` function.
+Abstract type used for time structures that represent a strategic period.
+These periods are obtained when iterating through the strategic periods of a time
+structure declared using the function [`strat_periods`](@ref.)
 """
 abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
-
-function duration_strat(sp::AbstractStrategicPeriod)
-    return error("duration_strat() not implemented for $(typeof(sp))")
-end
 
 function _strat_per(sp::AbstractStrategicPeriod)
     return error("_strat_per() not implemented for $(typeof(sp))")
 end
-
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
-
 mult_strat(sp::AbstractStrategicPeriod) = 1
+function duration_strat(sp::AbstractStrategicPeriod)
+    return error("duration_strat() not implemented for $(typeof(sp))")
+end
 
 function Base.isless(sp1::AbstractStrategicPeriod, sp2::AbstractStrategicPeriod)
     return _strat_per(sp1) < _strat_per(sp2)
@@ -51,11 +48,78 @@ function remaining(sp::AbstractStrategicPeriod, ts::TimeStructure)
     )
 end
 
-"""
-    StrategicPeriod <: AbstractStrategicPeriod
 
-Time period for iteration of strategic periods of a `TwoLevel`
-time structure.
+"""
+    SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T,T}
+
+A type representing a single strategic period supporting iteration over its
+time periods. It is created when iterating through [`SingleStrategicPeriodWrapper`](@ref).
+"""
+struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <:
+       AbstractStrategicPeriod{T,T}
+    ts::SP
+end
+
+_strat_per(sp::SingleStrategicPeriod) = 1
+
+mult_strat(sp::SingleStrategicPeriod) = 1.0
+duration_strat(sp::SingleStrategicPeriod) = _total_duration(sp.ts)
+
+# Add basic functions of iterators
+Base.length(sp::SingleStrategicPeriod) = length(sp.ts)
+function Base.iterate(sp::SingleStrategicPeriod, state = nothing)
+    next = isnothing(state) ? iterate(sp.ts) : iterate(sp.ts, state)
+    return next
+end
+Base.eltype(::Type{SingleStrategicPeriod{T,SP}}) where {T,SP} = eltype(SP)
+Base.last(sp::SingleStrategicPeriod) = last(sp.ts)
+
+"""
+    SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
+
+Type for iterating through the individual strategic periods of a time structure
+without [`TwoLevel`](@ref). It is automatically created through the function
+[`strat_periods`](@ref).
+"""
+struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
+    ts::SP
+end
+
+"""
+    strat_periods(ts::TimeStructure)
+
+This function returns a type for iterating through the individual strategic
+periods of a `TimeStructure`. The type of the iterator is dependent on the type of the
+input `TimeStructure`. The elements returned of the iterator will be subtypes of
+[`AbstractStrategicPeriod`](@ref).
+
+When the `TimeStructure` is a `TimeStructure`, `strat_periods` returns a
+[`SingleStrategicPeriodWrapper`](@ref). This corresponds to the default behavior.
+"""
+strat_periods(ts::TimeStructure) = SingleStrategicPeriodWrapper(ts)
+
+"""
+    strategic_periods(ts)
+
+Convenience constructor for [`strat_periods`](@ref). Both names can be used interchangable.
+"""
+strategic_periods(ts) = strat_periods(ts)
+
+Base.length(sps::SingleStrategicPeriodWrapper) = 1
+function Base.iterate(sps::SingleStrategicPeriodWrapper, state = nothing)
+    !isnothing(state) && return nothing
+    return SingleStrategicPeriod(sps.ts), 1
+end
+function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
+    return SingleStrategicPeriod{T,SP}
+end
+Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(sps.ts)
+
+"""
+    StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
+
+A type representing a single strategic period supporting iteration over its
+time periods. It is created when iterating through [`StratPeriods`](@ref).
 """
 struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
     sp::Int
@@ -64,11 +128,42 @@ struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
     operational::OP
 end
 
-Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
-
-duration_strat(sp::StrategicPeriod) = sp.duration
 _strat_per(sp::StrategicPeriod) = sp.sp
+
 mult_strat(sp::StrategicPeriod) = sp.mult_sp
+duration_strat(sp::StrategicPeriod) = sp.duration
+
+Base.show(io::IO, sp::StrategicPeriod) = print(io, "sp$(sp.sp)")
+# Provide a constructor to simplify the design
+function OperationalPeriod(sp::StrategicPeriod, per::TimePeriod)
+    mult = mult_strat(sp) * multiple(per)
+    return OperationalPeriod(sp.sp, per, mult)
+end
+
+# Add basic functions of iterators
+Base.length(sp::StrategicPeriod) = length(sp.operational)
+function Base.iterate(sp::StrategicPeriod, state = nothing)
+    next =
+        isnothing(state) ? iterate(sp.operational) :
+        iterate(sp.operational, state)
+    next === nothing && return nothing
+
+    return OperationalPeriod(sp, next[1]), next[2]
+end
+function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
+    return OperationalPeriod
+end
+function Base.getindex(sp::StrategicPeriod, index::Int)
+    per = sp.operational[index]
+    return OperationalPeriod(sp, per)
+end
+function Base.eachindex(sp::StrategicPeriod)
+    return eachindex(sp.operational)
+end
+function Base.last(sp::StrategicPeriod)
+    per = last(sp.operational)
+    return OperationalPeriod(sp, per)
+end
 
 """
     multiple_strat(sp::StrategicPeriod, t)
@@ -86,6 +181,13 @@ end
 """
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
+"""
+    StratPeriods{S,T,OP}
+
+Type for iterating through the individual strategic periods of a
+[`TwoLevel`](@ref) time structure. It is automatically created through the
+function [`strat_periods`](@ref).
+"""
 struct StratPeriods{S,T,OP}
     ts::TwoLevel{S,T,OP}
 end
@@ -95,120 +197,44 @@ function remaining(sp::AbstractStrategicPeriod, sps::StratPeriods)
 end
 
 """
-    strat_periods(ts::TimeStructure)
-
-Iterator to go through the strategic periods of a time structure.
-
-The elements returned will be subtypes of `AbstractStrategicPeriod`.
-If the time structure do not have strategic periods, the overall
-time structure will be wrapped as a single strategic period.
+When the `TimeStructure` is a [`TwoLevel`](@ref), `strat_periods` returns the
+iterator [`StratPeriods`](@ref).
 
 ## Example
 ```julia
 periods = TwoLevel(5, SimpleTimes(10,1))
-
 total_dur = sum(duration_strat(sp) for sp in strategic_periods(periods))
 ```
 """
 strat_periods(ts::TwoLevel) = StratPeriods(ts)
 
-Base.length(sps::StratPeriods) = sps.ts.len
-
-function Base.iterate(sps::StratPeriods)
-    mult_sp = _multiple_adj(sps.ts, 1)
+# Provide a constructor to simplify the design
+function StrategicPeriod(sps::StratPeriods, sp::Int)
     return StrategicPeriod(
-        1,
-        sps.ts.duration[1],
-        mult_sp,
-        sps.ts.operational[1],
-    ),
-    1
-end
-
-function Base.iterate(sps::StratPeriods, state)
-    state == sps.ts.len && return nothing
-    mult_sp = _multiple_adj(sps.ts, state + 1)
-    sp = StrategicPeriod(
-        state + 1,
-        sps.ts.duration[state+1],
-        mult_sp,
-        sps.ts.operational[state+1],
+        sp,
+        sps.ts.duration[sp],
+        _multiple_adj(sps.ts, sp),
+        sps.ts.operational[sp],
     )
-    return sp, state + 1
 end
 
+# Add basic functions of iterators
+Base.length(sps::StratPeriods) = sps.ts.len
+function Base.iterate(sps::StratPeriods, state = nothing)
+    sp = isnothing(state) ? 1 : state + 1
+    sp > length(sps) && return nothing
+
+    return StrategicPeriod(sps, sp), sp
+end
+function Base.eltype(_::StratPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return StrategicPeriod{S,T,OP}
+end
+function Base.getindex(sps::StratPeriods, index::Int)
+    return StrategicPeriod(sps, index)
+end
+function Base.eachindex(sps::StratPeriods)
+    return eachindex(sps.ts.rep_periods)
+end
 function Base.last(sps::StratPeriods)
-    n = sps.ts.len
-    dur = sps.ts.duration[n]
-    mult_sp = _multiple_adj(sps.ts, n)
-    op = sps.ts.operational[n]
-    return StrategicPeriod(n, dur, mult_sp, op)
+    return StrategicPeriod(sps, length(sps))
 end
-
-Base.length(itr::StrategicPeriod) = length(itr.operational)
-function Base.eltype(::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
-    return OperationalPeriod
-end
-
-# Function for defining the time periods when iterating through a strategic period
-function Base.iterate(itr::StrategicPeriod, state = nothing)
-    next =
-        isnothing(state) ? iterate(itr.operational) :
-        iterate(itr.operational, state)
-    next === nothing && return nothing
-    per = next[1]
-
-    mult = itr.mult_sp * multiple(per)
-    return OperationalPeriod(itr.sp, per, mult), next[2]
-end
-
-function Base.last(itr::StrategicPeriod)
-    per = last(itr.operational)
-    mult = itr.mult_sp * multiple(per)
-    return OperationalPeriod(itr.sp, per, mult)
-end
-
-struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
-    ts::SP
-end
-
-function Base.iterate(ssp::SingleStrategicPeriodWrapper, state = nothing)
-    !isnothing(state) && return nothing
-    return SingleStrategicPeriod(ssp.ts), 1
-end
-Base.length(ssp::SingleStrategicPeriodWrapper) = 1
-function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
-    return SingleStrategicPeriod{T,SP}
-end
-Base.last(ssp::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(ssp.ts)
-
-struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <:
-       AbstractStrategicPeriod{T,T}
-    ts::SP
-end
-Base.length(ssp::SingleStrategicPeriod) = length(ssp.ts)
-Base.eltype(::Type{SingleStrategicPeriod{T,SP}}) where {T,SP} = eltype(SP)
-
-function Base.iterate(ssp::SingleStrategicPeriod, state = nothing)
-    if isnothing(state)
-        return iterate(ssp.ts)
-    end
-    return iterate(ssp.ts, state)
-end
-
-Base.last(ssp::SingleStrategicPeriod) = last(ssp.ts)
-
-duration_strat(ssp::SingleStrategicPeriod) = _total_duration(ssp.ts)
-_strat_per(ssp::SingleStrategicPeriod) = 1
-
-# Default solution is to behave as a single strategic period
-strat_periods(ts::TimeStructure) = SingleStrategicPeriodWrapper(ts)
-
-# Allow strategic_periods() in addition to strat_periods()
-
-"""
-    strategic_periods(ts)
-
-Internal convenience constructor for [`strat_periods`](@ref).
-"""
-strategic_periods(ts) = strat_periods(ts)

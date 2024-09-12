@@ -45,15 +45,14 @@ _rper(rp::SingleReprPeriod) = 1
 
 mult_repr(rp::SingleReprPeriod) = 1.0
 
-Base.length(rp::SingleReprPeriod) = length(rp.ts)
-Base.eltype(::Type{SingleReprPeriod{T,OP}}) where {T,OP} = eltype(OP)
-
 StrategicIndexable(::Type{<:SingleReprPeriod}) = HasStratIndex()
 
+Base.length(rp::SingleReprPeriod) = length(rp.ts)
 function Base.iterate(rp::SingleReprPeriod, state = nothing)
     next = isnothing(state) ? iterate(rp.ts) : iterate(rp.ts, state)
     return next
 end
+Base.eltype(::Type{SingleReprPeriod{T,OP}}) where {T,OP} = eltype(OP)
 Base.last(rp::SingleReprPeriod) = last(rp.ts)
 
 """
@@ -79,14 +78,15 @@ When the `TimeStructure` is a `TimeStructure`, `repr_periods` returns a
 """
 repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)
 
+# Add basic functions of iterators
 Base.length(rpers::SingleReprPeriodWrapper) = 1
-function Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP}
-    return SingleReprPeriod{T,OP}
-end
 
 function Base.iterate(rpers::SingleReprPeriodWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleReprPeriod(rpers.ts), 1
+end
+function Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP}
+    return SingleReprPeriod{T,OP}
 end
 Base.last(rpers::SingleReprPeriodWrapper) = SingleReprPeriod(rpers.ts)
 
@@ -118,10 +118,6 @@ _rper(rp::RepresentativePeriod) = rp.rp
 mult_repr(rp::RepresentativePeriod) = rp.mult_rp
 
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(_rper(rp))")
-function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
-    return ReprPeriod{eltype(OP)}
-end
-Base.length(rp::RepresentativePeriod) = length(rp.operational)
 
 # Provide a constructor to simplify the design
 function ReprPeriod(
@@ -132,7 +128,8 @@ function ReprPeriod(
     return ReprPeriod(_rper(rp), per, mult)
 end
 
-# Iterate the time periods of a RepresentativePeriod
+# Add basic functions of iterators
+Base.length(rp::RepresentativePeriod) = length(rp.operational)
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
     next =
         isnothing(state) ? iterate(rp.operational) :
@@ -140,6 +137,9 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
     isnothing(next) && return nothing
 
     return ReprPeriod(rp, next[1]), next[2]
+end
+function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
+    return ReprPeriod{eltype(OP)}
 end
 function Base.getindex(rp::RepresentativePeriod, index::Int)
     per = rp.operational[index]
@@ -170,11 +170,6 @@ iterator [`ReprPeriods`](@ref).
 """
 repr_periods(ts::RepresentativePeriods) = ReprPeriods(ts)
 
-function Base.eltype(_::ReprPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return RepresentativePeriod{T,OP}
-end
-Base.length(rpers::ReprPeriods) = rpers.ts.len
-
 # Provide a constructor to simplify the design
 function RepresentativePeriod(rpers::ReprPeriods, per::Int)
     return RepresentativePeriod(
@@ -184,12 +179,16 @@ function RepresentativePeriod(rpers::ReprPeriods, per::Int)
     )
 end
 
-# Iterate the time periods of a ReprPeriods
+# Add basic functions of iterators
+Base.length(rpers::ReprPeriods) = rpers.ts.len
 function Base.iterate(rpers::ReprPeriods, state = nothing)
     per = isnothing(state) ? 1 : state + 1
-    per === length(rpers) + 1 && return nothing
+    per > length(rpers) && return nothing
 
     return RepresentativePeriod(rpers, per), per
+end
+function Base.eltype(_::ReprPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return RepresentativePeriod{T,OP}
 end
 function Base.getindex(rpers::ReprPeriods, index::Int)
     return RepresentativePeriod(rpers, index)

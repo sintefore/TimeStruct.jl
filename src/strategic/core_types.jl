@@ -163,72 +163,64 @@ function TwoLevel(len::Integer, duration::Real, oper::RepresentativePeriods)
     )
 end
 
-_total_duration(itr::TwoLevel) = sum(itr.duration)
+_total_duration(ts::TwoLevel) = sum(ts.duration)
 
-function _multiple_adj(itr::TwoLevel, sp)
+function _multiple_adj(ts::TwoLevel, sp)
     mult =
-        itr.duration[sp] * itr.op_per_strat /
-        _total_duration(itr.operational[sp])
+        ts.duration[sp] * ts.op_per_strat /
+        _total_duration(ts.operational[sp])
     return stripunit(mult)
 end
 
-function Base.iterate(itr::TwoLevel)
-    sp = 1
-    next = iterate(itr.operational[sp])
-    next === nothing && return nothing
-    per = next[1]
-
-    mult = _multiple_adj(itr, sp) * multiple(per)
-    return OperationalPeriod(sp, per, mult), (sp, next[2])
+function Base.length(ts::TwoLevel)
+    return sum(length(op) for op in ts.operational)
 end
-
-function Base.iterate(itr::TwoLevel, state)
-    sp = state[1]
-    next = iterate(itr.operational[sp], state[2])
+function Base.iterate(ts::TwoLevel, state = (nothing, 1))
+    sp = state[2]
+    next =
+        isnothing(state[1]) ? iterate(ts.operational[sp]) :
+        iterate(ts.operational[sp], state[1])
     if next === nothing
         sp = sp + 1
-        if sp > itr.len
+        if sp > ts.len
             return nothing
         end
-        next = iterate(itr.operational[sp])
+        next = iterate(ts.operational[sp])
     end
-    per = next[1]
-
-    mult = _multiple_adj(itr, sp) * multiple(per)
-    return OperationalPeriod(sp, per, mult), (sp, next[2])
+    return OperationalPeriod(ts, next[1], sp), (next[2], sp)
 end
-
-function Base.length(itr::TwoLevel)
-    return sum(length(op) for op in itr.operational)
+function Base.last(ts::TwoLevel)
+    per = last(ts.operational[ts.len])
+    return OperationalPeriod(ts, per, ts.len)
 end
 
 Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 
-function Base.last(itr::TwoLevel)
-    per = last(itr.operational[itr.len])
-    mult = _multiple_adj(itr, itr.len) * multiple(per)
-    return OperationalPeriod(itr.len, per, mult)
-end
-
 """
 	struct OperationalPeriod <: TimePeriod
-Time period for iteration of a TwoLevel time structure.
+
+Time period for a single operational period. It is created through iterating through a
+[`TwoLevel`](@ref) time structure.
 """
 struct OperationalPeriod <: TimePeriod
     sp::Int
     period::TimePeriod
     multiple::Float64
 end
+function OperationalPeriod(ts::TwoLevel, per::TimePeriod, sp::Int)
+    mult = _multiple_adj(ts, sp) * multiple(per)
+    return OperationalPeriod(sp, per, mult)
+end
+
+_oper(t::OperationalPeriod) = _oper(t.period)
+_opscen(t::OperationalPeriod) = _opscen(t.period)
+_rper(t::OperationalPeriod) = _rper(t.period)
+_strat_per(t::OperationalPeriod) = t.sp
 
 isfirst(t::OperationalPeriod) = isfirst(t.period)
 duration(t::OperationalPeriod) = duration(t.period)
-probability(t::OperationalPeriod) = probability(t.period)
 multiple(t::OperationalPeriod) = t.multiple
-
-_oper(t::OperationalPeriod) = _oper(t.period)
-_strat_per(t::OperationalPeriod) = t.sp
-_opscen(t::OperationalPeriod) = _opscen(t.period)
-_rper(t::OperationalPeriod) = _rper(t.period)
+probability(t::OperationalPeriod) = probability(t.period)
 
 function Base.show(io::IO, t::OperationalPeriod)
     return print(io, "sp$(t.sp)-$(t.period)")
