@@ -176,6 +176,7 @@ end
 function Base.length(ts::TwoLevel)
     return sum(length(op) for op in ts.operational)
 end
+Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 function Base.iterate(ts::TwoLevel, state = (nothing, 1))
     sp = state[2]
     next =
@@ -190,7 +191,6 @@ function Base.iterate(ts::TwoLevel, state = (nothing, 1))
     end
     return OperationalPeriod(ts, next[1], sp), (next[2], sp)
 end
-Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
 function Base.last(ts::TwoLevel)
     per = last(ts.operational[ts.len])
     return OperationalPeriod(ts, per, ts.len)
@@ -208,10 +208,6 @@ struct OperationalPeriod <: TimePeriod
     period::TimePeriod
     multiple::Float64
 end
-function OperationalPeriod(ts::TwoLevel, per::TimePeriod, sp::Int)
-    mult = _multiple_adj(ts, sp) * multiple(per)
-    return OperationalPeriod(sp, per, mult)
-end
 
 _oper(t::OperationalPeriod) = _oper(t.period)
 _opscen(t::OperationalPeriod) = _opscen(t.period)
@@ -228,4 +224,10 @@ function Base.show(io::IO, t::OperationalPeriod)
 end
 function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
     return t1.sp < t2.sp || (t1.sp == t2.sp && t1.period < t2.period)
+end
+
+# Convenience constructor for the type
+function OperationalPeriod(ts::TwoLevel, per::TimePeriod, sp::Int)
+    mult = _multiple_adj(ts, sp) * multiple(per)
+    return OperationalPeriod(sp, per, mult)
 end

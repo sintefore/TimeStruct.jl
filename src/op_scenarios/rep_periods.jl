@@ -70,15 +70,14 @@ function [`opscenarios`](@ref).
 struct RepOpScens{OP}
     rp::Int
     mult::Float64
-    op_scens::OP
+    opscens::OP
 end
 
 _rper(oscs::RepOpScens) = oscs.rp
 
 """
- opscenarios(rep::RepresentativePeriod)
-
-Iterator that iterates over operational scenarios in a `RepresentativePeriod` time structure.
+When the `TimeStructure` is a [`RepresentativePeriod`](@ref) with [`OperationalScenarios`](@ref),
+`opscenarios` returns the iterator [`RepOpScens`](@ref).
 """
 function opscenarios(
     rep::RepresentativePeriod{T,OperationalScenarios{T,OP}},
@@ -91,14 +90,14 @@ function ReprOperationalScenario(oscs::RepOpScens, state::Int)
     return ReprOperationalScenario(
         _rper(oscs),
         state,
-        oscs.op_scens.probability[state],
+        oscs.opscens.probability[state],
         oscs.mult,
-        _multiple_adj(oscs.op_scens, state),
-        oscs.op_scens.scenarios[state]
+        _multiple_adj(oscs.opscens, state),
+        oscs.opscens.scenarios[state]
     )
 end
 
-Base.length(oscs::RepOpScens) = length(oscs.op_scens.scenarios)
+Base.length(oscs::RepOpScens) = length(oscs.opscens.scenarios)
 function Base.eltype(_::RepOpScens{SC}) where {T,OP,SC<:OperationalScenarios{T,OP}}
     return ReprOperationalScenario{T,OP}
 end

@@ -40,6 +40,7 @@ _total_duration(st::SimpleTimes) = sum(st.duration)
 
 # Add basic functions of iterators
 Base.length(st::SimpleTimes) = st.len
+Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 function Base.iterate(itr::SimpleTimes{T}, state = nothing) where {T}
     next = isnothing(state) ? 1 : state + 1
     next > itr.len && return nothing
@@ -55,7 +56,6 @@ end
 function Base.last(ts::SimpleTimes{T}) where {T}
     return SimplePeriod{T}(ts.len, ts.duration[ts.len])
 end
-Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
 
 """
     struct SimplePeriod{T<:Number} <: TimePeriod

@@ -64,7 +64,7 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
                     "The length of `rep_periods` cannot be less than the field `len` of `RepresentativePeriods`.",
                 ),
             )
-        elseif sum(period_share) > 1 || sum(period_share) < 1
+        elseif sum(period_share) > 1+1e-6 || sum(period_share) < 1-1e-6
             @warn(
                 "The sum of the `period_share` vector is given by $(sum(period_share)). " *
                 "This can lead to unexpected behaviour."
@@ -139,6 +139,9 @@ end
 function Base.length(rpers::RepresentativePeriods)
     return sum(length(rp) for rp in rpers.rep_periods)
 end
+function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
+    return ReprPeriod{eltype(OP)}
+end
 function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
     rp = state[2]
     next =
@@ -152,9 +155,6 @@ function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
         next = iterate(rpers.rep_periods[rp])
     end
     return ReprPeriod(rpers, next[1], rp), (next[2], rp)
-end
-function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
-    return ReprPeriod{eltype(OP)}
 end
 function Base.last(rpers::RepresentativePeriods)
     per = last(rpers.rep_periods[rpers.len])
@@ -183,11 +183,12 @@ duration(t::ReprPeriod) = duration(t.period)
 multiple(t::ReprPeriod) = t.mult
 probability(t::ReprPeriod) = probability(t.period)
 
-Base.show(io::IO, rp::ReprPeriod) = print(io, "rp$(rp.rp)-$(rp.period)")
+Base.show(io::IO, t::ReprPeriod) = print(io, "rp$(t.rp)-$(t.period)")
 function Base.isless(t1::ReprPeriod, t2::ReprPeriod)
     return t1.rp < t2.rp || (t1.rp == t2.rp && t1.period < t2.period)
 end
 
+# Convenience constructor for the type
 function ReprPeriod(rpers::RepresentativePeriods, per::TimePeriod, rp::Int)
     mult = _multiple_adj(rpers, rp) * multiple(per)
     return ReprPeriod(rp, per, mult)

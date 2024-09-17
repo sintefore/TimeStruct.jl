@@ -82,17 +82,6 @@ When the `TimeStructure` is a [`StrategicPeriod`](@ref), `opscenarios` returns t
 function opscenarios(sp::StrategicPeriod{S,T,OP}) where {S,T,OP}
     return StratOpScens(_strat_per(sp), mult_strat(sp), opscenarios(sp.operational))
 end
-
-"""
-When the `TimeStructure` is a [`TwoLevel`](@ref), `opscenarios` returns a vector of
-[`StratOperationalScenario`](@ref)s.
-"""
-function opscenarios(ts::TwoLevel{S,T,OP}) where {S,T,OP}
-    return collect(
-        Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
-    )
-end
-
 # Provide a constructor to simplify the design
 function StratOperationalScenario(oscs::StratOpScens, scen::Int, per)
     return StratOperationalScenario(
@@ -234,18 +223,6 @@ function opscenarios(
     )
 end
 
-"""
-When the `TimeStructure` is a [`TwoLevel`](@ref) with [`RepresentativePeriods`](@ref),
-`opscenarios` returns a vector of [`StratReprOpscenario`](@ref)s.
-"""
-function opscenarios(
-    ts::TwoLevel{S1,T,RepresentativePeriods{S2,T,OP}},
-) where {S1,S2,T,OP}
-    return collect(
-        Iterators.flatten(opscenarios(rp) for sp in strategic_periods(ts) for rp in repr_periods(sp)),
-    )
-end
-
 # Provide a constructor to simplify the design
 function StratReprOpscenario(oscs::StratReprOpscenarios, scen, per)
     return StratReprOpscenario(
@@ -282,4 +259,26 @@ end
 function Base.last(oscs::StratReprOpscenarios)
     per = last(oscs.opscens)
     return StratReprOpscenario(oscs, _opscen(per), per)
+end
+
+"""
+When the `TimeStructure` is a [`TwoLevel`](@ref), `opscenarios` returns a vector of
+[`StratOperationalScenario`](@ref)s.
+"""
+function opscenarios(ts::TwoLevel{S,T,OP}) where {S,T,OP}
+    return collect(
+        Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)),
+    )
+end
+
+"""
+When the `TimeStructure` is a [`TwoLevel`](@ref) with [`RepresentativePeriods`](@ref),
+`opscenarios` returns a vector of [`StratReprOpscenario`](@ref)s.
+"""
+function opscenarios(
+    ts::TwoLevel{S1,T,RepresentativePeriods{S2,T,OP}},
+) where {S1,S2,T,OP}
+    return collect(
+        Iterators.flatten(opscenarios(rp) for sp in strategic_periods(ts) for rp in repr_periods(sp)),
+    )
 end

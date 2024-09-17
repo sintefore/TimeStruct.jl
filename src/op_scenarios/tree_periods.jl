@@ -1,4 +1,3 @@
-
 """
     struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
 

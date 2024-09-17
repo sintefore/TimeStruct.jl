@@ -1,16 +1,16 @@
-
 """
     AbstractStrategicPeriod{S,T} <: TimeStructure{T}
 
 Abstract type used for time structures that represent a strategic period.
 These periods are obtained when iterating through the strategic periods of a time
-structure declared using the function [`strat_periods`](@ref.)
+structure declared by the function [`strat_periods`](@ref.)
 """
 abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
 
 function _strat_per(sp::AbstractStrategicPeriod)
     return error("_strat_per() not implemented for $(typeof(sp))")
 end
+
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
 mult_strat(sp::AbstractStrategicPeriod) = 1
 function duration_strat(sp::AbstractStrategicPeriod)
@@ -67,11 +67,11 @@ duration_strat(sp::SingleStrategicPeriod) = _total_duration(sp.ts)
 
 # Add basic functions of iterators
 Base.length(sp::SingleStrategicPeriod) = length(sp.ts)
+Base.eltype(::Type{SingleStrategicPeriod{T,SP}}) where {T,SP} = eltype(SP)
 function Base.iterate(sp::SingleStrategicPeriod, state = nothing)
     next = isnothing(state) ? iterate(sp.ts) : iterate(sp.ts, state)
     return next
 end
-Base.eltype(::Type{SingleStrategicPeriod{T,SP}}) where {T,SP} = eltype(SP)
 Base.last(sp::SingleStrategicPeriod) = last(sp.ts)
 
 """
@@ -142,6 +142,9 @@ end
 
 # Add basic functions of iterators
 Base.length(sp::StrategicPeriod) = length(sp.operational)
+function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
+    return OperationalPeriod
+end
 function Base.iterate(sp::StrategicPeriod, state = nothing)
     next =
         isnothing(state) ? iterate(sp.operational) :
@@ -149,9 +152,6 @@ function Base.iterate(sp::StrategicPeriod, state = nothing)
     next === nothing && return nothing
 
     return OperationalPeriod(sp, next[1]), next[2]
-end
-function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
-    return OperationalPeriod
 end
 function Base.getindex(sp::StrategicPeriod, index::Int)
     per = sp.operational[index]
@@ -220,14 +220,14 @@ end
 
 # Add basic functions of iterators
 Base.length(sps::StratPeriods) = sps.ts.len
+function Base.eltype(_::StratPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return StrategicPeriod{S,T,OP}
+end
 function Base.iterate(sps::StratPeriods, state = nothing)
     sp = isnothing(state) ? 1 : state + 1
     sp > length(sps) && return nothing
 
     return StrategicPeriod(sps, sp), sp
-end
-function Base.eltype(_::StratPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StrategicPeriod{S,T,OP}
 end
 function Base.getindex(sps::StratPeriods, index::Int)
     return StrategicPeriod(sps, index)

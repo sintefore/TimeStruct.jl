@@ -1,16 +1,16 @@
-
 """
     AbstractRepresentativePeriod{T} <: TimeStructure{T}
 
 Abstract type used for time structures that represent a representative period.
 These periods are obtained when iterating through the representative periods of a time
-structure declared using the function [`repr_period`](@ref.)
+structure declared by the function [`repr_period`](@ref.)
 """
 abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T} end
 
 function _rper(rp::AbstractRepresentativePeriod)
     return error("_rper() not implemented for $(typeof(rp))")
 end
+
 isfirst(rp::AbstractRepresentativePeriod) = _rper(rp) == 1
 mult_repr(rp::AbstractRepresentativePeriod) = 1
 
@@ -66,6 +66,17 @@ struct SingleReprPeriodWrapper{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     ts::OP
 end
 
+# Add basic functions of iterators
+Base.length(rpers::SingleReprPeriodWrapper) = 1
+function Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP}
+    return SingleReprPeriod{T,OP}
+end
+function Base.iterate(rpers::SingleReprPeriodWrapper, state = nothing)
+    !isnothing(state) && return nothing
+    return SingleReprPeriod(rpers.ts), 1
+end
+Base.last(rpers::SingleReprPeriodWrapper) = SingleReprPeriod(rpers.ts)
+
 """
     repr_periods(ts::TimeStructure)
 
@@ -74,31 +85,9 @@ periods of a `TimeStructure`. The type of the iterator is dependent on the type 
 input `TimeStructure`.
 
 When the `TimeStructure` is a `TimeStructure`, `repr_periods` returns a
-[`SingleReprPeriodWrapper`](@ref). This coresponds to the default behavior.
+[`SingleReprPeriodWrapper`](@ref). This corresponds to the default behavior.
 """
 repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)
-
-# Add basic functions of iterators
-Base.length(rpers::SingleReprPeriodWrapper) = 1
-
-function Base.iterate(rpers::SingleReprPeriodWrapper, state = nothing)
-    !isnothing(state) && return nothing
-    return SingleReprPeriod(rpers.ts), 1
-end
-function Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP}
-    return SingleReprPeriod{T,OP}
-end
-Base.last(rpers::SingleReprPeriodWrapper) = SingleReprPeriod(rpers.ts)
-
-"""
-When the `TimeStructure` is a [`TwoLevel`](@ref), `repr_periods` returns an `Array` of
-all [`StratReprPeriod`](@ref)s.
-"""
-function repr_periods(ts::TwoLevel)
-    return collect(
-        Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)),
-    )
-end
 
 """
     RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
@@ -130,6 +119,9 @@ end
 
 # Add basic functions of iterators
 Base.length(rp::RepresentativePeriod) = length(rp.operational)
+function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
+    return ReprPeriod{eltype(OP)}
+end
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
     next =
         isnothing(state) ? iterate(rp.operational) :
@@ -137,9 +129,6 @@ function Base.iterate(rp::RepresentativePeriod, state = nothing)
     isnothing(next) && return nothing
 
     return ReprPeriod(rp, next[1]), next[2]
-end
-function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
-    return ReprPeriod{eltype(OP)}
 end
 function Base.getindex(rp::RepresentativePeriod, index::Int)
     per = rp.operational[index]
@@ -154,7 +143,7 @@ function Base.last(rp::RepresentativePeriod)
 end
 
 """
-    ReprPeriods{T,OP}
+    ReprPeriods{S,T,OP}
 
 Type for iterating through the individual representative periods of a
 [`RepresentativePeriods`](@ref) time structure. It is automatically created through the
@@ -181,14 +170,14 @@ end
 
 # Add basic functions of iterators
 Base.length(rpers::ReprPeriods) = rpers.ts.len
+function Base.eltype(_::ReprPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+    return RepresentativePeriod{T,OP}
+end
 function Base.iterate(rpers::ReprPeriods, state = nothing)
     per = isnothing(state) ? 1 : state + 1
     per > length(rpers) && return nothing
 
     return RepresentativePeriod(rpers, per), per
-end
-function Base.eltype(_::ReprPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return RepresentativePeriod{T,OP}
 end
 function Base.getindex(rpers::ReprPeriods, index::Int)
     return RepresentativePeriod(rpers, index)

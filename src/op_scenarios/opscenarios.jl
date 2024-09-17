@@ -1,4 +1,3 @@
-
 """
     AbstractOperationalScenario{T} <: TimeStructure{T}
 
@@ -166,7 +165,7 @@ Type for iterating through the individual operational scenarios of a
 function [`opscenarios`](@ref).
 """
 struct OpScens{T,OP}
-    ts::OperationalScenarios{T,OP}
+    opscens::OperationalScenarios{T,OP}
 end
 
 """
@@ -179,14 +178,14 @@ opscenarios(ts::OperationalScenarios) = OpScens(ts)
 function OperationalScenario(oscs::OpScens, per::Int)
     return OperationalScenario(
         per,
-        oscs.ts.probability[per],
-        _multiple_adj(oscs.ts, per),
-        oscs.ts.scenarios[per],
+        oscs.opscens.probability[per],
+        _multiple_adj(oscs.opscens, per),
+        oscs.opscens.scenarios[per],
     )
 end
 
 # Add basic functions of iterators
-Base.length(oscs::OpScens) = oscs.ts.len
+Base.length(oscs::OpScens) = oscs.opscens.len
 function Base.eltype(_::Type{OpScens{T,OP}}) where {T,OP<:TimeStructure{T}}
     return OperationalScenario{T,OP}
 end
@@ -200,6 +199,6 @@ function Base.getindex(oscs::OpScens, index::Int)
     return OperationalScenario(oscs, index)
 end
 function Base.eachindex(oscs::OpScens)
-    return eachindex(oscs.ts.scenarios)
+    return eachindex(oscs.opscens.scenarios)
 end
 Base.last(oscs::OpScens) = OperationalScenario(oscs, length(oscs))

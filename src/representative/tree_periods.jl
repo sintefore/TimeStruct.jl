@@ -1,5 +1,3 @@
-
-
 """
     struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 

@@ -1,4 +1,3 @@
-
 """
     struct CalendarTimes{T} <: TimeStructure{T}
 
@@ -70,6 +69,7 @@ _total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
 
 # Add basic functions of iterators
 Base.length(ts::CalendarTimes) = ts.length
+Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
 function Base.iterate(ts::CalendarTimes)
     return CalendarPeriod(ts.start_date, ts.start_date + ts.period, 1),
     (1, ts.start_date)
@@ -80,7 +80,6 @@ function Base.iterate(ts::CalendarTimes, state)
     return CalendarPeriod(start_time, start_time + ts.period, state[1] + 1),
     (state[1] + 1, start_time)
 end
-Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
 function Base.getindex(ts::CalendarTimes, index)
     start_time = ts.start_date + (index - 1) * ts.period
     return CalendarPeriod(start_time, start_time + ts.period, index)
