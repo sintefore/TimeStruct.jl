@@ -16,6 +16,8 @@ include(joinpath("strategic", "strat_periods.jl"))
 include(joinpath("representative", "rep_periods.jl"))
 include(joinpath("representative", "strat_periods.jl"))
 include(joinpath("op_scenarios", "opscenarios.jl"))
+include(joinpath("op_scenarios", "rep_periods.jl"))
+include(joinpath("op_scenarios", "strat_periods.jl"))
 include("utils.jl")
 include("discount.jl")
 
