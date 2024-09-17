@@ -28,7 +28,7 @@ Documenter.makedocs(
         assets = String[],
     ),
     doctest = false,
-    #modules = [TimeStruct],
+    modules = [TimeStruct],
     pages = pages,
 )
 

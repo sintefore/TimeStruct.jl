@@ -1,9 +1,5 @@
 # Internal types
 
-```@meta
-CurrentModule = TimeStruct
-```
-
 ## Strategic period types ([`TwoLevelTree`](@ref))
 
 ### Single types
@@ -19,7 +15,6 @@ StrategicScenario
 ```@docs
 AbstractTreeStructure
 StratTreeNodes
-
 ```
 
 ## Strategic period types ([`TwoLevel`](@ref))
@@ -60,7 +55,7 @@ StratNodeReprPeriods
 OperationalScenario
 StratOperationalScenario
 StratNodeOperationalScenario
-StratNodeReprOpscenario
+StratNodeReprOpScenario
 ```
 
 ### Iterator types
@@ -68,7 +63,7 @@ StratNodeReprOpscenario
 ```@docs
 StrategicScenarios
 StratNodeOpScens
-StratNodeReprOpscenarios
+StratNodeReprOpScens
 ```
 
 ## Operational period types

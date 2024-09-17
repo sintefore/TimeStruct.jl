@@ -1,7 +1,3 @@
-
-```@meta
-CurrentModule = TimeStruct
-```
 # Available time structures
 
 ```@docs
@@ -81,7 +77,6 @@ chunk
 ```@docs
 chunk_duration
 ```
-
 
 # Time profiles
 
