@@ -18,12 +18,12 @@ include(joinpath("representative", "strat_periods.jl"))
 include(joinpath("op_scenarios", "opscenarios.jl"))
 include(joinpath("op_scenarios", "rep_periods.jl"))
 include(joinpath("op_scenarios", "strat_periods.jl"))
+
+include(joinpath("strat_scenarios", "tree_periods.jl"))
+include(joinpath("strat_scenarios", "core_types.jl"))
+
 include("utils.jl")
 include("discount.jl")
-
-include("tree_nodes.jl")
-include("twoleveltree.jl")
-
 include("profiles.jl")
 
 export TimeStructure
