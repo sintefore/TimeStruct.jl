@@ -94,6 +94,7 @@ function StratOperationalScenario(oscs::StratOpScens, scen::Int, per)
     )
 end
 
+# Add basic functions of iterators
 Base.length(oscs::StratOpScens) = length(_oper_it(oscs))
 function Base.iterate(oscs::StratOpScens, state = (nothing, 1))
     next = isnothing(state[1]) ? iterate(_oper_it(oscs)) : iterate(_oper_it(oscs), state[1])
