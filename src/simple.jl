@@ -3,7 +3,7 @@
 
     SimpleTimes(len::Integer, duration::Vector{T}) where {T}
     SimpleTimes(len::Integer, duration::Number)
-    SimpleTimes(dur::Vector{T}) where {T<:Number}
+    SimpleTimes(dur::Vector{T}) where {T}
 
 A simple time structure consisting of consecutive time periods of varying duration.
 `SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
@@ -34,7 +34,7 @@ end
 function SimpleTimes(len::Integer, duration::Number)
     return SimpleTimes(len, fill(duration, len))
 end
-SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
+SimpleTimes(dur::Vector{T}) where {T} = SimpleTimes(length(dur), dur)
 
 _total_duration(st::SimpleTimes) = sum(st.duration)
 
@@ -63,7 +63,7 @@ end
 Time period for a single operational period. It is created through iterating through a
 [`SimpleTimes`](@ref) time structure.
 """
-struct SimplePeriod{T<:Number} <: TimePeriod
+struct SimplePeriod{T} <: TimePeriod
     op::Int
     duration::T
 end

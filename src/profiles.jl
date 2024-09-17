@@ -1,7 +1,7 @@
 abstract type TimeProfile{T} end
 
 """
-    FixedProfile(val<:Number)
+    FixedProfile(val)
 
 Time profile with a constant value for all time periods.
 
@@ -10,7 +10,7 @@ Time profile with a constant value for all time periods.
 profile = FixedProfile(5)
 ```
 """
-struct FixedProfile{T<:Number} <: TimeProfile{T}
+struct FixedProfile{T} <: TimeProfile{T}
     val::T
 end
 
@@ -19,7 +19,7 @@ function Base.getindex(fp::FixedProfile, _::T) where {T<:Union{TimePeriod,TimeSt
 end
 
 """
-    OperationalProfile(vals::Vector{T}) where {T<:Number}
+    OperationalProfile(vals::Vector{T}) where {T}
 
 Time profile with a value that varies with the operational time period.
 
@@ -30,7 +30,7 @@ If too few values are provided, the last provided value will be repeated.
 profile = OperationalProfile([1, 2, 3, 4, 5])
 ```
 """
-struct OperationalProfile{T<:Number} <: TimeProfile{T}
+struct OperationalProfile{T} <: TimeProfile{T}
     vals::Vector{T}
 end
 
@@ -42,8 +42,8 @@ function Base.getindex(
 end
 
 """
-    StrategicProfile(vals::Vector{P}) where {T<:Number, P<:TimeProfile{T}}
-    StrategicProfile(vals::Vector{<:Number})
+    StrategicProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
+    StrategicProfile(vals::Vector)
 
 Time profile with a separate time profile for each strategic period.
 
@@ -57,10 +57,10 @@ profile = StrategicProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4
 profile = StrategicProfile([1, 2, 3, 4, 5])
 ```
 """
-struct StrategicProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
+struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function StrategicProfile(vals::Vector{<:Number})
+function StrategicProfile(vals::Vector)
     return StrategicProfile([FixedProfile(v) for v in vals])
 end
 
@@ -80,8 +80,8 @@ function Base.getindex(
 end
 
 """
-    ScenarioProfile(vals::Vector{P}) where {T<:Number, P<:TimeProfile{T}}
-    ScenarioProfile(vals::Vector{<:Number})
+    ScenarioProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
+    ScenarioProfile(vals::Vector)
 
 Time profile with a separate time profile for each scenario.
 
@@ -95,10 +95,10 @@ profile = ScenarioProfile([OperationalProfile([1, 2]), OperationalProfile([3, 4,
 profile = ScenarioProfile([1, 2, 3, 4, 5])
 ```
 """
-struct ScenarioProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
+struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function ScenarioProfile(vals::Vector{<:Number})
+function ScenarioProfile(vals::Vector)
     return ScenarioProfile([FixedProfile(v) for v in vals])
 end
 
@@ -118,8 +118,8 @@ function Base.getindex(
 end
 
 """
-    RepresentativeProfile(vals::Vector{P}) where {T<:Number, P<:TimeProfile{T}}
-    RepresentativeProfile(vals::Vector{<:Number})
+    RepresentativeProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
+    RepresentativeProfile(vals::Vector)
 
 Time profile with a separate time profile for each representative period.
 
@@ -133,10 +133,10 @@ profile = RepresentativeProfile([OperationalProfile([1, 2]), OperationalProfile(
 profile = RepresentativeProfile([1, 2, 3, 4, 5])
 ```
 """
-struct RepresentativeProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
+struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
-function RepresentativeProfile(vals::Vector{<:Number})
+function RepresentativeProfile(vals::Vector)
     return RepresentativeProfile([FixedProfile(v) for v in vals])
 end
 
@@ -158,8 +158,8 @@ function Base.getindex(
 end
 
 """
-    StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T<:Number, P<:TimeProfile{T}}
-    StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
+    StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T, P<:TimeProfile{T}}
+    StrategicStochasticProfile(vals::Vector{<:Vector})
 
 Time profile with a separate time profile for each strategic node in a [`TwoLevelTree`](@ref)
 structure.
@@ -178,10 +178,10 @@ profile = StrategicStochasticProfile([
 ])
 ```
 """
-struct StrategicStochasticProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
+struct StrategicStochasticProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
 end
-function StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
+function StrategicStochasticProfile(vals::Vector{<:Vector})
     return StrategicStochasticProfile([[FixedProfile(v_2) for v_2 in v_1] for v_1 in vals])
 end
 
@@ -218,59 +218,59 @@ function Base.getindex(TP::TimeProfile, inds::Any)
 end
 
 import Base: +, -, *, /
-+(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val + b)
-function +(a::OperationalProfile{T}, b::Number) where {T<:Number}
++(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val + b)
+function +(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .+ b)
 end
-function +(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function +(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .+ b)
 end
-function +(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function +(a::ScenarioProfile{T}, b::Number) where {T}
     return ScenarioProfile(a.vals .+ b)
 end
-function +(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function +(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .+ b)
 end
-+(a::Number, b::TimeProfile{T}) where {T<:Number} = b + a
--(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val - b)
-function -(a::OperationalProfile{T}, b::Number) where {T<:Number}
++(a::Number, b::TimeProfile{T}) where {T} = b + a
+-(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val - b)
+function -(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .- b)
 end
-function -(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function -(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .- b)
 end
-function -(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function -(a::ScenarioProfile{T}, b::Number) where {T}
     return ScenarioProfile(a.vals .- b)
 end
-function -(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function -(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .- b)
 end
 
-*(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val .* b)
-function *(a::OperationalProfile{T}, b::Number) where {T<:Number}
+*(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val .* b)
+function *(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .* b)
 end
-function *(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function *(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .* b)
 end
-function *(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function *(a::ScenarioProfile{T}, b::Number) where {T}
     return ScenarioProfile(a.vals .* b)
 end
-function *(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function *(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .* b)
 end
 
-*(a::Number, b::TimeProfile{T}) where {T<:Number} = b * a
-/(a::FixedProfile{T}, b::Number) where {T<:Number} = FixedProfile(a.val / b)
-function /(a::OperationalProfile{T}, b::Number) where {T<:Number}
+*(a::Number, b::TimeProfile{T}) where {T} = b * a
+/(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val / b)
+function /(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals ./ b)
 end
-function /(a::StrategicProfile{T}, b::Number) where {T<:Number}
+function /(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals ./ b)
 end
-function /(a::ScenarioProfile{T}, b::Number) where {T<:Number}
+function /(a::ScenarioProfile{T}, b::Number) where {T}
     return ScenarioProfile(a.vals ./ b)
 end
-function /(a::RepresentativeProfile{T}, b::Number) where {T<:Number}
+function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
