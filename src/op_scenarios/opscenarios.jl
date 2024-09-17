@@ -89,11 +89,6 @@ When the `TimeStructure` is a `TimeStructure`, `opscenarios` returns a
 [`SingleScenarioWrapper`](@ref). This corresponds to the default behavior.
 """
 opscenarios(ts::TimeStructure) = SingleScenarioWrapper(ts)
-"""
-When the `TimeStructure` is a [`SingleStrategicPeriod`](@ref), `opscenarios` returns the
-correct behavior based on the substructure.
-"""
-opscenarios(ts::SingleStrategicPeriod) = opscenarios(ts.ts)
 
 # Add basic functions of iterators
 Base.length(ssw::SingleScenarioWrapper) = 1
@@ -114,8 +109,8 @@ time periods. It is created when iterating through [`OpScens`](@ref).
 struct OperationalScenario{T,OP<:TimeStructure{T}} <:
        AbstractOperationalScenario{T}
     scen::Int
-    probability::Float64
     mult_sc::Float64
+    probability::Float64
     operational::OP
 end
 
@@ -137,7 +132,9 @@ end
 
 # Add basic functions of iterators
 Base.length(osc::OperationalScenario) = length(osc.operational)
-Base.eltype(::Type{OperationalScenario}) = ScenarioPeriod
+function Base.eltype(_::Type{OperationalScenario{T,OP}}) where {T,OP}
+    return ScenarioPeriod{eltype(OP)}
+end
 function Base.iterate(osc::OperationalScenario, state = nothing)
     next =
         isnothing(state) ? iterate(osc.operational) :
@@ -165,27 +162,27 @@ Type for iterating through the individual operational scenarios of a
 function [`opscenarios`](@ref).
 """
 struct OpScens{T,OP}
-    opscens::OperationalScenarios{T,OP}
+    ts::OperationalScenarios{T,OP}
 end
 
 """
 When the `TimeStructure` is an [`OperationalScenarios`](@ref), `opscenarios` returns the
 iterator [`OpScens`](@ref).
 """
-opscenarios(ts::OperationalScenarios) = OpScens(ts)
+opscenarios(oscs::OperationalScenarios) = OpScens(oscs)
 
 # Provide a constructor to simplify the design
 function OperationalScenario(oscs::OpScens, per::Int)
     return OperationalScenario(
         per,
-        oscs.opscens.probability[per],
-        _multiple_adj(oscs.opscens, per),
-        oscs.opscens.scenarios[per],
+        _multiple_adj(oscs.ts, per),
+        oscs.ts.probability[per],
+        oscs.ts.scenarios[per],
     )
 end
 
 # Add basic functions of iterators
-Base.length(oscs::OpScens) = oscs.opscens.len
+Base.length(oscs::OpScens) = oscs.ts.len
 function Base.eltype(_::Type{OpScens{T,OP}}) where {T,OP<:TimeStructure{T}}
     return OperationalScenario{T,OP}
 end
@@ -199,6 +196,6 @@ function Base.getindex(oscs::OpScens, index::Int)
     return OperationalScenario(oscs, index)
 end
 function Base.eachindex(oscs::OpScens)
-    return eachindex(oscs.opscens.scenarios)
+    return eachindex(oscs.ts.scenarios)
 end
 Base.last(oscs::OpScens) = OperationalScenario(oscs, length(oscs))

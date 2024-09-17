@@ -6,39 +6,37 @@ time periods. It is created when iterating through [`RepOpScens`](@ref).
 """
 struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <:
     AbstractOperationalScenario{T}
- rp::Int
- scen::Int
- probability::Float64
- multiple_repr::Float64
- multiple_scen::Float64
- operational::OP
+    rp::Int
+    scen::Int
+    mult_rp::Float64
+    mult_scen::Float64
+    probability::Float64
+    operational::OP
 end
 
 _opscen(osc::ReprOperationalScenario) = osc.scen
 _rper(osc::ReprOperationalScenario) = osc.rp
 
 probability(osc::ReprOperationalScenario) = osc.probability
-mult_scen(osc::ReprOperationalScenario) = osc.multiple_scen
-mult_repr(osc::ReprOperationalScenario) = osc.multiple_repr
+mult_scen(osc::ReprOperationalScenario) = osc.mult_scen
+mult_repr(osc::ReprOperationalScenario) = osc.mult_rp
 
 RepresentativeIndexable(::Type{<:ReprOperationalScenario}) = HasReprIndex()
 
 # Provide a constructor to simplify the design
 function ReprPeriod(osc::ReprOperationalScenario, per)
-    mult_scp = mult_scen(osc) * multiple(per)
-    mult_rp = mult_repr(osc) * mult_scp
-    scp = ScenarioPeriod(_opscen(osc), probability(osc), mult_scp, per)
-    return ReprPeriod(_rper(osc), scp, mult_rp)
+    mult = mult_repr(osc) * multiple(per)
+    return ReprPeriod(_rper(osc), per, mult)
 end
 
 function Base.show(io::IO, osc::ReprOperationalScenario)
-    return print(io, "rp$(osc.rp)-sc$(osc.scen)")
+    return print(io, "rp$(_rper(osc))-sc$(_opscen(osc))")
 end
 
 # Add basic functions of iterators
 Base.length(osc::ReprOperationalScenario) = length(osc.operational)
-function Base.eltype(osc::ReprOperationalScenario{T,OP}) where {T,OP}
-    return ReprPeriod{ScenarioPeriod{eltype(OP)}}
+function Base.eltype(_::ReprOperationalScenario{T,OP}) where {T,OP}
+    return ReprPeriod{eltype(OP)}
 end
 function Base.iterate(osc::ReprOperationalScenario, state = nothing)
     next =
@@ -69,11 +67,15 @@ function [`opscenarios`](@ref).
 """
 struct RepOpScens{OP}
     rp::Int
-    mult::Float64
+    mult_rp::Float64
     opscens::OP
 end
 
 _rper(oscs::RepOpScens) = oscs.rp
+
+mult_repr(oscs::RepOpScens) = oscs.mult_rp
+
+_oper_it(oscs::RepOpScens) = oscs.opscens
 
 """
 When the `TimeStructure` is a [`RepresentativePeriod`](@ref) with [`OperationalScenarios`](@ref),
@@ -82,30 +84,45 @@ When the `TimeStructure` is a [`RepresentativePeriod`](@ref) with [`OperationalS
 function opscenarios(
     rep::RepresentativePeriod{T,OperationalScenarios{T,OP}},
 ) where {T,OP}
-    return RepOpScens(_rper(rep), mult_repr(rep), rep.operational)
+    return RepOpScens(_rper(rep), mult_repr(rep), opscenarios(rep.operational))
 end
 
 # Provide a constructor to simplify the design
-function ReprOperationalScenario(oscs::RepOpScens, state::Int)
+function ReprOperationalScenario(oscs::RepOpScens, scen::Int, per)
     return ReprOperationalScenario(
         _rper(oscs),
-        state,
-        oscs.opscens.probability[state],
-        oscs.mult,
-        _multiple_adj(oscs.opscens, state),
-        oscs.opscens.scenarios[state]
+        scen,
+        mult_repr(oscs),
+        _multiple_adj(_oper_it(_oper_it(oscs)), scen),
+        probability(per),
+        per,
     )
 end
 
-Base.length(oscs::RepOpScens) = length(oscs.opscens.scenarios)
-function Base.eltype(_::RepOpScens{SC}) where {T,OP,SC<:OperationalScenarios{T,OP}}
-    return ReprOperationalScenario{T,OP}
+# Add basic functions of iterators
+Base.length(oscs::RepOpScens) = length(_oper_it(_oper_it(oscs)).scenarios)
+function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
+    return ReprOperationalScenario{T,eltype(SC)}
 end
-function Base.iterate(oscs::RepOpScens, state = nothing)
-    scen = isnothing(state) ? 1 : state + 1
-    scen > length(oscs) && return nothing
+function Base.iterate(oscs::RepOpScens, state = (nothing, 1))
+    next =
+        isnothing(state[1]) ? iterate(_oper_it(oscs)) :
+        iterate(_oper_it(oscs), state[1])
+    isnothing(next) && return nothing
 
-    return ReprOperationalScenario(oscs, scen), scen
+    scen = state[2]
+    return ReprOperationalScenario(oscs, _opscen(next[1]), next[1]), (next[2], scen + 1)
+end
+function Base.getindex(oscs::RepOpScens, index::Int)
+    per = _oper_it(oscs)[index]
+    return ReprOperationalScenario(oscs, _opscen(per), per)
+end
+function Base.eachindex(oscs::RepOpScens)
+    return eachindex(_oper_it(oscs))
+end
+function Base.last(oscs::RepOpScens)
+    per = last(_oper_it(oscs))
+    return ReprOperationalScenario(oscs, _opscen(per), per)
 end
 
 """
