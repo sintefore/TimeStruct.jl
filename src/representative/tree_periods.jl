@@ -2,10 +2,10 @@
     struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A structure representing a single representative period of a [`StratNode`](@ref) of a
-[`TwolevelTree`]. It is created through iterating through [`StratNodeReprPeriods`](@ref).
+[`TwoLevelTree`](@ref). It is created through iterating through [`StratNodeReprPeriods`](@ref).
 
-It is equivalent to a [`StratReprPeriod`] of a [`TwoLevel`](@ref) time structure when
-utilizing a [`TwolevelTree`].
+It is equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
+utilizing a [`TwoLevelTree`](@ref).
 """
 struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <:
        AbstractRepresentativePeriod{T}

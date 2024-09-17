@@ -1,6 +1,6 @@
 # Multi-horizon time structures
 
-## TwoLevel
+## TwoLevel structure
 
 The main motivation for the `TimeStruct` package is to support
 multi-horizon optimization models. The time structure [`TwoLevel`](@ref) allows for a two level
@@ -67,4 +67,4 @@ repr = RepresentativePeriods(2, 365, [0.6, 0.4], [week, week]);
 periods = TwoLevel(3, [5, 5, 10], [repr, repr, repr], 365.0);
 ```
 
-## TwoLevelTree
+## TwoLevelTree structure

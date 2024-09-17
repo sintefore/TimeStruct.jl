@@ -3,7 +3,7 @@
 
 Abstract type used for time structures that represent a representative period.
 These periods are obtained when iterating through the representative periods of a time
-structure declared by the function [`repr_period`](@ref.)
+structure declared by the function [`repr_periods`](@ref).
 """
 abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T} end
 

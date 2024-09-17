@@ -1,14 +1,14 @@
 """
     AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T}
 
-Abstract base type for all tree nodes within a [`TwoLevelTree`] type.
+Abstract base type for all tree nodes within a [`TwoLevelTree`](@ref) type.
 """
 abstract type AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T} end
 
 """
     AbstractTreeStructure
 
-Abstract base type for all tree timestructures within a [`TwoLevelTree`] type.
+Abstract base type for all tree timestructures within a [`TwoLevelTree`](@ref) type.
 """
 abstract type AbstractTreeStructure end
 
@@ -33,11 +33,11 @@ StrategicTreeIndexable(::Type{<:TimePeriod}) = HasStratTreeIndex()
 """
     struct StratNode{S, T, OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
 
-A structure representing a single strategic node of a [`TwolevelTree`]. It is created
+A structure representing a single strategic node of a [`TwoLevelTree`](@ref). It is created
 through iterating through [`StratTreeNodes`](@ref).
 
 It is equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
-utilizing a [`TwolevelTree`].
+utilizing a [`TwoLevelTree`](@ref).
 """
 struct StratNode{S,T,OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
     sp::Int

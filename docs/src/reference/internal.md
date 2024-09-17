@@ -5,16 +5,17 @@
 ### Single types
 
 ```@docs
-AbstractTreeNode
-StratNode
-StrategicScenario
+TimeStruct.AbstractTreeNode
+TimeStruct.StratNode
+TimeStruct.StrategicScenario
 ```
 
 ### Iterator types
 
 ```@docs
-AbstractTreeStructure
-StratTreeNodes
+TimeStruct.AbstractTreeStructure
+TimeStruct.StratTreeNodes
+TimeStruct.StrategicScenarios
 ```
 
 ## Strategic period types ([`TwoLevel`](@ref))
@@ -22,13 +23,16 @@ StratTreeNodes
 ### Single types
 
 ```@docs
-AbstractStrategicPeriod
-StrategicPeriod
+TimeStruct.AbstractStrategicPeriod
+TimeStruct.SingleStrategicPeriod
+TimeStruct.StrategicPeriod
 ```
 
 ### Iterator types
 
 ```@docs
+TimeStruct.SingleStrategicPeriodWrapper
+TimeStruct.StratPeriods
 ```
 
 ## Representative period types
@@ -36,15 +40,20 @@ StrategicPeriod
 ### Single types
 
 ```@docs
-AbstractRepresentativePeriod
-RepresentativePeriod
-StratNodeReprPeriod
+TimeStruct.AbstractRepresentativePeriod
+TimeStruct.SingleReprPeriod
+TimeStruct.RepresentativePeriod
+TimeStruct.StratReprPeriod
+TimeStruct.StratNodeReprPeriod
 ```
 
 ### Iterator types
 
 ```@docs
-StratNodeReprPeriods
+TimeStruct.SingleReprPeriodWrapper
+TimeStruct.ReprPeriods
+TimeStruct.StratReprPeriods
+TimeStruct.StratNodeReprPeriods
 ```
 
 ## Operational scenarios types
@@ -52,26 +61,36 @@ StratNodeReprPeriods
 ### Single types
 
 ```@docs
-OperationalScenario
-StratOperationalScenario
-StratNodeOperationalScenario
-StratNodeReprOpScenario
+TimeStruct.AbstractOperationalScenario
+TimeStruct.SingleScenario
+TimeStruct.OperationalScenario
+TimeStruct.ReprOperationalScenario
+TimeStruct.StratOperationalScenario
+TimeStruct.StratReprOpscenario
+TimeStruct.StratNodeOperationalScenario
+TimeStruct.StratNodeReprOpScenario
 ```
 
 ### Iterator types
 
 ```@docs
-StrategicScenarios
-StratNodeOpScens
-StratNodeReprOpScens
+TimeStruct.SingleScenarioWrapper
+TimeStruct.OpScens
+TimeStruct.RepOpScens
+TimeStruct.StratOpScens
+TimeStruct.StratReprOpscenarios
+TimeStruct.StratNodeOpScens
+TimeStruct.StratNodeReprOpScens
 ```
 
 ## Operational period types
 
 ```@docs
-TimePeriod
-SimplePeriod
-CalendarPeriod
-OperationalPeriod
-TreePeriod
+TimeStruct.TimePeriod
+TimeStruct.SimplePeriod
+TimeStruct.CalendarPeriod
+TimeStruct.ScenarioPeriod
+TimeStruct.ReprPeriod
+TimeStruct.OperationalPeriod
+TimeStruct.TreePeriod
 ```

@@ -44,6 +44,10 @@ multiple
 ```
 
 ```@docs
+multiple_strat
+```
+
+```@docs
 probability
 ```
 

@@ -3,7 +3,7 @@
 
 Abstract type used for time structures that represent an operational scenario.
 These periods are obtained when iterating through the operational scenarios of a time
-structure declared by the function [`opscenarios`](@ref.)
+structure declared by the function [`opscenarios`](@ref).
 """
 abstract type AbstractOperationalScenario{T} <: TimeStructure{T} end
 

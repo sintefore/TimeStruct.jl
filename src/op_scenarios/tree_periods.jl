@@ -6,7 +6,7 @@ iteration over its time periods. It is created through iterating through
 [`StratNodeOpScens`](@ref).
 
 It is equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
-structure when utilizing a [`TwolevelTree`].
+structure when utilizing a [`TwoLevelTree`](@ref).
 """
 struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <:
        AbstractOperationalScenario{T}
@@ -106,7 +106,7 @@ Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
     struct StratNodeReprOpScenario{T} <: AbstractOperationalScenario{T}
 
 A structure representing a single operational scenario for a representative period in A
-[`TwoLevelTree`] structure supporting iteration over its time periods.
+[`TwoLevelTree`](@ref) structure supporting iteration over its time periods.
 """
 struct StratNodeReprOpScenario{T,OP<:TimeStructure{T}} <:
        AbstractOperationalScenario{T}

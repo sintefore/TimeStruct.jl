@@ -3,7 +3,7 @@
 
 Abstract type used for time structures that represent a strategic period.
 These periods are obtained when iterating through the strategic periods of a time
-structure declared by the function [`strat_periods`](@ref.)
+structure declared by the function [`strat_periods`](@ref).
 """
 abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
 

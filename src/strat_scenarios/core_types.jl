@@ -135,7 +135,7 @@ end
     struct StrategicScenarios
 
 Type for iteration through the individual strategic scenarios represented as
-[`StrategicScenario`].
+[`StrategicScenario`](@ref).
 """
 struct StrategicScenarios
     ts::TwoLevelTree

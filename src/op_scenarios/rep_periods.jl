@@ -109,7 +109,7 @@ function Base.iterate(oscs::RepOpScens, state = nothing)
 end
 
 """
-When the `TimeStructure` is a [`SingleStrategicPeriod`](@ref), `repr_periods` returns the
+When the `TimeStructure` is a [`SingleReprPeriod`](@ref), `opscenarios` returns the
 correct behavior based on the substructure.
 """
 opscenarios(ts::SingleReprPeriod) = opscenarios(ts.ts)
