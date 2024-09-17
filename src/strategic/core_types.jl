@@ -109,20 +109,13 @@ function TwoLevel(
     return TwoLevel(len, fill(duration, len), oper, op_per_strat)
 end
 
-function TwoLevel(
-    len::Integer,
-    oper::TimeStructure{T};
-    op_per_strat = 1.0,
-) where {T}
+function TwoLevel(len::Integer, oper::TimeStructure{T}; op_per_strat = 1.0) where {T}
     oper = fill(oper, len)
     dur = [_total_duration(op) / op_per_strat for op in oper]
     return TwoLevel(len, dur, oper, op_per_strat)
 end
 
-function TwoLevel(
-    oper::Vector{<:TimeStructure{T}};
-    op_per_strat = 1.0,
-) where {T}
+function TwoLevel(oper::Vector{<:TimeStructure{T}}; op_per_strat = 1.0) where {T}
     len = length(oper)
     dur = [_total_duration(op) / op_per_strat for op in oper]
     return TwoLevel(len, dur, oper, op_per_strat)
@@ -166,9 +159,7 @@ end
 _total_duration(ts::TwoLevel) = sum(ts.duration)
 
 function _multiple_adj(ts::TwoLevel, sp)
-    mult =
-        ts.duration[sp] * ts.op_per_strat /
-        _total_duration(ts.operational[sp])
+    mult = ts.duration[sp] * ts.op_per_strat / _total_duration(ts.operational[sp])
     return stripunit(mult)
 end
 
@@ -195,7 +186,6 @@ function Base.last(ts::TwoLevel)
     per = last(ts.operational[ts.len])
     return OperationalPeriod(ts, per, ts.len)
 end
-
 
 """
 	struct OperationalPeriod <: TimePeriod

@@ -19,15 +19,10 @@ function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
         return zero(S)
     end
 
-    return sum(
-        duration_strat(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp
-    )
+    return sum(duration_strat(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp)
 end
 
-function _start_strat(
-    sp::AbstractStrategicPeriod,
-    ts::TwoLevel{S,T},
-) where {S,T}
+function _start_strat(sp::AbstractStrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
     if _strat_per(sp) == 1
         return zero(S)
     end
@@ -69,12 +64,7 @@ function discount(
     return multiplier
 end
 
-function discount(
-    disc::Discounter,
-    t::TimePeriod;
-    type = "start",
-    timeunit_to_year = 1.0,
-)
+function discount(disc::Discounter, t::TimePeriod; type = "start", timeunit_to_year = 1.0)
     return discount(t, disc.ts, disc.discount_rate; type, timeunit_to_year)
 end
 
@@ -82,8 +72,8 @@ function discount_avg(discount_rate, start_year, duration_years)
     if discount_rate > 0
         δ = 1 / (1 + discount_rate)
         m =
-            (δ^start_year - δ^(start_year + duration_years)) /
-            log(1 + discount_rate) / duration_years
+            (δ^start_year - δ^(start_year + duration_years)) / log(1 + discount_rate) /
+            duration_years
         return m
     else
         return 1.0
@@ -151,11 +141,7 @@ function objective_weight(
     return discount(sp, ts, discount_rate; type, timeunit_to_year)
 end
 
-function objective_weight(
-    sp::AbstractStrategicPeriod,
-    disc::Discounter;
-    type = "start",
-)
+function objective_weight(sp::AbstractStrategicPeriod, disc::Discounter; type = "start")
     return objective_weight(
         sp,
         disc.ts,

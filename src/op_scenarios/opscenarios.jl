@@ -106,8 +106,7 @@ end
 A type representing a single operational scenario supporting iteration over its
 time periods. It is created when iterating through [`OpScens`](@ref).
 """
-struct OperationalScenario{T,OP<:TimeStructure{T}} <:
-       AbstractOperationalScenario{T}
+struct OperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     scen::Int
     mult_sc::Float64
     probability::Float64
@@ -136,9 +135,7 @@ function Base.eltype(_::Type{OperationalScenario{T,OP}}) where {T,OP}
     return ScenarioPeriod{eltype(OP)}
 end
 function Base.iterate(osc::OperationalScenario, state = nothing)
-    next =
-        isnothing(state) ? iterate(osc.operational) :
-        iterate(osc.operational, state)
+    next = isnothing(state) ? iterate(osc.operational) : iterate(osc.operational, state)
     next === nothing && return nothing
     return ScenarioPeriod(osc, next[1]), next[2]
 end
@@ -152,7 +149,6 @@ end
 function Base.eachindex(osc::OperationalScenario)
     return eachindex(osc.operational)
 end
-
 
 """
     OpScens{T,OP}

@@ -30,10 +30,7 @@ StrategicIndexable(::Type) = NoStratIndex()
 StrategicIndexable(::Type{<:AbstractStrategicPeriod}) = HasStratIndex()
 StrategicIndexable(::Type{<:TimePeriod}) = HasStratIndex()
 
-function start_time(
-    sp::AbstractStrategicPeriod{S,T},
-    ts::TimeStructure{T},
-) where {S,T}
+function start_time(sp::AbstractStrategicPeriod{S,T}, ts::TimeStructure{T}) where {S,T}
     return isfirst(sp) ? zero(S) :
            sum(duration_strat(spp) for spp in strategic_periods(ts) if spp < sp)
 end
@@ -43,11 +40,8 @@ function end_time(sp::AbstractStrategicPeriod, ts::TimeStructure)
 end
 
 function remaining(sp::AbstractStrategicPeriod, ts::TimeStructure)
-    return sum(
-        duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp
-    )
+    return sum(duration_strat(spp) for spp in strategic_periods(ts) if spp >= sp)
 end
-
 
 """
     SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T,T}
@@ -55,8 +49,7 @@ end
 A type representing a single strategic period supporting iteration over its
 time periods. It is created when iterating through [`SingleStrategicPeriodWrapper`](@ref).
 """
-struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <:
-       AbstractStrategicPeriod{T,T}
+struct SingleStrategicPeriod{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T,T}
     ts::SP
 end
 
@@ -146,9 +139,7 @@ function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
     return OperationalPeriod
 end
 function Base.iterate(sp::StrategicPeriod, state = nothing)
-    next =
-        isnothing(state) ? iterate(sp.operational) :
-        iterate(sp.operational, state)
+    next = isnothing(state) ? iterate(sp.operational) : iterate(sp.operational, state)
     next === nothing && return nothing
 
     return OperationalPeriod(sp, next[1]), next[2]

@@ -4,8 +4,7 @@
 A type representing a single representative period supporting iteration over its
 time periods. It is created when iterating through [`StratReprPeriods`](@ref).
 """
-struct StratReprPeriod{T,OP<:TimeStructure{T}} <:
-       AbstractRepresentativePeriod{T}
+struct StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     sp::Int
     rp::Int
     mult_sp::Float64
@@ -36,9 +35,7 @@ end
 Base.length(rp::StratReprPeriod) = length(rp.operational)
 Base.eltype(_::Type{StratReprPeriod{T,OP}}) where {T,OP} = OperationalPeriod
 function Base.iterate(rp::StratReprPeriod, state = nothing)
-    next =
-        isnothing(state) ? iterate(rp.operational) :
-        iterate(rp.operational, state)
+    next = isnothing(state) ? iterate(rp.operational) : iterate(rp.operational, state)
     isnothing(next) && return nothing
 
     return OperationalPeriod(rp, next[1]), next[2]
@@ -84,9 +81,7 @@ end
 # Add basic functions of iterators
 Base.length(rpers::StratReprPeriods) = length(rpers.repr)
 function Base.iterate(rpers::StratReprPeriods, state = (nothing, 1))
-    next =
-        isnothing(state[1]) ? iterate(rpers.repr) :
-        iterate(rpers.repr, state[1])
+    next = isnothing(state[1]) ? iterate(rpers.repr) : iterate(rpers.repr, state[1])
     isnothing(next) && return nothing
 
     return StratReprPeriod(rpers, state[2], next[1]), (next[2], state[2] + 1)
@@ -112,7 +107,5 @@ When the `TimeStructure` is a [`TwoLevel`](@ref), `repr_periods` returns an `Arr
 all [`StratReprPeriod`](@ref)s.
 """
 function repr_periods(ts::TwoLevel)
-    return collect(
-        Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)),
-    )
+    return collect(Iterators.flatten(repr_periods(sp) for sp in strategic_periods(ts)))
 end

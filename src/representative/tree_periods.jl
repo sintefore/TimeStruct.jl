@@ -7,8 +7,7 @@ A structure representing a single representative period of a [`StratNode`](@ref)
 It is equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
 utilizing a [`TwoLevelTree`](@ref).
 """
-struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <:
-       AbstractRepresentativePeriod{T}
+struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     sp::Int
     branch::Int
     rp::Int
@@ -105,7 +104,5 @@ all [`StratNodeReprPeriod`](@ref)s.
 These are equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
 function repr_periods(ts::TwoLevelTree)
-    return collect(
-        Iterators.flatten(repr_periods(sp) for sp in strat_periods(ts)),
-    )
+    return collect(Iterators.flatten(repr_periods(sp) for sp in strat_periods(ts)))
 end

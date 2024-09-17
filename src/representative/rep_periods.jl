@@ -14,10 +14,7 @@ end
 isfirst(rp::AbstractRepresentativePeriod) = _rper(rp) == 1
 mult_repr(rp::AbstractRepresentativePeriod) = 1
 
-function Base.isless(
-    rp1::AbstractRepresentativePeriod,
-    rp2::AbstractRepresentativePeriod,
-)
+function Base.isless(rp1::AbstractRepresentativePeriod, rp2::AbstractRepresentativePeriod)
     return _rper(rp1) < _rper(rp2)
 end
 
@@ -36,8 +33,7 @@ RepresentativeIndexable(::Type{<:TimePeriod}) = HasReprIndex()
 A type representing a single representative period supporting iteration over its
 time periods. It is created when iterating through [`SingleReprPeriodWrapper`](@ref).
 """
-struct SingleReprPeriod{T,OP<:TimeStructure{T}} <:
-       AbstractRepresentativePeriod{T}
+struct SingleReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     ts::OP
 end
 
@@ -95,8 +91,7 @@ repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)
 A type representing a single representative period supporting iteration over its
 time periods. It is created when iterating through [`ReprPeriods`](@ref).
 """
-struct RepresentativePeriod{T,OP<:TimeStructure{T}} <:
-       AbstractRepresentativePeriod{T}
+struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     rp::Int
     mult_rp::Float64
     operational::OP
@@ -123,9 +118,7 @@ function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
     return ReprPeriod{eltype(OP)}
 end
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
-    next =
-        isnothing(state) ? iterate(rp.operational) :
-        iterate(rp.operational, state)
+    next = isnothing(state) ? iterate(rp.operational) : iterate(rp.operational, state)
     isnothing(next) && return nothing
 
     return ReprPeriod(rp, next[1]), next[2]

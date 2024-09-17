@@ -20,11 +20,9 @@ function TwoLevelTree{S,T,OP}(
     return TwoLevelTree{S,T,OP}(0, nothing, nodes, op_per_strat)
 end
 
-
 function _multiple_adj(itr::TwoLevelTree, n)
     mult =
-        itr.nodes[n].duration * itr.op_per_strat /
-        _total_duration(itr.nodes[n].operational)
+        itr.nodes[n].duration * itr.op_per_strat / _total_duration(itr.nodes[n].operational)
     return stripunit(mult)
 end
 strat_nodes(ts::TwoLevelTree) = ts.nodes
@@ -46,9 +44,7 @@ Base.eltype(::Type{TwoLevelTree{S,T,OP}}) where {S,T,OP} = eltype(OP)
 function Base.iterate(itr::TwoLevelTree, state = (1, nothing))
     i = state[1]
     n = itr.nodes[i]
-    next =
-        isnothing(state[2]) ? iterate(n.operational) :
-        iterate(n.operational, state[2])
+    next = isnothing(state[2]) ? iterate(n.operational) : iterate(n.operational, state[2])
     if next === nothing
         i = i + 1
         if i > length(itr.nodes)
@@ -93,7 +89,6 @@ multiple(t::TreePeriod) = t.multiple
 probability_branch(t::TreePeriod) = t.prob_branch
 probability(t::TreePeriod) = probability(t.period) * probability_branch(t)
 
-
 function Base.show(io::IO, t::TreePeriod)
     return print(io, "sp$(t.sp)-br$(t.branch)-$(t.period)")
 end
@@ -102,10 +97,7 @@ function Base.isless(t1::TreePeriod, t2::TreePeriod)
 end
 
 # Convenient constructors for the individual types
-function TreePeriod(
-    n::StratNode,
-    per::P,
-) where {P<:Union{TimePeriod,TimeStructure}}
+function TreePeriod(n::StratNode, per::P) where {P<:Union{TimePeriod,TimeStructure}}
     mult = n.mult_sp * multiple(per)
     return TreePeriod(_strat_per(n), _branch(n), probability_branch(n), mult, per)
 end
@@ -219,15 +211,7 @@ function add_node(
     if sp < tree.len
         for i in 1:branching[sp]
             # TODO: consider branching probability as input, but use uniform for now
-            add_node(
-                tree,
-                node,
-                sp + 1,
-                duration,
-                1.0 / branching[sp],
-                branching,
-                oper,
-            )
+            add_node(tree, node, sp + 1, duration, 1.0 / branching[sp], branching, oper)
         end
     end
 end
@@ -248,10 +232,7 @@ function regular_tree(
     ts::OP;
     op_per_strat::Real = 1.0,
 ) where {S,T,OP<:TimeStructure{T}}
-    tree = TwoLevelTree{S,T,StratNode{S,T,OP}}(
-        Vector{StratNode{S,T,OP}}(),
-        op_per_strat,
-    )
+    tree = TwoLevelTree{S,T,StratNode{S,T,OP}}(Vector{StratNode{S,T,OP}}(), op_per_strat)
     tree.len = length(branching) + 1
     add_node(tree, nothing, 1, duration, 1.0, branching, ts)
 

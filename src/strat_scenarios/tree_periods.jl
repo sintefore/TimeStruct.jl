@@ -66,9 +66,7 @@ Base.show(io::IO, n::StratNode) = print(io, "sp$(n.sp)-br$(n.branch)")
 Base.length(n::StratNode) = length(n.operational)
 Base.eltype(::Type{StratNode{S,T,OP}}) where {S,T,OP} = TreePeriod{eltype(OP)}
 function Base.iterate(n::StratNode, state = nothing)
-    next =
-        isnothing(state) ? iterate(n.operational) :
-        iterate(n.operational, state)
+    next = isnothing(state) ? iterate(n.operational) : iterate(n.operational, state)
     next === nothing && return nothing
 
     return TreePeriod(n, next[1]), next[2]

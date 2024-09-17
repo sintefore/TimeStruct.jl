@@ -62,18 +62,11 @@ end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
     return OperationalScenarios(len, fill(oper, len), fill(1.0 / len, len))
 end
-function OperationalScenarios(
-    oper::Vector{<:TimeStructure{T}},
-    prob::Vector,
-) where {T}
+function OperationalScenarios(oper::Vector{<:TimeStructure{T}}, prob::Vector) where {T}
     return OperationalScenarios(length(oper), oper, prob)
 end
 function OperationalScenarios(oper::Vector{<:TimeStructure{T}}) where {T}
-    return OperationalScenarios(
-        length(oper),
-        oper,
-        fill(1.0 / length(oper), length(oper)),
-    )
+    return OperationalScenarios(length(oper), oper, fill(1.0 / length(oper), length(oper)))
 end
 
 function _total_duration(oscs::OperationalScenarios)

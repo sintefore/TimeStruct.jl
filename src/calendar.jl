@@ -42,11 +42,7 @@ function CalendarTimes(
     length::Integer,
     period::Dates.Period,
 )
-    return CalendarTimes(
-        TimeZones.ZonedDateTime(start_date, zone),
-        length,
-        period,
-    )
+    return CalendarTimes(TimeZones.ZonedDateTime(start_date, zone), length, period)
 end
 function CalendarTimes(
     start_date::Union{Dates.Date,Dates.DateTime},
@@ -71,8 +67,7 @@ _total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
 Base.length(ts::CalendarTimes) = ts.length
 Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}
 function Base.iterate(ts::CalendarTimes)
-    return CalendarPeriod(ts.start_date, ts.start_date + ts.period, 1),
-    (1, ts.start_date)
+    return CalendarPeriod(ts.start_date, ts.start_date + ts.period, 1), (1, ts.start_date)
 end
 function Base.iterate(ts::CalendarTimes, state)
     state[1] == ts.length && return nothing

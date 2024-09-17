@@ -14,10 +14,7 @@ struct FixedProfile{T<:Number} <: TimeProfile{T}
     val::T
 end
 
-function Base.getindex(
-    fp::FixedProfile,
-    _::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+function Base.getindex(fp::FixedProfile, _::T) where {T<:Union{TimePeriod,TimeStructure}}
     return fp.val
 end
 
@@ -68,14 +65,11 @@ function StrategicProfile(vals::Vector{<:Number})
 end
 
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
-    return sp.vals[_strat_per(period) > length(sp.vals) ? end :
-                   _strat_per(period)][period]
+    return sp.vals[_strat_per(period) > length(sp.vals) ? end : _strat_per(period)][period]
 end
 
 function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
-    return error(
-        "Type $(typeof(period)) can not be used as index for a strategic profile",
-    )
+    return error("Type $(typeof(period)) can not be used as index for a strategic profile")
 end
 
 function Base.getindex(
@@ -113,9 +107,7 @@ function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
 end
 
 function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
-    return error(
-        "Type $(typeof(period)) can not be used as index for a scenario profile",
-    )
+    return error("Type $(typeof(period)) can not be used as index for a scenario profile")
 end
 
 function Base.getindex(
@@ -190,28 +182,16 @@ struct StrategicStochasticProfile{T<:Number,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
 end
 function StrategicStochasticProfile(vals::Vector{<:Vector{<:Number}})
-    return StrategicStochasticProfile([
-        [FixedProfile(v_2) for v_2 in v_1] for v_1 in vals
-    ])
+    return StrategicStochasticProfile([[FixedProfile(v_2) for v_2 in v_1] for v_1 in vals])
 end
 
-function _value_lookup(
-    ::HasStratTreeIndex,
-    ssp::StrategicStochasticProfile,
-    period,
-)
-    sp_prof = ssp.vals[_strat_per(period) > length(ssp.vals) ? end :
-             _strat_per(period)]
-    branch_prof =
-        sp_prof[_branch(period) > length(sp_prof) ? end : _branch(period)]
+function _value_lookup(::HasStratTreeIndex, ssp::StrategicStochasticProfile, period)
+    sp_prof = ssp.vals[_strat_per(period) > length(ssp.vals) ? end : _strat_per(period)]
+    branch_prof = sp_prof[_branch(period) > length(sp_prof) ? end : _branch(period)]
     return branch_prof[period]
 end
 
-function _value_lookup(
-    ::NoStratTreeIndex,
-    ssp::StrategicStochasticProfile,
-    period,
-)
+function _value_lookup(::NoStratTreeIndex, ssp::StrategicStochasticProfile, period)
     return error(
         "Type $(typeof(period)) can not be used as index for a strategic stochastic profile",
     )
@@ -234,9 +214,7 @@ function Base.getindex(
 end
 
 function Base.getindex(TP::TimeProfile, inds::Any)
-    return error(
-        "Type $(typeof(inds)) can not be used as index for a $(typeof(TP))",
-    )
+    return error("Type $(typeof(inds)) can not be used as index for a $(typeof(TP))")
 end
 
 import Base: +, -, *, /

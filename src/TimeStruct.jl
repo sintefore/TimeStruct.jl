@@ -3,8 +3,7 @@ module TimeStruct
 import Dates
 import TimeZones
 
-import .Base:
-    first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
+import .Base: first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
 
 include("structures.jl")
 include("simple.jl")
@@ -22,7 +21,6 @@ include(joinpath("op_scenarios", "opscenarios.jl"))
 include(joinpath("op_scenarios", "rep_periods.jl"))
 include(joinpath("op_scenarios", "strat_periods.jl"))
 include(joinpath("op_scenarios", "tree_periods.jl"))
-
 
 include("utils.jl")
 include("discount.jl")

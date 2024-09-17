@@ -108,8 +108,7 @@ Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
 A structure representing a single operational scenario for a representative period in A
 [`TwoLevelTree`](@ref) structure supporting iteration over its time periods.
 """
-struct StratNodeReprOpScenario{T,OP<:TimeStructure{T}} <:
-       AbstractOperationalScenario{T}
+struct StratNodeReprOpScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     rp::Int
@@ -154,10 +153,12 @@ end
 
 # Adding methods to existing Julia functions
 function Base.show(io::IO, osc::StratNodeReprOpScenario)
-    return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))")
+    return print(
+        io,
+        "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))",
+    )
 end
 Base.eltype(_::StratNodeReprOpScenario) = TreePeriod
-
 
 """
     struct StratNodeReprOpScens <: AbstractTreeStructure
@@ -190,9 +191,7 @@ _oper_struct(oscs::StratNodeReprOpScens) = oscs.opscens
 When the `TimeStructure` is a [`StratNodeReprPeriod`](@ref) with a [`RepresentativePeriod`](@ref),
 `opscenarios` returns the iterator [`StratNodeReprOpScens`](@ref).
 """
-function opscenarios(
-    rp::StratNodeReprPeriod{T,RepresentativePeriod{T,OP}},
-) where {T,OP}
+function opscenarios(rp::StratNodeReprPeriod{T,RepresentativePeriod{T,OP}}) where {T,OP}
     return StratNodeReprOpScens(
         _strat_per(rp),
         _branch(rp),
@@ -209,9 +208,7 @@ When the `TimeStructure` is a [`StratNodeReprPeriod`](@ref) with a [`SingleReprP
 `opscenarios` returns the iterator [`StratNodeOpScens`](@ref) as the overall time structure
 does not include representative periods.
 """
-function opscenarios(
-    rp::StratNodeReprPeriod{T,SingleReprPeriod{T,OP}},
-) where {T,OP}
+function opscenarios(rp::StratNodeReprPeriod{T,SingleReprPeriod{T,OP}}) where {T,OP}
     return StratNodeOpScens(
         _strat_per(rp),
         _branch(rp),
@@ -256,17 +253,14 @@ These are equivalent to a [`StratOperationalScenario`](@ref) and [`StratReprOpsc
 of a [`TwoLevel`](@ref) time structure.
 """
 function opscenarios(ts::TwoLevelTree)
-    return collect(
-        Iterators.flatten(opscenarios(sp) for sp in strat_periods(ts)),
-    )
+    return collect(Iterators.flatten(opscenarios(sp) for sp in strat_periods(ts)))
 end
 function opscenarios(
     ts::TwoLevelTree{T,StratNode{S,T,OP}},
 ) where {S,T,OP<:RepresentativePeriods}
     return collect(
         Iterators.flatten(
-            opscenarios(rp) for sp in strat_periods(ts) for
-            rp in repr_periods(sp)
+            opscenarios(rp) for sp in strat_periods(ts) for rp in repr_periods(sp)
         ),
     )
 end

@@ -40,8 +40,7 @@ RepresentativePeriods(2, 8760, SimpleTimes(24, 1))
 RepresentativePeriods(8760, [SimpleTimes(24, 1), SimpleTimes(24,1)])
 ```
 """
-struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
-       TimeStructure{T}
+struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
     duration::S
     period_share::Vector{Float64}
@@ -64,7 +63,7 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <:
                     "The length of `rep_periods` cannot be less than the field `len` of `RepresentativePeriods`.",
                 ),
             )
-        elseif sum(period_share) > 1+1e-6 || sum(period_share) < 1-1e-6
+        elseif sum(period_share) > 1 + 1e-6 || sum(period_share) < 1 - 1e-6
             @warn(
                 "The sum of the `period_share` vector is given by $(sum(period_share)). " *
                 "This can lead to unexpected behaviour."
@@ -95,12 +94,7 @@ function RepresentativePeriods(
     period_share::Vector{<:Real},
     rep_periods::Vector{<:TimeStructure{T}},
 ) where {S<:Duration,T}
-    return RepresentativePeriods(
-        length(rep_periods),
-        duration,
-        period_share,
-        rep_periods,
-    )
+    return RepresentativePeriods(length(rep_periods), duration, period_share, rep_periods)
 end
 function RepresentativePeriods(
     duration::S,
@@ -160,7 +154,6 @@ function Base.last(rpers::RepresentativePeriods)
     per = last(rpers.rep_periods[rpers.len])
     return ReprPeriod(rpers, per, rpers.len)
 end
-
 
 """
 	ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}

@@ -63,10 +63,7 @@ function Base.iterate(w::Chunk, state = nothing)
     if w.cyclic
         itr = Iterators.cycle(w.itr)
     end
-    next = Iterators.take(
-        isnothing(state) ? itr : Iterators.rest(itr, state),
-        w.ns,
-    )
+    next = Iterators.take(isnothing(state) ? itr : Iterators.rest(itr, state), w.ns)
     return next, n[2]
 end
 
@@ -114,10 +111,7 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     if w.cyclic
         itr = Iterators.cycle(w.itr)
     end
-    next = take_duration(
-        isnothing(state) ? itr : Iterators.rest(itr, state...),
-        w.duration,
-    )
+    next = take_duration(isnothing(state) ? itr : Iterators.rest(itr, state...), w.duration)
     return next, n[2]
 end
 
@@ -141,11 +135,8 @@ function expand_dataframe!(df, periods) end
 
 # All introduced subtypes require the same procedures for the iteration and indexing.
 # Hence, all introduced types use the same functions.
-TreeStructure = Union{
-    StratNodeOperationalScenario,
-    StratNodeReprPeriod,
-    StratNodeReprOpScenario,
-}
+TreeStructure =
+    Union{StratNodeOperationalScenario,StratNodeReprPeriod,StratNodeReprOpScenario}
 Base.length(ts::TreeStructure) = length(ts.operational)
 function Base.last(ts::TreeStructure)
     per = last(ts.operational)
@@ -160,9 +151,7 @@ function Base.eachindex(ts::TreeStructure)
     return eachindex(ts.operational)
 end
 function Base.iterate(ts::TreeStructure, state = nothing)
-    next =
-        isnothing(state) ? iterate(ts.operational) :
-        iterate(ts.operational, state)
+    next = isnothing(state) ? iterate(ts.operational) : iterate(ts.operational, state)
     isnothing(next) && return nothing
 
     return TreePeriod(ts, next[1]), next[2]

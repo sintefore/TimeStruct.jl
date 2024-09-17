@@ -4,8 +4,7 @@
 A type representing a single operational scenarios supporting iteration over its
 time periods. It is created when iterating through [`RepOpScens`](@ref).
 """
-struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <:
-    AbstractOperationalScenario{T}
+struct ReprOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     rp::Int
     scen::Int
     mult_rp::Float64
@@ -39,9 +38,7 @@ function Base.eltype(_::ReprOperationalScenario{T,OP}) where {T,OP}
     return ReprPeriod{eltype(OP)}
 end
 function Base.iterate(osc::ReprOperationalScenario, state = nothing)
-    next =
-        isnothing(state) ? iterate(osc.operational) :
-        iterate(osc.operational, state)
+    next = isnothing(state) ? iterate(osc.operational) : iterate(osc.operational, state)
     next === nothing && return nothing
 
     return ReprPeriod(osc, next[1]), next[2]
@@ -81,9 +78,7 @@ _oper_it(oscs::RepOpScens) = oscs.opscens
 When the `TimeStructure` is a [`RepresentativePeriod`](@ref) with [`OperationalScenarios`](@ref),
 `opscenarios` returns the iterator [`RepOpScens`](@ref).
 """
-function opscenarios(
-    rep::RepresentativePeriod{T,OperationalScenarios{T,OP}},
-) where {T,OP}
+function opscenarios(rep::RepresentativePeriod{T,OperationalScenarios{T,OP}}) where {T,OP}
     return RepOpScens(_rper(rep), mult_repr(rep), opscenarios(rep.operational))
 end
 
@@ -105,9 +100,7 @@ function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
     return ReprOperationalScenario{T,eltype(SC)}
 end
 function Base.iterate(oscs::RepOpScens, state = (nothing, 1))
-    next =
-        isnothing(state[1]) ? iterate(_oper_it(oscs)) :
-        iterate(_oper_it(oscs), state[1])
+    next = isnothing(state[1]) ? iterate(_oper_it(oscs)) : iterate(_oper_it(oscs), state[1])
     isnothing(next) && return nothing
 
     scen = state[2]
@@ -135,7 +128,5 @@ When the `TimeStructure` is a [`RepresentativePeriods`](@ref), `opscenarios` ret
 `Array` of all [`ReprOperationalScenario`](@ref)s.
 """
 function opscenarios(ts::RepresentativePeriods)
-    return collect(
-        Iterators.flatten(opscenarios(rp) for rp in repr_periods(ts)),
-    )
+    return collect(Iterators.flatten(opscenarios(rp) for rp in repr_periods(ts)))
 end
