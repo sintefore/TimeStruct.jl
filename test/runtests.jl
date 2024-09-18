@@ -116,7 +116,7 @@ end
     week = SimpleTimes(168, 1)
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
-    @test first(ts) == TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1))
+    @test first(ts) == TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.1)
     @test length(ts) == 216
     pers = []
     for sc in opscenarios(ts)
@@ -133,7 +133,7 @@ end
     # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
-    @test first(ts) == TimeStruct.ScenarioPeriod(1, 0.5, 7.0, TimeStruct.SimplePeriod(1, 1))
+    @test first(ts) == TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.5)
     @test length(ts) == 192
 
     scens = opscenarios(ts)
@@ -189,7 +189,7 @@ end
     @test rps[1] < rps[2]
     @test rps[1] < rps[25]
 
-    # Test of direct functions of `ReprPeriods`
+    # Test of direct functions of `ReprPers`
     rpers = repr_periods(rep)
     @test eltype(rpers) == TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}}
     @test last(rpers) == collect(rpers)[end]
@@ -477,7 +477,7 @@ end
     ops = collect(seasonal_year)
     @test ops[1] == TimeStruct.OperationalPeriod(
         1,
-        TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1)),
+        TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.1),
         91.0,
     )
 
@@ -524,7 +524,7 @@ end
     sp = first(strat_periods(ts))
     scen = first(opscenarios(sp))
     @test length(scen) == 10
-    @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod
+    @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod{TimeStruct.SimplePeriod{Int}}
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 1.0
     per = first(scen)

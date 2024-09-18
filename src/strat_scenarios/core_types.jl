@@ -71,35 +71,36 @@ respective branch and probability of the branch
 struct TreePeriod{P} <: TimePeriod where {P<:TimePeriod}
     sp::Int
     branch::Int
-    prob_branch::Float64
-    multiple::Float64
     period::P
+    multiple::Float64
+    prob_branch::Float64
 end
+_period(t::TreePeriod) = t.period
 
 _strat_per(t::TreePeriod) = t.sp
 _branch(t::TreePeriod) = t.branch
+_rper(t::TreePeriod) = _rper(_period(t))
+_opscen(t::TreePeriod) = _opscen(_period(t))
+_oper(t::TreePeriod) = _oper(_period(t))
 
-_rper(t::TreePeriod) = _rper(t.period)
-_opscen(t::TreePeriod) = _opscen(t.period)
-_oper(t::TreePeriod) = _oper(t.period)
-
-isfirst(t::TreePeriod) = isfirst(t.period)
-duration(t::TreePeriod) = duration(t.period)
+isfirst(t::TreePeriod) = isfirst(_period(t))
+duration(t::TreePeriod) = duration(_period(t))
 multiple(t::TreePeriod) = t.multiple
 probability_branch(t::TreePeriod) = t.prob_branch
-probability(t::TreePeriod) = probability(t.period) * probability_branch(t)
+probability(t::TreePeriod) = probability(_period(t)) * probability_branch(t)
 
 function Base.show(io::IO, t::TreePeriod)
-    return print(io, "sp$(t.sp)-br$(t.branch)-$(t.period)")
+    return print(io, "sp$(_strat_per(t))-br$(_branch(t))-$(_period(t))")
 end
 function Base.isless(t1::TreePeriod, t2::TreePeriod)
-    return t1.period < t2.period
+    return _strat_per(t1) < _strat_per(t2) ||
+           (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
 end
 
 # Convenient constructors for the individual types
-function TreePeriod(n::StratNode, per::P) where {P<:Union{TimePeriod,TimeStructure}}
+function TreePeriod(n::StratNode, per::TimePeriod)
     mult = n.mult_sp * multiple(per)
-    return TreePeriod(_strat_per(n), _branch(n), probability_branch(n), mult, per)
+    return TreePeriod(_strat_per(n), _branch(n), per, mult, probability_branch(n))
 end
 """
     struct StrategicScenario
@@ -198,8 +199,8 @@ function add_node(
         sp,
         branches(tree, sp) + 1,
         duration,
-        prob_branch,
         mult_sp,
+        prob_branch,
         parent,
         oper,
     )
@@ -240,7 +241,7 @@ function regular_tree(
 end
 
 """
-    struct StratTreeNodes{S, T, OP} <: AbstractTreeStructure
+    struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](@ref).
 It is automatically created through the function [`strat_periods`](@ref), and hence,
@@ -249,7 +250,7 @@ It is automatically created through the function [`strat_periods`](@ref), and he
 Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behaviour,
 although the meaning remains unchanged.
 """
-struct StratTreeNodes{S,T,OP} <: AbstractTreeStructure
+struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
     ts::TwoLevelTree{S,T,OP}
 end
 

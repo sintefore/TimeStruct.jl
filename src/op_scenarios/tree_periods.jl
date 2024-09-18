@@ -1,15 +1,14 @@
 """
-    struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
+    struct StratNodeOpScenario{T,OP<:TimeStructure{T}}  <: AbstractOperationalScenario{T}
 
 A structure representing a single operational scenario for a strategic node supporting
 iteration over its time periods. It is created through iterating through
 [`StratNodeOpScens`](@ref).
 
-It is equivalent to a [`StratOperationalScenario`](@ref) of a [`TwoLevel`](@ref) time
+It is equivalent to a [`StratOpScenario`](@ref) of a [`TwoLevel`](@ref) time
 structure when utilizing a [`TwoLevelTree`](@ref).
 """
-struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <:
-       AbstractOperationalScenario{T}
+struct StratNodeOpScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     scen::Int
@@ -20,49 +19,46 @@ struct StratNodeOperationalScenario{T,OP<:TimeStructure{T}} <:
     operational::OP
 end
 
-_strat_per(osc::StratNodeOperationalScenario) = osc.sp
-_branch(osc::StratNodeOperationalScenario) = osc.branch
-_opscen(osc::StratNodeOperationalScenario) = osc.scen
+_strat_per(osc::StratNodeOpScenario) = osc.sp
+_branch(osc::StratNodeOpScenario) = osc.branch
+_opscen(osc::StratNodeOpScenario) = osc.scen
 
-mult_strat(osc::StratNodeOperationalScenario) = osc.mult_sp
-mult_scen(osc::StratNodeOperationalScenario) = osc.mult_scen
-probability(osc::StratNodeOperationalScenario) = osc.prob_branch * prob_scen
-probability_branch(osc::StratNodeOperationalScenario) = osc.prob_branch
+mult_strat(osc::StratNodeOpScenario) = osc.mult_sp
+mult_scen(osc::StratNodeOpScenario) = osc.mult_scen
+probability(osc::StratNodeOpScenario) = osc.prob_branch * prob_scen
+probability_branch(osc::StratNodeOpScenario) = osc.prob_branch
 
-_oper_struct(osc::StratNodeOperationalScenario) = osc.operational
+_oper_struct(osc::StratNodeOpScenario) = osc.operational
 
 # Provide a constructor to simplify the design
-function TreePeriod(
-    osc::StratNodeOperationalScenario,
-    per::P,
-) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
+function TreePeriod(osc::StratNodeOpScenario, per::TimePeriod)
     mult = mult_strat(osc) * multiple(per)
-    return TreePeriod(_strat_per(osc), _branch(osc), probability_branch(osc), mult, per)
+    return TreePeriod(_strat_per(osc), _branch(osc), per, mult, probability_branch(osc))
 end
 
-function StrategicTreeIndexable(::Type{<:StratNodeOperationalScenario})
+function StrategicTreeIndexable(::Type{<:StratNodeOpScenario})
     return HasStratTreeIndex()
 end
-StrategicIndexable(::Type{<:StratNodeOperationalScenario}) = HasStratIndex()
+StrategicIndexable(::Type{<:StratNodeOpScenario}) = HasStratIndex()
 
 # Adding methods to existing Julia functions
-function Base.show(io::IO, osc::StratNodeOperationalScenario)
+function Base.show(io::IO, osc::StratNodeOpScenario)
     return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-sc$(_opscen(osc))")
 end
-Base.eltype(_::StratNodeOperationalScenario) = TreePeriod
+Base.eltype(_::StratNodeOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeOpScens <: AbstractTreeStructure
+    struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual operational scenarios of a [`StratNode`](@ref).
 It is automatically created through the function [`opscenarios`](@ref).
 """
-struct StratNodeOpScens <: AbstractTreeStructure
+struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     mult_sp::Float64
     prob_branch::Float64
-    opscens::Any
+    opscens::OP
 end
 
 _strat_per(oscs::StratNodeOpScens) = oscs.sp
@@ -88,7 +84,7 @@ function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
 end
 
 function strat_node_period(oscs::StratNodeOpScens, next, state)
-    return StratNodeOperationalScenario(
+    return StratNodeOpScenario(
         _strat_per(oscs),
         _branch(oscs),
         state,
@@ -100,7 +96,7 @@ function strat_node_period(oscs::StratNodeOpScens, next, state)
     )
 end
 
-Base.eltype(_::StratNodeOpScens) = StratNodeOperationalScenario
+Base.eltype(_::StratNodeOpScens) = StratNodeOpScenario
 
 """
     struct StratNodeReprOpScenario{T} <: AbstractOperationalScenario{T}
@@ -142,13 +138,10 @@ end
 ScenarioIndexable(::Type{<:StratNodeReprOpScenario}) = HasScenarioIndex()
 
 # Provide a constructor to simplify the design
-function TreePeriod(
-    osc::StratNodeReprOpScenario,
-    per::P,
-) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
+function TreePeriod(osc::StratNodeReprOpScenario, per::TimePeriod)
     rper = ReprPeriod(_rper(osc), per, mult_repr(osc) * multiple(per))
     mult = mult_strat(osc) * mult_repr(osc) * multiple(per)
-    return TreePeriod(_strat_per(osc), _branch(osc), probability_branch(osc), mult, rper)
+    return TreePeriod(_strat_per(osc), _branch(osc), rper, mult, probability_branch(osc))
 end
 
 # Adding methods to existing Julia functions
@@ -158,23 +151,23 @@ function Base.show(io::IO, osc::StratNodeReprOpScenario)
         "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))",
     )
 end
-Base.eltype(_::StratNodeReprOpScenario) = TreePeriod
+Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeReprOpScens <: AbstractTreeStructure
+    struct StratNodeReprOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual operational scenarios of a
 [`StratNodeReprPeriod`](@ref). It is automatically created through the function
 [`opscenarios`](@ref).
 """
-struct StratNodeReprOpScens <: AbstractTreeStructure
+struct StratNodeReprOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     rp::Int
     mult_sp::Float64
     mult_rp::Float64
     prob_branch::Float64
-    opscens::Any
+    opscens::OP
 end
 
 _strat_per(oscs::StratNodeReprOpScens) = oscs.sp
@@ -245,11 +238,11 @@ end
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `opscenarios` returns an `Array` of
-all [`StratNodeOperationalScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
+all [`StratNodeOpScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
 dependening on whether the [`TwoLevelTree`](@ref) includes [`RepresentativePeriods`](@ref)
 or not.
 
-These are equivalent to a [`StratOperationalScenario`](@ref) and [`StratReprOpscenario`](@ref)
+These are equivalent to a [`StratOpScenario`](@ref) and [`StratReprOpScenario`](@ref)
 of a [`TwoLevel`](@ref) time structure.
 """
 function opscenarios(ts::TwoLevelTree)

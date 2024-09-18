@@ -1,8 +1,8 @@
 """
-    StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+    struct StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
-time periods. It is created when iterating through [`StratReprPeriods`](@ref).
+time periods. It is created when iterating through [`StratReprPers`](@ref).
 """
 struct StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     sp::Int
@@ -12,12 +12,12 @@ struct StratReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T
     operational::OP
 end
 
-_rper(rp::StratReprPeriod) = rp.rp
 _strat_per(rp::StratReprPeriod) = rp.sp
+_rper(rp::StratReprPeriod) = rp.rp
 
-multiple(rp::StratReprPeriod, t::OperationalPeriod) = t.multiple / rp.mult_sp
-mult_repr(rp::StratReprPeriod) = rp.mult_rp
 mult_strat(rp::StratReprPeriod) = rp.mult_sp
+mult_repr(rp::StratReprPeriod) = rp.mult_rp
+multiple(rp::StratReprPeriod, t::OperationalPeriod) = t.multiple / rp.mult_sp
 
 StrategicIndexable(::Type{<:StratReprPeriod}) = HasStratIndex()
 
@@ -33,7 +33,7 @@ end
 
 # Add basic functions of iterators
 Base.length(rp::StratReprPeriod) = length(rp.operational)
-Base.eltype(_::Type{StratReprPeriod{T,OP}}) where {T,OP} = OperationalPeriod
+Base.eltype(_::Type{StratReprPeriod{T,OP}}) where {T,OP} = OperationalPeriod{eltype(OP)}
 function Base.iterate(rp::StratReprPeriod, state = nothing)
     next = isnothing(state) ? iterate(rp.operational) : iterate(rp.operational, state)
     isnothing(next) && return nothing
@@ -53,47 +53,55 @@ function Base.last(rp::StratReprPeriod)
 end
 
 """
-    StratReprPeriods{OP}
+    struct StratReprPers{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
 
 Type for iterating through the individual representative periods of a
 [`StrategicPeriod`](@ref) time structure. It is automatically created through the function
 [`repr_periods`](@ref).
 """
-struct StratReprPeriods{OP}
+struct StratReprPers{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
     sp::Int
     mult_sp::Float64
     repr::OP
 end
 
+_strat_per(rpers::StratReprPers) = rpers.sp
+
+mult_strat(rpers::StratReprPers) = rpers.mult_sp
+
+_oper_struct(rpers::StratReprPers) = rpers.repr
+
 """
 When the `TimeStructure` is a [`StrategicPeriod`](@ref), `repr_periods` returns the iterator
-[`StratReprPeriods`](@ref).
+[`StratReprPers`](@ref).
 """
 function repr_periods(sp::StrategicPeriod{S,T,OP}) where {S,T,OP}
-    return StratReprPeriods(_strat_per(sp), mult_strat(sp), repr_periods(sp.operational))
+    return StratReprPers(_strat_per(sp), mult_strat(sp), repr_periods(sp.operational))
 end
 
 # Provide a constructor to simplify the design
-function StratReprPeriod(rpers::StratReprPeriods, state, per)
-    return StratReprPeriod(rpers.sp, state, rpers.mult_sp, mult_repr(per), per)
+function StratReprPeriod(rpers::StratReprPers, state, per)
+    return StratReprPeriod(_strat_per(rpers), state, mult_strat(rpers), mult_repr(per), per)
 end
 
 # Add basic functions of iterators
-Base.length(rpers::StratReprPeriods) = length(rpers.repr)
-function Base.iterate(rpers::StratReprPeriods, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(rpers.repr) : iterate(rpers.repr, state[1])
+Base.length(rpers::StratReprPers) = length(_oper_struct(rpers))
+function Base.iterate(rpers::StratReprPers, state = (nothing, 1))
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(rpers)) :
+        iterate(_oper_struct(rpers), state[1])
     isnothing(next) && return nothing
 
     return StratReprPeriod(rpers, state[2], next[1]), (next[2], state[2] + 1)
 end
-function Base.getindex(rpers::StratReprPeriods, index::Int)
+function Base.getindex(rpers::StratReprPers, index::Int)
     return StratReprPeriod(rpers, index)
 end
-function Base.eachindex(rpers::StratReprPeriods)
-    return eachindex(rpers.repr)
+function Base.eachindex(rpers::StratReprPers)
+    return eachindex(_oper_struct(rpers))
 end
-function Base.last(rpers::StratReprPeriods)
-    per = last(rpers.repr)
+function Base.last(rpers::StratReprPers)
+    per = last(_oper_struct(rpers))
     return StratReprPeriod(rpers, _rper(per), per)
 end
 

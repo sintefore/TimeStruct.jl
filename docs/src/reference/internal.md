@@ -1,5 +1,12 @@
 # Internal types
 
+## Internal supertypes
+
+```@docs
+TimeStruct.TimeStructInnerIter
+TimeStruct.TimeStructOuterIter
+```
+
 ## Strategic period types ([`TwoLevelTree`](@ref))
 
 ### Single types
@@ -32,7 +39,7 @@ TimeStruct.StrategicPeriod
 
 ```@docs
 TimeStruct.SingleStrategicPeriodWrapper
-TimeStruct.StratPeriods
+TimeStruct.StratPers
 ```
 
 ## Representative period types
@@ -51,9 +58,9 @@ TimeStruct.StratNodeReprPeriod
 
 ```@docs
 TimeStruct.SingleReprPeriodWrapper
-TimeStruct.ReprPeriods
-TimeStruct.StratReprPeriods
-TimeStruct.StratNodeReprPeriods
+TimeStruct.ReprPers
+TimeStruct.StratReprPers
+TimeStruct.StratNodeReprPers
 ```
 
 ## Operational scenarios types
@@ -64,10 +71,10 @@ TimeStruct.StratNodeReprPeriods
 TimeStruct.AbstractOperationalScenario
 TimeStruct.SingleScenario
 TimeStruct.OperationalScenario
-TimeStruct.ReprOperationalScenario
-TimeStruct.StratOperationalScenario
-TimeStruct.StratReprOpscenario
-TimeStruct.StratNodeOperationalScenario
+TimeStruct.ReprOpScenario
+TimeStruct.StratOpScenario
+TimeStruct.StratReprOpScenario
+TimeStruct.StratNodeOpScenario
 TimeStruct.StratNodeReprOpScenario
 ```
 
@@ -78,7 +85,7 @@ TimeStruct.SingleScenarioWrapper
 TimeStruct.OpScens
 TimeStruct.RepOpScens
 TimeStruct.StratOpScens
-TimeStruct.StratReprOpscenarios
+TimeStruct.StratReprOpScens
 TimeStruct.StratNodeOpScens
 TimeStruct.StratNodeReprOpScens
 ```

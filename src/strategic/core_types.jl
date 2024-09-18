@@ -167,7 +167,7 @@ end
 function Base.length(ts::TwoLevel)
     return sum(length(op) for op in ts.operational)
 end
-Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod
+Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod{eltype(OP)}
 function Base.iterate(ts::TwoLevel, state = (nothing, 1))
     sp = state[2]
     next =
@@ -188,32 +188,34 @@ function Base.last(ts::TwoLevel)
 end
 
 """
-	struct OperationalPeriod <: TimePeriod
+	struct OperationalPeriod{P} <: TimePeriod where {P<:TimePeriod}
 
 Time period for a single operational period. It is created through iterating through a
 [`TwoLevel`](@ref) time structure.
 """
-struct OperationalPeriod <: TimePeriod
+struct OperationalPeriod{P} <: TimePeriod where {P<:TimePeriod}
     sp::Int
-    period::TimePeriod
+    period::P
     multiple::Float64
 end
+_period(t::OperationalPeriod) = t.period
 
-_oper(t::OperationalPeriod) = _oper(t.period)
-_opscen(t::OperationalPeriod) = _opscen(t.period)
-_rper(t::OperationalPeriod) = _rper(t.period)
 _strat_per(t::OperationalPeriod) = t.sp
+_rper(t::OperationalPeriod) = _rper(_period(t))
+_opscen(t::OperationalPeriod) = _opscen(_period(t))
+_oper(t::OperationalPeriod) = _oper(_period(t))
 
-isfirst(t::OperationalPeriod) = isfirst(t.period)
-duration(t::OperationalPeriod) = duration(t.period)
+isfirst(t::OperationalPeriod) = isfirst(_period(t))
+duration(t::OperationalPeriod) = duration(_period(t))
 multiple(t::OperationalPeriod) = t.multiple
-probability(t::OperationalPeriod) = probability(t.period)
+probability(t::OperationalPeriod) = probability(_period(t))
 
 function Base.show(io::IO, t::OperationalPeriod)
-    return print(io, "sp$(t.sp)-$(t.period)")
+    return print(io, "sp$(_strat_per(t))-$(_period(t))")
 end
 function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
-    return t1.sp < t2.sp || (t1.sp == t2.sp && t1.period < t2.period)
+    return _strat_per(t1) < _strat_per(t2) ||
+           (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
 end
 
 # Convenience constructor for the type

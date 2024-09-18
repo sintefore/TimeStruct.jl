@@ -156,7 +156,7 @@ function Base.last(rpers::RepresentativePeriods)
 end
 
 """
-	ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
+	struct ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
 
 Time period for a single operational period. It is created through iterating through a
 [`RepresentativePeriods`](@ref) time structure. It is as well created as period within
@@ -165,20 +165,22 @@ Time period for a single operational period. It is created through iterating thr
 struct ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
     rp::Int
     period::P
-    mult::Float64
+    multiple::Float64
 end
-_oper(t::ReprPeriod) = _oper(t.period)
-_opscen(t::ReprPeriod) = _opscen(t.period)
+_period(t::ReprPeriod) = t.period
+
+_oper(t::ReprPeriod) = _oper(_period(t))
+_opscen(t::ReprPeriod) = _opscen(_period(t))
 _rper(t::ReprPeriod) = t.rp
 
-isfirst(t::ReprPeriod) = isfirst(t.period)
-duration(t::ReprPeriod) = duration(t.period)
-multiple(t::ReprPeriod) = t.mult
-probability(t::ReprPeriod) = probability(t.period)
+isfirst(t::ReprPeriod) = isfirst(_period(t))
+duration(t::ReprPeriod) = duration(_period(t))
+multiple(t::ReprPeriod) = t.multiple
+probability(t::ReprPeriod) = probability(_period(t))
 
-Base.show(io::IO, t::ReprPeriod) = print(io, "rp$(t.rp)-$(t.period)")
+Base.show(io::IO, t::ReprPeriod) = print(io, "rp$(t.rp)-$(_period(t))")
 function Base.isless(t1::ReprPeriod, t2::ReprPeriod)
-    return t1.rp < t2.rp || (t1.rp == t2.rp && t1.period < t2.period)
+    return _rper(t1) < _rper(t2) || (_rper(t1) == _rper(t2) && _period(t1) < _period(t2))
 end
 
 # Convenience constructor for the type

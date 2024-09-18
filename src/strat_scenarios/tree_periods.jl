@@ -1,16 +1,16 @@
 """
-    AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T}
+    abstract type AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T}
 
 Abstract base type for all tree nodes within a [`TwoLevelTree`](@ref) type.
 """
 abstract type AbstractTreeNode{S,T} <: AbstractStrategicPeriod{S,T} end
 
 """
-    AbstractTreeStructure
+    abstract type AbstractTreeStructure{T} <: TimeStructOuterIter{T}
 
 Abstract base type for all tree timestructures within a [`TwoLevelTree`](@ref) type.
 """
-abstract type AbstractTreeStructure end
+abstract type AbstractTreeStructure{T} <: TimeStructOuterIter{T} end
 
 Base.length(ats::AbstractTreeStructure) = length(_oper_struct(ats))
 function Base.iterate(ats::AbstractTreeStructure, state = (nothing, 1))
@@ -43,8 +43,8 @@ struct StratNode{S,T,OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
     sp::Int
     branch::Int
     duration::S
-    prob_branch::Float64
     mult_sp::Float64
+    prob_branch::Float64
     parent::Any
     operational::OP
 end
