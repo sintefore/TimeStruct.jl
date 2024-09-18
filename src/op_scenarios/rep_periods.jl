@@ -1,5 +1,5 @@
 """
-    ReprOpScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
+    struct ReprOpScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
 
 A type representing a single operational scenarios supporting iteration over its
 time periods. It is created when iterating through [`RepOpScens`](@ref).
@@ -56,13 +56,13 @@ function Base.last(osc::ReprOpScenario)
 end
 
 """
-    RepOpScens{OP}
+    struct RepOpScens{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
 
 Type for iterating through the individual operational scenarios of a
 [`RepresentativePeriod`](@ref) time structure. It is automatically created through the
 function [`opscenarios`](@ref).
 """
-struct RepOpScens{OP}
+struct RepOpScens{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
     rp::Int
     mult_rp::Float64
     opscens::OP
