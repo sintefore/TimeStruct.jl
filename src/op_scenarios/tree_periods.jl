@@ -49,7 +49,7 @@ StrategicIndexable(::Type{<:StratNodeOperationalScenario}) = HasStratIndex()
 function Base.show(io::IO, osc::StratNodeOperationalScenario)
     return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-sc$(_opscen(osc))")
 end
-Base.eltype(_::StratNodeOperationalScenario) = TreePeriod
+Base.eltype(_::StratNodeOperationalScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
     struct StratNodeOpScens <: AbstractTreeStructure
@@ -158,7 +158,7 @@ function Base.show(io::IO, osc::StratNodeReprOpScenario)
         "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))",
     )
 end
-Base.eltype(_::StratNodeReprOpScenario) = TreePeriod
+Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
     struct StratNodeReprOpScens <: AbstractTreeStructure

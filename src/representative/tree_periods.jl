@@ -45,7 +45,7 @@ end
 function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(_strat_per(rp))-br$(_branch(rp))-rp$(_rper(rp))")
 end
-Base.eltype(_::StratNodeReprPeriod) = TreePeriod
+Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
     struct StratNodeReprPeriods <: AbstractTreeStructure
