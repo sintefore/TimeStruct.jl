@@ -123,10 +123,7 @@ mult_scen(osc::OperationalScenario) = osc.mult_scen
 Base.show(io::IO, osc::OperationalScenario) = print(io, "sc-$(osc.scen)")
 
 # Provide a constructor to simplify the design
-function ScenarioPeriod(
-    osc::OperationalScenario,
-    per::TimePeriod,
-)
+function ScenarioPeriod(osc::OperationalScenario, per::TimePeriod)
     mult = mult_scen(osc) * multiple(per)
     return ScenarioPeriod(_opscen(osc), per, mult, probability(osc))
 end

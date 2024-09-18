@@ -97,7 +97,9 @@ end
 # Add basic functions of iterators
 Base.length(oscs::StratOpScens) = length(_oper_struct(oscs))
 function Base.iterate(oscs::StratOpScens, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(oscs)) :
+        iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     scen = state[2]
@@ -247,7 +249,9 @@ function Base.eltype(_::Type{StratReprOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP
     return StratReprOpScenario{T,eltype(SC)}
 end
 function Base.iterate(oscs::StratReprOpScens, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(oscs)) :
+        iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     return StratReprOpScenario(oscs, state[2], next[1]), (next[2], state[2] + 1)

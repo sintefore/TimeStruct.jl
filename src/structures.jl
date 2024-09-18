@@ -19,7 +19,7 @@ will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
 
 !!! note
     `TimeStructInnerIter` and [`TimeStructOuterIter`](@ref) are comparable. The
-    former is implemented for the inner level, that is if you want to use, _e.g.,
+    former is implemented for the inner level, that is if you want to use, _e.g._,
     `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
     _e.g._, `opscenarios(StrategicPeriod())`.
 """
@@ -34,7 +34,7 @@ will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
 
 !!! note
     [`TimeStructInnerIter`](@ref) and `TimeStructOuterIter` are comparable. The
-    former is implemented for the inner level, that is if you want to use, _e.g.,
+    former is implemented for the inner level, that is if you want to use, _e.g._,
     `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
     _e.g._, `opscenarios(StrategicPeriod())`.
 """

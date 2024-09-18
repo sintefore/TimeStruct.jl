@@ -181,7 +181,7 @@ Type for iterating through the individual strategic periods of a
 [`TwoLevel`](@ref) time structure. It is automatically created through the
 function [`strat_periods`](@ref).
 """
-struct StratPers{S,T,OP} <:TimeStructInnerIter{T}
+struct StratPers{S,T,OP} <: TimeStructInnerIter{T}
     ts::TwoLevel{S,T,OP}
 end
 

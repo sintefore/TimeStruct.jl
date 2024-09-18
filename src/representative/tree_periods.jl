@@ -33,10 +33,7 @@ StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
 
 # Provide a constructor to simplify the design
-function TreePeriod(
-    rp::StratNodeReprPeriod,
-    per::TimePeriod,
-)
+function TreePeriod(rp::StratNodeReprPeriod, per::TimePeriod)
     mult = mult_strat(rp) * multiple(per)
     return TreePeriod(_strat_per(rp), _branch(rp), per, mult, probability_branch(rp))
 end

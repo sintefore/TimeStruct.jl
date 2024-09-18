@@ -214,7 +214,8 @@ function Base.show(io::IO, t::OperationalPeriod)
     return print(io, "sp$(_strat_per(t))-$(_period(t))")
 end
 function Base.isless(t1::OperationalPeriod, t2::OperationalPeriod)
-    return _strat_per(t1) < _strat_per(t2) || (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
+    return _strat_per(t1) < _strat_per(t2) ||
+           (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
 end
 
 # Convenience constructor for the type

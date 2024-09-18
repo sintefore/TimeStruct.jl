@@ -100,7 +100,9 @@ function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
     return ReprOpScenario{T,eltype(SC)}
 end
 function Base.iterate(oscs::RepOpScens, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(oscs)) :
+        iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     scen = state[2]

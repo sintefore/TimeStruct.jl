@@ -93,7 +93,8 @@ function Base.show(io::IO, t::TreePeriod)
     return print(io, "sp$(_strat_per(t))-br$(_branch(t))-$(_period(t))")
 end
 function Base.isless(t1::TreePeriod, t2::TreePeriod)
-    return _strat_per(t1) < _strat_per(t2) || (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
+    return _strat_per(t1) < _strat_per(t2) ||
+           (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
 end
 
 # Convenient constructors for the individual types

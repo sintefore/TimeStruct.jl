@@ -128,7 +128,8 @@ probability(t::ScenarioPeriod) = t.prob
 
 Base.show(io::IO, t::ScenarioPeriod) = print(io, "sc$(_opscen(t))-$(_period(t))")
 function Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod)
-    return _opscen(t1) < _opscen(t2) || (_opscen(t1) == _opscen(t2) && _period(t1) < _period(t2))
+    return _opscen(t1) < _opscen(t2) ||
+           (_opscen(t1) == _opscen(t2) && _period(t1) < _period(t2))
 end
 
 # Convenience constructors for the type

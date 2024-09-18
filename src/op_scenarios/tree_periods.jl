@@ -8,8 +8,7 @@ iteration over its time periods. It is created through iterating through
 It is equivalent to a [`StratOpScenario`](@ref) of a [`TwoLevel`](@ref) time
 structure when utilizing a [`TwoLevelTree`](@ref).
 """
-struct StratNodeOpScenario{T,OP<:TimeStructure{T}} <:
-       AbstractOperationalScenario{T}
+struct StratNodeOpScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     sp::Int
     branch::Int
     scen::Int
@@ -32,10 +31,7 @@ probability_branch(osc::StratNodeOpScenario) = osc.prob_branch
 _oper_struct(osc::StratNodeOpScenario) = osc.operational
 
 # Provide a constructor to simplify the design
-function TreePeriod(
-    osc::StratNodeOpScenario,
-    per::TimePeriod,
-)
+function TreePeriod(osc::StratNodeOpScenario, per::TimePeriod)
     mult = mult_strat(osc) * multiple(per)
     return TreePeriod(_strat_per(osc), _branch(osc), per, mult, probability_branch(osc))
 end
@@ -142,10 +138,7 @@ end
 ScenarioIndexable(::Type{<:StratNodeReprOpScenario}) = HasScenarioIndex()
 
 # Provide a constructor to simplify the design
-function TreePeriod(
-    osc::StratNodeReprOpScenario,
-    per::TimePeriod,
-)
+function TreePeriod(osc::StratNodeReprOpScenario, per::TimePeriod)
     rper = ReprPeriod(_rper(osc), per, mult_repr(osc) * multiple(per))
     mult = mult_strat(osc) * mult_repr(osc) * multiple(per)
     return TreePeriod(_strat_per(osc), _branch(osc), rper, mult, probability_branch(osc))

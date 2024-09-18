@@ -87,7 +87,9 @@ end
 # Add basic functions of iterators
 Base.length(rpers::StratReprPers) = length(_oper_struct(rpers))
 function Base.iterate(rpers::StratReprPers, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_struct(rpers)) : iterate(_oper_struct(rpers), state[1])
+    next =
+        isnothing(state[1]) ? iterate(_oper_struct(rpers)) :
+        iterate(_oper_struct(rpers), state[1])
     isnothing(next) && return nothing
 
     return StratReprPeriod(rpers, state[2], next[1]), (next[2], state[2] + 1)
