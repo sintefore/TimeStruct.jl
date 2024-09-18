@@ -72,7 +72,7 @@ _rper(oscs::RepOpScens) = oscs.rp
 
 mult_repr(oscs::RepOpScens) = oscs.mult_rp
 
-_oper_it(oscs::RepOpScens) = oscs.opscens
+_oper_struct(oscs::RepOpScens) = oscs.opscens
 
 """
 When the `TimeStructure` is a [`RepresentativePeriod`](@ref) with [`OperationalScenarios`](@ref),
@@ -88,33 +88,33 @@ function ReprOperationalScenario(oscs::RepOpScens, scen::Int, per)
         _rper(oscs),
         scen,
         mult_repr(oscs),
-        _multiple_adj(_oper_it(_oper_it(oscs)), scen),
+        _multiple_adj(_oper_struct(_oper_struct(oscs)), scen),
         probability(per),
         per,
     )
 end
 
 # Add basic functions of iterators
-Base.length(oscs::RepOpScens) = length(_oper_it(_oper_it(oscs)).scenarios)
+Base.length(oscs::RepOpScens) = length(_oper_struct(_oper_struct(oscs)).scenarios)
 function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
     return ReprOperationalScenario{T,eltype(SC)}
 end
 function Base.iterate(oscs::RepOpScens, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_it(oscs)) : iterate(_oper_it(oscs), state[1])
+    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     scen = state[2]
     return ReprOperationalScenario(oscs, _opscen(next[1]), next[1]), (next[2], scen + 1)
 end
 function Base.getindex(oscs::RepOpScens, index::Int)
-    per = _oper_it(oscs)[index]
+    per = _oper_struct(oscs)[index]
     return ReprOperationalScenario(oscs, _opscen(per), per)
 end
 function Base.eachindex(oscs::RepOpScens)
-    return eachindex(_oper_it(oscs))
+    return eachindex(_oper_struct(oscs))
 end
 function Base.last(oscs::RepOpScens)
-    per = last(_oper_it(oscs))
+    per = last(_oper_struct(oscs))
     return ReprOperationalScenario(oscs, _opscen(per), per)
 end
 

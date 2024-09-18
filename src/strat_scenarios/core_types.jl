@@ -240,7 +240,7 @@ function regular_tree(
 end
 
 """
-    struct StratTreeNodes{S, T, OP} <: AbstractTreeStructure
+    struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](@ref).
 It is automatically created through the function [`strat_periods`](@ref), and hence,
@@ -249,7 +249,7 @@ It is automatically created through the function [`strat_periods`](@ref), and he
 Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behaviour,
 although the meaning remains unchanged.
 """
-struct StratTreeNodes{S,T,OP} <: AbstractTreeStructure
+struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
     ts::TwoLevelTree{S,T,OP}
 end
 

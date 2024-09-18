@@ -90,7 +90,7 @@ function Base.last(ts::CalendarTimes)
 end
 
 """
-    struct CalendarPeriod <: TimePeriod
+    struct CalendarPeriod{T} <: TimePeriod
 
 Time period for a single operational period. It is created through iterating through a
 [`CalendarTimes`](@ref) time structure with duration measured in hours (by default).

@@ -1,5 +1,5 @@
 """
-    AbstractStrategicPeriod{S,T} <: TimeStructure{T}
+    abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T}
 
 Abstract type used for time structures that represent a strategic period.
 These periods are obtained when iterating through the strategic periods of a time
@@ -44,7 +44,7 @@ function remaining(sp::AbstractStrategicPeriod, ts::TimeStructure)
 end
 
 """
-    SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T,T}
+    struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStrategicPeriod{T,T}
 
 A type representing a single strategic period supporting iteration over its
 time periods. It is created when iterating through [`SingleStrategicPeriodWrapper`](@ref).
@@ -68,15 +68,17 @@ end
 Base.last(sp::SingleStrategicPeriod) = last(sp.ts)
 
 """
-    SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
+    struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructInnerIter{T}
 
 Type for iterating through the individual strategic periods of a time structure
 without [`TwoLevel`](@ref). It is automatically created through the function
 [`strat_periods`](@ref).
 """
-struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructure{T}
+struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructInnerIter{T}
     ts::SP
 end
+
+_oper_struct(sps::SingleStrategicPeriodWrapper) = sps.ts
 
 """
     strat_periods(ts::TimeStructure)
@@ -101,15 +103,15 @@ strategic_periods(ts) = strat_periods(ts)
 Base.length(sps::SingleStrategicPeriodWrapper) = 1
 function Base.iterate(sps::SingleStrategicPeriodWrapper, state = nothing)
     !isnothing(state) && return nothing
-    return SingleStrategicPeriod(sps.ts), 1
+    return SingleStrategicPeriod(_oper_struct(sps)), 1
 end
 function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
     return SingleStrategicPeriod{T,SP}
 end
-Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(sps.ts)
+Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(_oper_struct(sps))
 
 """
-    StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
+    struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
 
 A type representing a single strategic period supporting iteration over its
 time periods. It is created when iterating through [`StratPeriods`](@ref).
@@ -173,15 +175,17 @@ end
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
 """
-    StratPeriods{S,T,OP}
+    struct StratPeriods{S,T,OP} <:TimeStructInnerIter{T}
 
 Type for iterating through the individual strategic periods of a
 [`TwoLevel`](@ref) time structure. It is automatically created through the
 function [`strat_periods`](@ref).
 """
-struct StratPeriods{S,T,OP}
+struct StratPeriods{S,T,OP} <:TimeStructInnerIter{T}
     ts::TwoLevel{S,T,OP}
 end
+
+_oper_struct(sps::StratPeriods) = sps.ts
 
 function remaining(sp::AbstractStrategicPeriod, sps::StratPeriods)
     return sum(duration_strat(spp) for spp in sps if spp >= sp)
@@ -203,14 +207,14 @@ strat_periods(ts::TwoLevel) = StratPeriods(ts)
 function StrategicPeriod(sps::StratPeriods, sp::Int)
     return StrategicPeriod(
         sp,
-        sps.ts.duration[sp],
-        _multiple_adj(sps.ts, sp),
-        sps.ts.operational[sp],
+        _oper_struct(sps).duration[sp],
+        _multiple_adj(_oper_struct(sps), sp),
+        _oper_struct(sps).operational[sp],
     )
 end
 
 # Add basic functions of iterators
-Base.length(sps::StratPeriods) = sps.ts.len
+Base.length(sps::StratPeriods) = _oper_struct(sps).len
 function Base.eltype(_::StratPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return StrategicPeriod{S,T,OP}
 end
@@ -224,7 +228,7 @@ function Base.getindex(sps::StratPeriods, index::Int)
     return StrategicPeriod(sps, index)
 end
 function Base.eachindex(sps::StratPeriods)
-    return eachindex(sps.ts.rep_periods)
+    return eachindex(_oper_struct(sps).rep_periods)
 end
 function Base.last(sps::StratPeriods)
     return StrategicPeriod(sps, length(sps))

@@ -23,11 +23,11 @@ _rper(rp::StratNodeReprPeriod) = rp.rp
 
 mult_strat(rp::StratNodeReprPeriod) = rp.mult_sp
 mult_repr(rp::StratNodeReprPeriod) = rp.mult_rp
-probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
-probability(rp::StratNodeReprPeriod) = rp.prob_branch
 function multiple(rp::StratNodeReprPeriod, t::OperationalPeriod)
     return t.multiple / rp.mult_sp
 end
+probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
+probability(rp::StratNodeReprPeriod) = rp.prob_branch
 
 StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
@@ -48,17 +48,17 @@ end
 Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeReprPeriods <: AbstractTreeStructure
+    struct StratNodeReprPeriods{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual presentative periods of a [`StratNode`](@ref).
 It is automatically created through the function [`repr_periods`](@ref).
 """
-struct StratNodeReprPeriods <: AbstractTreeStructure
+struct StratNodeReprPeriods{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     mult_sp::Float64
     prob_branch::Float64
-    repr::Any
+    repr::OP
 end
 
 _strat_per(rps::StratNodeReprPeriods) = rps.sp

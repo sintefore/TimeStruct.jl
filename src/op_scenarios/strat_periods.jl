@@ -1,5 +1,5 @@
 """
-    StratOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
+    struct StratOperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
 
 A type representing a single operational scenario supporting iteration over its
 time periods. It is created when iterating through [`StratOpScens`](@ref).
@@ -57,13 +57,13 @@ function Base.last(osc::StratOperationalScenario)
 end
 
 """
-    StratOpScens{OP}
+    struct StratOpScens{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
 
 Type for iterating through the individual operational scenarios of a
 [`StrategicPeriod`](@ref) time structure. It is automatically created through the function
 [`opscenarios`](@ref).
 """
-struct StratOpScens{OP}
+struct StratOpScens{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
     sp::Int
     mult_sp::Float64
     opscens::OP
@@ -73,7 +73,7 @@ _strat_per(oscs::StratOpScens) = oscs.sp
 
 mult_strat(oscs::StratOpScens) = oscs.mult_sp
 
-_oper_it(oscs::StratOpScens) = oscs.opscens
+_oper_struct(oscs::StratOpScens) = oscs.opscens
 
 """
 When the `TimeStructure` is a [`StrategicPeriod`](@ref), `opscenarios` returns the iterator
@@ -95,20 +95,20 @@ function StratOperationalScenario(oscs::StratOpScens, scen::Int, per)
 end
 
 # Add basic functions of iterators
-Base.length(oscs::StratOpScens) = length(_oper_it(oscs))
+Base.length(oscs::StratOpScens) = length(_oper_struct(oscs))
 function Base.iterate(oscs::StratOpScens, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_it(oscs)) : iterate(_oper_it(oscs), state[1])
+    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     scen = state[2]
     return StratOperationalScenario(oscs, _opscen(next[1]), next[1]), (next[2], scen + 1)
 end
 function Base.getindex(oscs::StratOpScens, index::Int)
-    per = _oper_it(oscs)[index]
+    per = _oper_struct(oscs)[index]
     return StratOperationalScenario(oscs, index, per)
 end
 function Base.eachindex(oscs::StratOpScens)
-    return eachindex(_oper_it(oscs))
+    return eachindex(_oper_struct(oscs))
 end
 function Base.last(oscs::StratOpScens)
     per = last(oscs.repr)
@@ -116,7 +116,7 @@ function Base.last(oscs::StratOpScens)
 end
 
 """
-    StratReprOpscenario{T, OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
+    struct StratReprOpscenario{T, OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
 time periods. It is created when iterating through [`StratReprPeriods`](@ref).
@@ -181,13 +181,13 @@ function Base.last(osc::StratReprOpscenario)
 end
 
 """
-    StratReprOpscenarios{OP}
+    struct StratReprOpscenarios{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
 
 Type for iterating through the individual operational scenarios of a
 [`StrategicPeriod`](@ref) time structure with [`RepresentativePeriods`](@ref). It is
 automatically created through the function [`opscenarios`](@ref).
 """
-struct StratReprOpscenarios{OP}
+struct StratReprOpscenarios{T,OP<:TimeStructInnerIter{T}} <: TimeStructOuterIter{T}
     sp::Int
     rp::Int
     mult_sp::Float64
@@ -201,7 +201,7 @@ _rper(oscs::StratReprOpscenarios) = oscs.rp
 mult_strat(oscs::StratReprOpscenarios) = oscs.mult_sp
 mult_repr(oscs::StratReprOpscenarios) = oscs.mult_rp
 
-_oper_it(oscs::StratReprOpscenarios) = oscs.opscens
+_oper_struct(oscs::StratReprOpscenarios) = oscs.opscens
 
 function opscenarios(rp::StratReprPeriod{T,RepresentativePeriod{T,OP}}) where {T,OP}
     return StratReprOpscenarios(
@@ -240,25 +240,25 @@ function StratReprOpscenario(oscs::StratReprOpscenarios, scen, per)
 end
 
 # Add basic functions of iterators
-Base.length(oscs::StratReprOpscenarios) = length(_oper_it(oscs))
+Base.length(oscs::StratReprOpscenarios) = length(_oper_struct(oscs))
 function Base.eltype(_::Type{StratReprOpscenarios{SC}}) where {T,OP,SC<:OpScens{T,OP}}
     return StratReprOpscenario{T,eltype(SC)}
 end
 function Base.iterate(oscs::StratReprOpscenarios, state = (nothing, 1))
-    next = isnothing(state[1]) ? iterate(_oper_it(oscs)) : iterate(_oper_it(oscs), state[1])
+    next = isnothing(state[1]) ? iterate(_oper_struct(oscs)) : iterate(_oper_struct(oscs), state[1])
     isnothing(next) && return nothing
 
     return StratReprOpscenario(oscs, state[2], next[1]), (next[2], state[2] + 1)
 end
 function Base.getindex(oscs::StratReprOpscenarios, index::Int)
-    per = _oper_it(oscs)[index]
+    per = _oper_struct(oscs)[index]
     return StratReprOpscenario(oscs, _opscen(per), per)
 end
 function Base.eachindex(oscs::StratReprOpscenarios)
-    return eachindex(_oper_it(oscs))
+    return eachindex(_oper_struct(oscs))
 end
 function Base.last(oscs::StratReprOpscenarios)
-    per = last(_oper_it(oscs))
+    per = last(_oper_struct(oscs))
     return StratReprOpscenario(oscs, _opscen(per), per)
 end
 

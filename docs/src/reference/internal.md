@@ -1,5 +1,12 @@
 # Internal types
 
+## Internal supertypes
+
+```@docs
+TimeStruct.TimeStructInnerIter
+TimeStruct.TimeStructOuterIter
+```
+
 ## Strategic period types ([`TwoLevelTree`](@ref))
 
 ### Single types

@@ -108,7 +108,7 @@ function Base.last(oscs::OperationalScenarios)
 end
 
 """
-	ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
+	struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
 
 Time period for a single operational period. It is created through iterating through a
 [`OperationalScenarios`](@ref) time structure. It is as well created as period within

@@ -2,13 +2,43 @@
 Duration = Number
 
 """
-    abstract type TimeStructure{T}
+    abstract type TimeStructure{T<:Duration}
 
 Abstract type representing different time structures that
 consists of one or more time periods. The type 'T' gives
 the data type used for the duration of the time periods.
 """
 abstract type TimeStructure{T<:Duration} end
+
+"""
+    abstract type TimeStructInnerIter{T<:Duration}
+
+Abstract type representing different iterators for individual time structures.
+The difference to [`TimeStructure`](@ref) is that iterating through a `TimeStructInnerIter`
+will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
+
+!!! note
+    `TimeStructInnerIter` and [`TimeStructOuterIter`](@ref) are comparable. The
+    former is implemented for the inner level, that is if you want to use, _e.g.,
+    `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
+    _e.g._, `opscenarios(StrategicPeriod())`.
+"""
+abstract type TimeStructInnerIter{T<:Duration} end
+
+"""
+    abstract type TimeStructOuterIter{T<:Duration}
+
+Abstract type representing different iterators for individual time structures.
+The difference to [`TimeStructure`](@ref) is that iterating through a `TimeStructOuterIter`
+will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
+
+!!! note
+    [`TimeStructInnerIter`](@ref) and `TimeStructOuterIter` are comparable. The
+    former is implemented for the inner level, that is if you want to use, _e.g.,
+    `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
+    _e.g._, `opscenarios(StrategicPeriod())`.
+"""
+abstract type TimeStructOuterIter{T<:Duration} end
 
 """
     abstract type TimePeriod

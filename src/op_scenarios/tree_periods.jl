@@ -52,17 +52,17 @@ end
 Base.eltype(_::StratNodeOperationalScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeOpScens <: AbstractTreeStructure
+    struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual operational scenarios of a [`StratNode`](@ref).
 It is automatically created through the function [`opscenarios`](@ref).
 """
-struct StratNodeOpScens <: AbstractTreeStructure
+struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     mult_sp::Float64
     prob_branch::Float64
-    opscens::Any
+    opscens::OP
 end
 
 _strat_per(oscs::StratNodeOpScens) = oscs.sp
@@ -161,20 +161,20 @@ end
 Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeReprOpScens <: AbstractTreeStructure
+    struct StratNodeReprOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual operational scenarios of a
 [`StratNodeReprPeriod`](@ref). It is automatically created through the function
 [`opscenarios`](@ref).
 """
-struct StratNodeReprOpScens <: AbstractTreeStructure
+struct StratNodeReprOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     rp::Int
     mult_sp::Float64
     mult_rp::Float64
     prob_branch::Float64
-    opscens::Any
+    opscens::OP
 end
 
 _strat_per(oscs::StratNodeReprOpScens) = oscs.sp
