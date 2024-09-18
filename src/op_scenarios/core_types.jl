@@ -99,12 +99,8 @@ function Base.iterate(oscs::OperationalScenarios, state = (nothing, 1))
     return ScenarioPeriod(oscs, next[1], osc), (next[2], osc)
 end
 function Base.last(oscs::OperationalScenarios)
-    return ScenarioPeriod(
-        oscs.len,
-        oscs.probability[oscs.len],
-        _multiple_adj(oscs, oscs.len),
-        last(oscs.scenarios[oscs.len]),
-    )
+    per = last(oscs.scenarios[oscs.len])
+    return ScenarioPeriod(oscs, per, oscs.len)
 end
 
 """
@@ -116,9 +112,9 @@ Time period for a single operational period. It is created through iterating thr
 """
 struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
     osc::Int
-    prob::Float64
-    multiple::Float64
     period::P
+    multiple::Float64
+    prob::Float64
 end
 _period(t::ScenarioPeriod) = t.period
 
@@ -139,13 +135,13 @@ end
 function ScenarioPeriod(osc::Int, prob::Number, multiple::Number, period)
     return ScenarioPeriod(
         osc,
-        Base.convert(Float64, prob),
-        Base.convert(Float64, multiple),
         period,
+        Base.convert(Float64, multiple),
+        Base.convert(Float64, prob),
     )
 end
 function ScenarioPeriod(oscs::OperationalScenarios, per::TimePeriod, osc::Int)
     prob = oscs.probability[osc]
     mult = _multiple_adj(oscs, osc)
-    return ScenarioPeriod(osc, prob, mult, per)
+    return ScenarioPeriod(osc, per, mult, prob)
 end

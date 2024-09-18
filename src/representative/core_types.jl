@@ -165,7 +165,7 @@ Time period for a single operational period. It is created through iterating thr
 struct ReprPeriod{P} <: TimePeriod where {P<:TimePeriod}
     rp::Int
     period::P
-    mult::Float64
+    multiple::Float64
 end
 _period(t::ReprPeriod) = t.period
 
@@ -175,7 +175,7 @@ _rper(t::ReprPeriod) = t.rp
 
 isfirst(t::ReprPeriod) = isfirst(_period(t))
 duration(t::ReprPeriod) = duration(_period(t))
-multiple(t::ReprPeriod) = t.mult
+multiple(t::ReprPeriod) = t.multiple
 probability(t::ReprPeriod) = probability(_period(t))
 
 Base.show(io::IO, t::ReprPeriod) = print(io, "rp$(t.rp)-$(_period(t))")

@@ -110,7 +110,7 @@ time periods. It is created when iterating through [`OpScens`](@ref).
 """
 struct OperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     scen::Int
-    mult_sc::Float64
+    mult_scen::Float64
     probability::Float64
     operational::OP
 end
@@ -118,17 +118,17 @@ end
 _opscen(osc::OperationalScenario) = osc.scen
 
 probability(osc::OperationalScenario) = osc.probability
-mult_scen(osc::OperationalScenario) = osc.mult_sc
+mult_scen(osc::OperationalScenario) = osc.mult_scen
 
 Base.show(io::IO, osc::OperationalScenario) = print(io, "sc-$(osc.scen)")
 
 # Provide a constructor to simplify the design
 function ScenarioPeriod(
     osc::OperationalScenario,
-    per::P,
-) where {P<:Union{TimePeriod,TimeStructure}}
+    per::TimePeriod,
+)
     mult = mult_scen(osc) * multiple(per)
-    return ScenarioPeriod(_opscen(osc), probability(osc), mult, per)
+    return ScenarioPeriod(_opscen(osc), per, mult, probability(osc))
 end
 
 # Add basic functions of iterators

@@ -34,10 +34,10 @@ _oper_struct(osc::StratNodeOperationalScenario) = osc.operational
 # Provide a constructor to simplify the design
 function TreePeriod(
     osc::StratNodeOperationalScenario,
-    per::P,
-) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
+    per::TimePeriod,
+)
     mult = mult_strat(osc) * multiple(per)
-    return TreePeriod(_strat_per(osc), _branch(osc), probability_branch(osc), mult, per)
+    return TreePeriod(_strat_per(osc), _branch(osc), per, mult, probability_branch(osc))
 end
 
 function StrategicTreeIndexable(::Type{<:StratNodeOperationalScenario})
@@ -144,11 +144,11 @@ ScenarioIndexable(::Type{<:StratNodeReprOpScenario}) = HasScenarioIndex()
 # Provide a constructor to simplify the design
 function TreePeriod(
     osc::StratNodeReprOpScenario,
-    per::P,
-) where {P<:Union{TimePeriod,AbstractOperationalScenario}}
+    per::TimePeriod,
+)
     rper = ReprPeriod(_rper(osc), per, mult_repr(osc) * multiple(per))
     mult = mult_strat(osc) * mult_repr(osc) * multiple(per)
-    return TreePeriod(_strat_per(osc), _branch(osc), probability_branch(osc), mult, rper)
+    return TreePeriod(_strat_per(osc), _branch(osc), rper, mult, probability_branch(osc))
 end
 
 # Adding methods to existing Julia functions

@@ -43,8 +43,8 @@ struct StratNode{S,T,OP<:TimeStructure{T}} <: AbstractTreeNode{S,T}
     sp::Int
     branch::Int
     duration::S
-    prob_branch::Float64
     mult_sp::Float64
+    prob_branch::Float64
     parent::Any
     operational::OP
 end

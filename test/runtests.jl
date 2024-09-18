@@ -116,7 +116,7 @@ end
     week = SimpleTimes(168, 1)
     ts = OperationalScenarios(3, [day, day, week], [0.1, 0.2, 0.7])
 
-    @test first(ts) == TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1))
+    @test first(ts) == TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.1)
     @test length(ts) == 216
     pers = []
     for sc in opscenarios(ts)
@@ -133,7 +133,7 @@ end
     # resolution and the same probability of occuring
     ts = OperationalScenarios([day, week])
 
-    @test first(ts) == TimeStruct.ScenarioPeriod(1, 0.5, 7.0, TimeStruct.SimplePeriod(1, 1))
+    @test first(ts) == TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.5)
     @test length(ts) == 192
 
     scens = opscenarios(ts)
@@ -477,7 +477,7 @@ end
     ops = collect(seasonal_year)
     @test ops[1] == TimeStruct.OperationalPeriod(
         1,
-        TimeStruct.ScenarioPeriod(1, 0.1, 7.0, TimeStruct.SimplePeriod(1, 1)),
+        TimeStruct.ScenarioPeriod(1, TimeStruct.SimplePeriod(1, 1), 7.0, 0.1),
         91.0,
     )
 

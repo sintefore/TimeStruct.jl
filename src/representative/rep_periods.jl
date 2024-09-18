@@ -108,8 +108,8 @@ Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(_rper(rp))")
 # Provide a constructor to simplify the design
 function ReprPeriod(
     rp::RepresentativePeriod,
-    per::P,
-) where {P<:Union{TimePeriod,TimeStructure}}
+    per::TimePeriod,
+)
     mult = mult_repr(rp) * multiple(per)
     return ReprPeriod(_rper(rp), per, mult)
 end

@@ -124,21 +124,22 @@ time periods. It is created when iterating through [`StratReprPeriods`](@ref).
 struct StratReprOpscenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
     sp::Int
     rp::Int
-    opscen::Int
+    scen::Int
     mult_sp::Float64
     mult_rp::Float64
+    mult_scen::Float64
     probability::Float64
     operational::OP
 end
 
-_opscen(osc::StratReprOpscenario) = osc.opscen
+_opscen(osc::StratReprOpscenario) = osc.scen
 _rper(osc::StratReprOpscenario) = osc.rp
 _strat_per(osc::StratReprOpscenario) = osc.sp
 
 probability(osc::StratReprOpscenario) = osc.probability
-mult_scen(osc::StratReprOpscenario) = osc.multiple_scen
-mult_repr(osc::StratReprOpscenario) = osc.mult_rp
 mult_strat(osc::StratReprOpscenario) = osc.mult_sp
+mult_repr(osc::StratReprOpscenario) = osc.mult_rp
+mult_scen(osc::StratReprOpscenario) = osc.mult_scen
 
 StrategicIndexable(::Type{<:StratReprOpscenario}) = HasStratIndex()
 function RepresentativeIndexable(::Type{<:StratReprOpscenario})
@@ -234,6 +235,7 @@ function StratReprOpscenario(oscs::StratReprOpscenarios, scen, per)
         scen,
         mult_strat(oscs),
         mult_repr(oscs),
+        mult_scen(per),
         probability(per),
         per,
     )

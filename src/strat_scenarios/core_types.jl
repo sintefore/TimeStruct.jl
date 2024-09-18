@@ -71,9 +71,9 @@ respective branch and probability of the branch
 struct TreePeriod{P} <: TimePeriod where {P<:TimePeriod}
     sp::Int
     branch::Int
-    prob_branch::Float64
-    multiple::Float64
     period::P
+    multiple::Float64
+    prob_branch::Float64
 end
 _period(t::TreePeriod) = t.period
 
@@ -97,9 +97,9 @@ function Base.isless(t1::TreePeriod, t2::TreePeriod)
 end
 
 # Convenient constructors for the individual types
-function TreePeriod(n::StratNode, per::P) where {P<:Union{TimePeriod,TimeStructure}}
+function TreePeriod(n::StratNode, per::TimePeriod)
     mult = n.mult_sp * multiple(per)
-    return TreePeriod(_strat_per(n), _branch(n), probability_branch(n), mult, per)
+    return TreePeriod(_strat_per(n), _branch(n), per, mult, probability_branch(n))
 end
 """
     struct StrategicScenario
@@ -198,8 +198,8 @@ function add_node(
         sp,
         branches(tree, sp) + 1,
         duration,
-        prob_branch,
         mult_sp,
+        prob_branch,
         parent,
         oper,
     )
