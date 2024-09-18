@@ -33,7 +33,7 @@ end
 
 # Add basic functions of iterators
 Base.length(rp::StratReprPeriod) = length(rp.operational)
-Base.eltype(_::Type{StratReprPeriod{T,OP}}) where {T,OP} = OperationalPeriod
+Base.eltype(_::Type{StratReprPeriod{T,OP}}) where {T,OP} = OperationalPeriod{eltype(OP)}
 function Base.iterate(rp::StratReprPeriod, state = nothing)
     next = isnothing(state) ? iterate(rp.operational) : iterate(rp.operational, state)
     isnothing(next) && return nothing

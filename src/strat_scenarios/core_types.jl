@@ -75,25 +75,25 @@ struct TreePeriod{P} <: TimePeriod where {P<:TimePeriod}
     multiple::Float64
     period::P
 end
+_period(t::TreePeriod) = t.period
 
 _strat_per(t::TreePeriod) = t.sp
 _branch(t::TreePeriod) = t.branch
+_rper(t::TreePeriod) = _rper(_period(t))
+_opscen(t::TreePeriod) = _opscen(_period(t))
+_oper(t::TreePeriod) = _oper(_period(t))
 
-_rper(t::TreePeriod) = _rper(t.period)
-_opscen(t::TreePeriod) = _opscen(t.period)
-_oper(t::TreePeriod) = _oper(t.period)
-
-isfirst(t::TreePeriod) = isfirst(t.period)
-duration(t::TreePeriod) = duration(t.period)
+isfirst(t::TreePeriod) = isfirst(_period(t))
+duration(t::TreePeriod) = duration(_period(t))
 multiple(t::TreePeriod) = t.multiple
 probability_branch(t::TreePeriod) = t.prob_branch
-probability(t::TreePeriod) = probability(t.period) * probability_branch(t)
+probability(t::TreePeriod) = probability(_period(t)) * probability_branch(t)
 
 function Base.show(io::IO, t::TreePeriod)
-    return print(io, "sp$(t.sp)-br$(t.branch)-$(t.period)")
+    return print(io, "sp$(_strat_per(t))-br$(_branch(t))-$(_period(t))")
 end
 function Base.isless(t1::TreePeriod, t2::TreePeriod)
-    return t1.period < t2.period
+    return _strat_per(t1) < _strat_per(t2) || (_strat_per(t1) == _strat_per(t2) && _period(t1) < _period(t2))
 end
 
 # Convenient constructors for the individual types

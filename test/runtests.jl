@@ -524,7 +524,7 @@ end
     sp = first(strat_periods(ts))
     scen = first(opscenarios(sp))
     @test length(scen) == 10
-    @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod
+    @test eltype(typeof(scen)) == TimeStruct.OperationalPeriod{TimeStruct.SimplePeriod{Int}}
     @test repr(scen) == "sp1-sc1"
     @test probability(scen) == 1.0
     per = first(scen)

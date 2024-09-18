@@ -36,7 +36,7 @@ end
 # Add basic functions of iterators
 Base.length(osc::StratOperationalScenario) = length(osc.operational)
 function Base.eltype(::Type{StratOperationalScenario{T,OP}}) where {T,OP}
-    return OperationalPeriod
+    return OperationalPeriod{eltype(OP)}
 end
 function Base.iterate(osc::StratOperationalScenario, state = nothing)
     next = isnothing(state) ? iterate(osc.operational) : iterate(osc.operational, state)
@@ -160,7 +160,7 @@ end
 # Add basic functions of iterators
 Base.length(osc::StratReprOpscenario) = length(osc.operational)
 function Base.eltype(::Type{StratReprOpscenario{T,OP}}) where {T,OP}
-    return OperationalPeriod
+    return OperationalPeriod{ReprPeriod{eltype(OP)}}
 end
 function Base.iterate(osc::StratReprOpscenario, state = nothing)
     next = isnothing(state) ? iterate(osc.operational) : iterate(osc.operational, state)

@@ -136,7 +136,7 @@ end
 # Add basic functions of iterators
 Base.length(sp::StrategicPeriod) = length(sp.operational)
 function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
-    return OperationalPeriod
+    return OperationalPeriod{eltype(OP)}
 end
 function Base.iterate(sp::StrategicPeriod, state = nothing)
     next = isnothing(state) ? iterate(sp.operational) : iterate(sp.operational, state)
