@@ -2,7 +2,6 @@
 
 Welcome to the documentation of the TimeStruct package!
 
-
 ## What is TimeStruct?
 
 TimeStruct is a Julia package that supports the efficient development of optimization models with multi-horizon time modelling. The package is designed to be used in combination with the JuMP package for optimization modeling in Julia.
@@ -24,6 +23,7 @@ The main concept is a [`TimeStructure`](@ref) which is an abstract type that ena
 ## How to get started
 
 The package is registered in the general registry and can be installed in standard fashion
+
 ```julia
 ] add TimeStruct
 ```
@@ -31,11 +31,12 @@ The package is registered in the general registry and can be installed in standa
 This documentation consists of a manual explaining concepts and giving examples as well as a complete
 API reference.
 
-
 ## Cite
+
 If you find TimeStruct useful in your work, we kindly request that you cite the
 following:
 ```
+
 @misc{TimeStruct.jl,
   author       = {Flatberg, Truls and Hellemo, Lars},
   title        = {{TimeStruct.jl: Flexible time structures in optimization modelling}},
@@ -47,9 +48,6 @@ following:
 }
 ```
 
-
 ## Acknowledgements
 
 This material is based upon work supported by the Research Council of Norway through the projects ZeroKyst (328721), MaritimeNH3 (328679) and CleanExport (308811).
-
-

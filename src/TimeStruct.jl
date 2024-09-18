@@ -3,24 +3,27 @@ module TimeStruct
 import Dates
 import TimeZones
 
-import .Base:
-    first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
+import .Base: first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
 
 include("structures.jl")
 include("simple.jl")
 include("calendar.jl")
-include("representative.jl")
-include("stochastic.jl")
-include("twolevel.jl")
-include("strat_periods.jl")
-include("repr_periods.jl")
-include("opscenarios.jl")
+include(joinpath("representative", "core_types.jl"))
+include(joinpath("op_scenarios", "core_types.jl"))
+include(joinpath("strategic", "core_types.jl"))
+include(joinpath("strategic", "strat_periods.jl"))
+include(joinpath("strat_scenarios", "tree_periods.jl"))
+include(joinpath("strat_scenarios", "core_types.jl"))
+include(joinpath("representative", "rep_periods.jl"))
+include(joinpath("representative", "strat_periods.jl"))
+include(joinpath("representative", "tree_periods.jl"))
+include(joinpath("op_scenarios", "opscenarios.jl"))
+include(joinpath("op_scenarios", "rep_periods.jl"))
+include(joinpath("op_scenarios", "strat_periods.jl"))
+include(joinpath("op_scenarios", "tree_periods.jl"))
+
 include("utils.jl")
 include("discount.jl")
-
-include("tree_nodes.jl")
-include("twoleveltree.jl")
-
 include("profiles.jl")
 
 export TimeStructure

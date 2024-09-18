@@ -62,92 +62,89 @@ end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
     return OperationalScenarios(len, fill(oper, len), fill(1.0 / len, len))
 end
-function OperationalScenarios(
-    oper::Vector{<:TimeStructure{T}},
-    prob::Vector,
-) where {T}
+function OperationalScenarios(oper::Vector{<:TimeStructure{T}}, prob::Vector) where {T}
     return OperationalScenarios(length(oper), oper, prob)
 end
 function OperationalScenarios(oper::Vector{<:TimeStructure{T}}) where {T}
-    return OperationalScenarios(
-        length(oper),
-        oper,
-        fill(1.0 / length(oper), length(oper)),
-    )
+    return OperationalScenarios(length(oper), oper, fill(1.0 / length(oper), length(oper)))
 end
 
-function _total_duration(os::OperationalScenarios)
-    return maximum(_total_duration(sc) for sc in os.scenarios)
+function _total_duration(oscs::OperationalScenarios)
+    return maximum(_total_duration(osc) for osc in oscs.scenarios)
 end
 
-function _multiple_adj(os::OperationalScenarios, scen)
-    return stripunit(_total_duration(os) / _total_duration(os.scenarios[scen]))
+function _multiple_adj(oscs::OperationalScenarios, scen)
+    return stripunit(_total_duration(oscs) / _total_duration(oscs.scenarios[scen]))
 end
 
-# Iteration through all time periods for the operational scenarios
-function Base.iterate(itr::OperationalScenarios)
-    sc = 1
-    next = iterate(itr.scenarios[sc])
-    next === nothing && return nothing
-    mult = _multiple_adj(itr, sc)
-    return ScenarioPeriod(sc, itr.probability[sc], mult, next[1]), (sc, next[2])
+# Add basic functions of iterators
+function Base.length(oscs::OperationalScenarios)
+    return sum(length(oscs.scenarios[osc]) for osc in 1:oscs.len)
 end
-
-function Base.iterate(itr::OperationalScenarios, state)
-    sc = state[1]
-    next = iterate(itr.scenarios[sc], state[2])
+function Base.eltype(::Type{OperationalScenarios{T,OP}}) where {T,OP}
+    return ScenarioPeriod{eltype(OP)}
+end
+function Base.iterate(oscs::OperationalScenarios, state = (nothing, 1))
+    osc = state[2]
+    next =
+        isnothing(state[1]) ? iterate(oscs.scenarios[osc]) :
+        iterate(oscs.scenarios[osc], state[1])
     if next === nothing
-        sc = sc + 1
-        if sc > itr.len
+        osc = osc + 1
+        if osc > oscs.len
             return nothing
         end
-        next = iterate(itr.scenarios[sc])
+        next = iterate(oscs.scenarios[osc])
     end
-    mult = _multiple_adj(itr, sc)
-    return ScenarioPeriod(sc, itr.probability[sc], mult, next[1]), (sc, next[2])
+    return ScenarioPeriod(oscs, next[1], osc), (next[2], osc)
 end
-
-function Base.length(itr::OperationalScenarios)
-    return sum(length(itr.scenarios[sc]) for sc in 1:itr.len)
-end
-
-Base.eltype(::Type{OperationalScenarios{T}}) where {T} = ScenarioPeriod
-
-function Base.last(itr::OperationalScenarios)
+function Base.last(oscs::OperationalScenarios)
     return ScenarioPeriod(
-        itr.len,
-        itr.probability[itr.len],
-        _multiple_adj(itr, itr.len),
-        last(itr.scenarios[itr.len]),
+        oscs.len,
+        oscs.probability[oscs.len],
+        _multiple_adj(oscs, oscs.len),
+        last(oscs.scenarios[oscs.len]),
     )
 end
 
-# A time period with scenario number and probability
+"""
+	ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
+
+Time period for a single operational period. It is created through iterating through a
+[`OperationalScenarios`](@ref) time structure. It is as well created as period within
+[`OperationalPeriod`](@ref) when the time structure includes [`OperationalScenarios`](@ref).
+"""
 struct ScenarioPeriod{P} <: TimePeriod where {P<:TimePeriod}
-    sc::Int
+    osc::Int
     prob::Float64
     multiple::Float64
     period::P
 end
 
-function ScenarioPeriod(scenario::Int, prob::Number, multiple::Number, period)
+_oper(t::ScenarioPeriod) = _oper(t.period)
+_opscen(t::ScenarioPeriod) = t.osc
+
+isfirst(t::ScenarioPeriod) = isfirst(t.period)
+duration(t::ScenarioPeriod) = duration(t.period)
+multiple(t::ScenarioPeriod) = t.multiple
+probability(t::ScenarioPeriod) = t.prob
+
+Base.show(io::IO, t::ScenarioPeriod) = print(io, "sc$(t.osc)-$(t.period)")
+function Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod)
+    return t1.osc < t2.osc || (t1.osc == t2.osc && t1.period < t2.period)
+end
+
+# Convenience constructors for the type
+function ScenarioPeriod(osc::Int, prob::Number, multiple::Number, period)
     return ScenarioPeriod(
-        scenario,
+        osc,
         Base.convert(Float64, prob),
         Base.convert(Float64, multiple),
         period,
     )
 end
-
-Base.show(io::IO, up::ScenarioPeriod) = print(io, "sc$(up.sc)-$(up.period)")
-function Base.isless(t1::ScenarioPeriod, t2::ScenarioPeriod)
-    return t1.sc < t2.sc || (t1.sc == t2.sc && t1.period < t2.period)
+function ScenarioPeriod(oscs::OperationalScenarios, per::TimePeriod, osc::Int)
+    prob = oscs.probability[osc]
+    mult = _multiple_adj(oscs, osc)
+    return ScenarioPeriod(osc, prob, mult, per)
 end
-
-isfirst(t::ScenarioPeriod) = isfirst(t.period)
-duration(t::ScenarioPeriod) = duration(t.period)
-probability(t::ScenarioPeriod) = t.prob
-multiple(t::ScenarioPeriod) = t.multiple
-
-_oper(t::ScenarioPeriod) = _oper(t.period)
-_opscen(t::ScenarioPeriod) = t.sc

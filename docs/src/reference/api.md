@@ -1,7 +1,3 @@
-
-```@meta
-CurrentModule = TimeStruct
-```
 # Available time structures
 
 ```@docs
@@ -48,6 +44,10 @@ multiple
 ```
 
 ```@docs
+multiple_strat
+```
+
+```@docs
 probability
 ```
 
@@ -81,7 +81,6 @@ chunk
 ```@docs
 chunk_duration
 ```
-
 
 # Time profiles
 

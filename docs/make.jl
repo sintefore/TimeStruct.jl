@@ -13,12 +13,7 @@ pages = [
     "Internal reference" => "reference/internal.md",
 ]
 
-DocMeta.setdocmeta!(
-    TimeStruct,
-    :DocTestSetup,
-    :(using TimeStruct);
-    recursive = true,
-)
+DocMeta.setdocmeta!(TimeStruct, :DocTestSetup, :(using TimeStruct); recursive = true)
 
 Documenter.makedocs(
     sitename = "TimeStruct",
@@ -28,7 +23,7 @@ Documenter.makedocs(
         assets = String[],
     ),
     doctest = false,
-    #modules = [TimeStruct],
+    modules = [TimeStruct],
     pages = pages,
 )
 

@@ -3,10 +3,7 @@ module TimeStructUnitfulExt
 using Unitful
 using TimeStruct
 
-function TimeStruct.SimpleTimes(
-    dur::Vector{T},
-    u::Unitful.Units,
-) where {T<:Real}
+function TimeStruct.SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T<:Real}
     return TimeStruct.SimpleTimes(length(dur), Unitful.Quantity.(dur, u))
 end
 
@@ -15,11 +12,7 @@ function TimeStruct.TwoLevel(
     u::Unitful.Units,
     oper::TimeStructure{<:Unitful.Quantity{V,Unitful.𝐓}},
 ) where {V}
-    return TimeStruct.TwoLevel(
-        Unitful.Quantity.(duration, u),
-        oper;
-        op_per_strat = 1.0,
-    )
+    return TimeStruct.TwoLevel(Unitful.Quantity.(duration, u), oper; op_per_strat = 1.0)
 end
 
 function TimeStruct.stripunit(val::Unitful.Quantity)

@@ -36,45 +36,42 @@ function SimpleTimes(len::Integer, duration::Number)
 end
 SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
 
-Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
-Base.length(st::SimpleTimes) = st.len
-
 _total_duration(st::SimpleTimes) = sum(st.duration)
 
+# Add basic functions of iterators
+Base.length(st::SimpleTimes) = st.len
+Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}
+function Base.iterate(itr::SimpleTimes{T}, state = nothing) where {T}
+    next = isnothing(state) ? 1 : state + 1
+    next > itr.len && return nothing
+
+    return SimplePeriod{T}(next, itr.duration[next]), next
+end
+function Base.getindex(itr::SimpleTimes{T}, index) where {T}
+    return SimplePeriod{T}(index, itr.duration[index])
+end
+function Base.eachindex(itr::SimpleTimes{T}) where {T}
+    return Base.OneTo(itr.len)
+end
+function Base.last(ts::SimpleTimes{T}) where {T}
+    return SimplePeriod{T}(ts.len, ts.duration[ts.len])
+end
+
 """
-    struct SimplePeriod <: TimePeriod
-A single time period returned when iterating through a SimpleTimes structure
+    struct SimplePeriod{T<:Number} <: TimePeriod
+
+Time period for a single operational period. It is created through iterating through a
+[`SimpleTimes`](@ref) time structure.
 """
 struct SimplePeriod{T<:Number} <: TimePeriod
     op::Int
     duration::T
 end
 
-duration(t::SimplePeriod) = t.duration
-multiple(t::SimplePeriod) = 1
-isfirst(t::SimplePeriod) = t.op == 1
 _oper(t::SimplePeriod) = t.op
 
-Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
+isfirst(t::SimplePeriod) = t.op == 1
+duration(t::SimplePeriod) = t.duration
+
 Base.show(io::IO, t::SimplePeriod) = print(io, "t$(t.op)")
-
-function Base.iterate(itr::SimpleTimes{T}) where {T}
-    return SimplePeriod{T}(1, itr.duration[1]), 1
-end
-
-function Base.iterate(itr::SimpleTimes{T}, state) where {T}
-    state == itr.len && return nothing
-    return SimplePeriod{T}(state + 1, itr.duration[state+1]), state + 1
-end
-
-function Base.last(ts::SimpleTimes)
-    return SimplePeriod(ts.len, ts.duration[ts.len])
-end
-
-function Base.getindex(itr::SimpleTimes{T}, index) where {T}
-    return SimplePeriod{T}(index, itr.duration[index])
-end
-
-function Base.eachindex(itr::SimpleTimes{T}) where {T}
-    return Base.OneTo(itr.len)
-end
+Base.isless(t1::SimplePeriod, t2::SimplePeriod) = t1.op < t2.op
