@@ -136,7 +136,7 @@ function expand_dataframe!(df, periods) end
 # All introduced subtypes require the same procedures for the iteration and indexing.
 # Hence, all introduced types use the same functions.
 TreeStructure =
-    Union{StratNodeOperationalScenario,StratNodeReprPeriod,StratNodeReprOpScenario}
+    Union{StratNodeOpScenario,StratNodeReprPeriod,StratNodeReprOpScenario}
 Base.length(ts::TreeStructure) = length(ts.operational)
 function Base.last(ts::TreeStructure)
     per = last(ts.operational)

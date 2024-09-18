@@ -114,7 +114,7 @@ Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(_oper_struc
     struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
 
 A type representing a single strategic period supporting iteration over its
-time periods. It is created when iterating through [`StratPeriods`](@ref).
+time periods. It is created when iterating through [`StratPers`](@ref).
 """
 struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
     sp::Int
@@ -175,25 +175,25 @@ end
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
 """
-    struct StratPeriods{S,T,OP} <:TimeStructInnerIter{T}
+    struct StratPers{S,T,OP} <:TimeStructInnerIter{T}
 
 Type for iterating through the individual strategic periods of a
 [`TwoLevel`](@ref) time structure. It is automatically created through the
 function [`strat_periods`](@ref).
 """
-struct StratPeriods{S,T,OP} <:TimeStructInnerIter{T}
+struct StratPers{S,T,OP} <:TimeStructInnerIter{T}
     ts::TwoLevel{S,T,OP}
 end
 
-_oper_struct(sps::StratPeriods) = sps.ts
+_oper_struct(sps::StratPers) = sps.ts
 
-function remaining(sp::AbstractStrategicPeriod, sps::StratPeriods)
+function remaining(sp::AbstractStrategicPeriod, sps::StratPers)
     return sum(duration_strat(spp) for spp in sps if spp >= sp)
 end
 
 """
 When the `TimeStructure` is a [`TwoLevel`](@ref), `strat_periods` returns the
-iterator [`StratPeriods`](@ref).
+iterator [`StratPers`](@ref).
 
 ## Example
 ```julia
@@ -201,10 +201,10 @@ periods = TwoLevel(5, SimpleTimes(10,1))
 total_dur = sum(duration_strat(sp) for sp in strategic_periods(periods))
 ```
 """
-strat_periods(ts::TwoLevel) = StratPeriods(ts)
+strat_periods(ts::TwoLevel) = StratPers(ts)
 
 # Provide a constructor to simplify the design
-function StrategicPeriod(sps::StratPeriods, sp::Int)
+function StrategicPeriod(sps::StratPers, sp::Int)
     return StrategicPeriod(
         sp,
         _oper_struct(sps).duration[sp],
@@ -214,22 +214,22 @@ function StrategicPeriod(sps::StratPeriods, sp::Int)
 end
 
 # Add basic functions of iterators
-Base.length(sps::StratPeriods) = _oper_struct(sps).len
-function Base.eltype(_::StratPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+Base.length(sps::StratPers) = _oper_struct(sps).len
+function Base.eltype(_::StratPers{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return StrategicPeriod{S,T,OP}
 end
-function Base.iterate(sps::StratPeriods, state = nothing)
+function Base.iterate(sps::StratPers, state = nothing)
     sp = isnothing(state) ? 1 : state + 1
     sp > length(sps) && return nothing
 
     return StrategicPeriod(sps, sp), sp
 end
-function Base.getindex(sps::StratPeriods, index::Int)
+function Base.getindex(sps::StratPers, index::Int)
     return StrategicPeriod(sps, index)
 end
-function Base.eachindex(sps::StratPeriods)
+function Base.eachindex(sps::StratPers)
     return eachindex(_oper_struct(sps).rep_periods)
 end
-function Base.last(sps::StratPeriods)
+function Base.last(sps::StratPers)
     return StrategicPeriod(sps, length(sps))
 end

@@ -189,7 +189,7 @@ end
     @test rps[1] < rps[2]
     @test rps[1] < rps[25]
 
-    # Test of direct functions of `ReprPeriods`
+    # Test of direct functions of `ReprPers`
     rpers = repr_periods(rep)
     @test eltype(rpers) == TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}}
     @test last(rpers) == collect(rpers)[end]

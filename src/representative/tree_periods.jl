@@ -2,7 +2,7 @@
     struct StratNodeReprPeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A structure representing a single representative period of a [`StratNode`](@ref) of a
-[`TwoLevelTree`](@ref). It is created through iterating through [`StratNodeReprPeriods`](@ref).
+[`TwoLevelTree`](@ref). It is created through iterating through [`StratNodeReprPers`](@ref).
 
 It is equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure when
 utilizing a [`TwoLevelTree`](@ref).
@@ -48,12 +48,12 @@ end
 Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
 
 """
-    struct StratNodeReprPeriods{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
+    struct StratNodeReprPers{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
 
 Type for iterating through the individual presentative periods of a [`StratNode`](@ref).
 It is automatically created through the function [`repr_periods`](@ref).
 """
-struct StratNodeReprPeriods{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
+struct StratNodeReprPers{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
     sp::Int
     branch::Int
     mult_sp::Float64
@@ -61,20 +61,20 @@ struct StratNodeReprPeriods{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructu
     repr::OP
 end
 
-_strat_per(rps::StratNodeReprPeriods) = rps.sp
-_branch(rps::StratNodeReprPeriods) = rps.branch
+_strat_per(rps::StratNodeReprPers) = rps.sp
+_branch(rps::StratNodeReprPers) = rps.branch
 
-mult_strat(rps::StratNodeReprPeriods) = rps.mult_sp
-probability_branch(rps::StratNodeReprPeriods) = rps.prob_branch
+mult_strat(rps::StratNodeReprPers) = rps.mult_sp
+probability_branch(rps::StratNodeReprPers) = rps.prob_branch
 
-_oper_struct(rps::StratNodeReprPeriods) = rps.repr
+_oper_struct(rps::StratNodeReprPers) = rps.repr
 
 """
 When the `TimeStructure` is a [`StratNode`](@ref), `repr_periods` returns the iterator
-[`StratNodeReprPeriods`](@ref).
+[`StratNodeReprPers`](@ref).
 """
 function repr_periods(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StratNodeReprPeriods(
+    return StratNodeReprPers(
         _strat_per(n),
         _branch(n),
         mult_strat(n),
@@ -83,7 +83,7 @@ function repr_periods(n::StratNode{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     )
 end
 
-function strat_node_period(rps::StratNodeReprPeriods, next, state)
+function strat_node_period(rps::StratNodeReprPers, next, state)
     return StratNodeReprPeriod(
         _strat_per(rps),
         _branch(rps),
@@ -95,7 +95,7 @@ function strat_node_period(rps::StratNodeReprPeriods, next, state)
     )
 end
 
-Base.eltype(_::StratNodeReprPeriods) = StratNodeReprPeriod
+Base.eltype(_::StratNodeReprPers) = StratNodeReprPeriod
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `repr_periods` returns an `Array` of

@@ -91,7 +91,7 @@ repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)
     struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
-time periods. It is created when iterating through [`ReprPeriods`](@ref).
+time periods. It is created when iterating through [`ReprPers`](@ref).
 """
 struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
     rp::Int
@@ -138,26 +138,26 @@ function Base.last(rp::RepresentativePeriod)
 end
 
 """
-    struct ReprPeriods{S,T,OP} <: TimeStructInnerIter{T}
+    struct ReprPers{S,T,OP} <: TimeStructInnerIter{T}
 
 Type for iterating through the individual representative periods of a
 [`RepresentativePeriods`](@ref) time structure. It is automatically created through the
 function [`repr_periods`](@ref).
 """
-struct ReprPeriods{S,T,OP} <: TimeStructInnerIter{T}
+struct ReprPers{S,T,OP} <: TimeStructInnerIter{T}
     ts::RepresentativePeriods{S,T,OP}
 end
 
-_oper_struct(rpers::ReprPeriods) = rpers.ts
+_oper_struct(rpers::ReprPers) = rpers.ts
 
 """
 When the `TimeStructure` is a [`RepresentativePeriods`](@ref), `repr_periods` returns the
-iterator [`ReprPeriods`](@ref).
+iterator [`ReprPers`](@ref).
 """
-repr_periods(ts::RepresentativePeriods) = ReprPeriods(ts)
+repr_periods(ts::RepresentativePeriods) = ReprPers(ts)
 
 # Provide a constructor to simplify the design
-function RepresentativePeriod(rpers::ReprPeriods, per::Int)
+function RepresentativePeriod(rpers::ReprPers, per::Int)
     return RepresentativePeriod(
         per,
         _multiple_adj(_oper_struct(rpers), per),
@@ -166,20 +166,20 @@ function RepresentativePeriod(rpers::ReprPeriods, per::Int)
 end
 
 # Add basic functions of iterators
-Base.length(rpers::ReprPeriods) = _oper_struct(rpers).len
-function Base.eltype(_::ReprPeriods{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+Base.length(rpers::ReprPers) = _oper_struct(rpers).len
+function Base.eltype(_::ReprPers{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
     return RepresentativePeriod{T,OP}
 end
-function Base.iterate(rpers::ReprPeriods, state = nothing)
+function Base.iterate(rpers::ReprPers, state = nothing)
     per = isnothing(state) ? 1 : state + 1
     per > length(rpers) && return nothing
 
     return RepresentativePeriod(rpers, per), per
 end
-function Base.getindex(rpers::ReprPeriods, index::Int)
+function Base.getindex(rpers::ReprPers, index::Int)
     return RepresentativePeriod(rpers, index)
 end
-function Base.eachindex(rpers::ReprPeriods)
+function Base.eachindex(rpers::ReprPers)
     return eachindex(_oper_struct(rpers).rep_periods)
 end
-Base.last(rpers::ReprPeriods) = RepresentativePeriod(rpers, length(rpers))
+Base.last(rpers::ReprPers) = RepresentativePeriod(rpers, length(rpers))
