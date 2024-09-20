@@ -727,6 +727,26 @@ end
     test_last(periods)
 end
 
+@testitem "Multiple for time structures" begin
+    periods = SimpleTimes(24, 1)
+    @test collect(mult_scen(os) for os in opscenarios(periods)) == [1.0]
+    @test collect(mult_repr(rp) for rp in repr_periods(periods)) == [1.0]
+
+    opscen = OperationalScenarios(2, [SimpleTimes(10, 1), SimpleTimes(5, 3)], [0.4, 0.6])
+    @test collect(mult_scen(os) for os in opscenarios(opscen)) == [1.5, 1.0]
+    @test collect(mult_repr(rp) for rp in repr_periods(opscen)) == [1.0]
+
+    rep = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    @test collect(mult_scen(os) for os in opscenarios(rep)) == [1.5, 1.0, 1.5, 1.0]
+    @test collect(mult_repr(rp) for rp in repr_periods(rep)) == 20 / 15 .* [0.2, 0.8]
+
+    twolevel = TwoLevel(2, 1, rep)
+    @test collect(mult_scen(os) for os in opscenarios(twolevel)) ==
+          [1.5, 1.0, 1.5, 1.0, 1.5, 1.0, 1.5, 1.0]
+    @test collect(mult_repr(rp) for rp in repr_periods(twolevel)) ==
+          20 / 15 .* [0.2, 0.8, 0.2, 0.8]
+end
+
 @testitem "Duration invariants" begin
 
     #=
