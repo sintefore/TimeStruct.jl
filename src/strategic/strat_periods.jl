@@ -12,7 +12,16 @@ function _strat_per(sp::AbstractStrategicPeriod)
 end
 
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
+
+"""
+    mult_strat(sp)
+
+Returns the multiplication factor to be used for this strategic period when
+comparing the duration of the strategic period to the duration of the
+time structure being used for the strategic period.
+"""
 mult_strat(sp::AbstractStrategicPeriod) = 1
+
 function duration_strat(sp::AbstractStrategicPeriod)
     return error("duration_strat() not implemented for $(typeof(sp))")
 end

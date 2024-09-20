@@ -126,6 +126,7 @@ mult_strat(osc::StratNodeReprOpScenario) = osc.mult_sp
 mult_repr(osc::StratNodeReprOpScenario) = osc.mult_rp
 mult_scen(osc::StratNodeReprOpScenario) = osc.mult_scen
 probability_branch(osc::StratNodeReprOpScenario) = osc.prob_branch
+probability_scen(osc::StratNodeReprOpScenario) = osc.prob_scen
 probability(osc::StratNodeReprOpScenario) = osc.prob_branch * osc.prob_scen
 
 _oper_struct(osc::StratNodeReprOpScenario) = osc.operational
