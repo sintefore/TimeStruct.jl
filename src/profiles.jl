@@ -12,6 +12,17 @@ profile = FixedProfile(5)
 """
 struct FixedProfile{T} <: TimeProfile{T}
     val::T
+    function FixedProfile(val::T) where {T}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use an `Array` as input to `FixedProfile`."
+                )
+            )
+        else
+            new{T}(val)
+        end
+    end
 end
 
 function Base.getindex(fp::FixedProfile, _::T) where {T<:Union{TimePeriod,TimeStructure}}
@@ -32,6 +43,18 @@ profile = OperationalProfile([1, 2, 3, 4, 5])
 """
 struct OperationalProfile{T} <: TimeProfile{T}
     vals::Vector{T}
+    function OperationalProfile(vals::Vector{T}) where {T}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Array}` as input " *
+                    "to an `OperationalProfileProfile`."
+                )
+            )
+        else
+            new{T}(vals)
+        end
+    end
 end
 
 function Base.getindex(
@@ -59,6 +82,18 @@ profile = StrategicProfile([1, 2, 3, 4, 5])
 """
 struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
+    function StrategicProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Array}` as input " *
+                    "to a `StrategicProfile`."
+                )
+            )
+        else
+            new{T,P}(vals)
+        end
+    end
 end
 function StrategicProfile(vals::Vector)
     return StrategicProfile([FixedProfile(v) for v in vals])
@@ -97,6 +132,18 @@ profile = ScenarioProfile([1, 2, 3, 4, 5])
 """
 struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
+    function ScenarioProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Array}` as input " *
+                    "to a `ScenarioProfile`."
+                )
+            )
+        else
+            new{T,P}(vals)
+        end
+    end
 end
 function ScenarioProfile(vals::Vector)
     return ScenarioProfile([FixedProfile(v) for v in vals])
@@ -135,6 +182,18 @@ profile = RepresentativeProfile([1, 2, 3, 4, 5])
 """
 struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
+    function RepresentativeProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Array}` as input " *
+                    "to a `RepresentativeProfile`."
+                )
+            )
+        else
+            new{T,P}(vals)
+        end
+    end
 end
 function RepresentativeProfile(vals::Vector)
     return RepresentativeProfile([FixedProfile(v) for v in vals])
@@ -180,6 +239,18 @@ profile = StrategicStochasticProfile([
 """
 struct StrategicStochasticProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
+    function StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T,P<:TimeProfile{T}}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Vector{<:Array}}` as input " *
+                    "to a `StrategicStochasticProfile`."
+                )
+            )
+        else
+            new{T,P}(vals)
+        end
+    end
 end
 function StrategicStochasticProfile(vals::Vector{<:Vector})
     return StrategicStochasticProfile([[FixedProfile(v_2) for v_2 in v_1] for v_1 in vals])
