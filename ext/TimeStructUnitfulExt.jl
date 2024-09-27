@@ -8,7 +8,7 @@ function TimeStruct.SimpleTimes(dur::Vector{T}, u::Unitful.Units) where {T<:Real
 end
 
 function TimeStruct.TwoLevel(
-    duration::Vector,
+    duration::Vector{<:Number},
     u::Unitful.Units,
     oper::TimeStructure{<:Unitful.Quantity{V,Unitful.𝐓}},
 ) where {V}
