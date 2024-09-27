@@ -60,7 +60,7 @@ end
 function Base.getindex(
     op::OperationalProfile,
     i::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:TimePeriod}
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]
 end
 
