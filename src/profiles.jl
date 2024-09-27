@@ -87,21 +87,18 @@ profile = StrategicProfile([1, 2, 3, 4, 5])
 """
 struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
-    function StrategicProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
-        if T <: Array
-            throw(
-                ArgumentError(
-                    "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `StrategicProfile`.",
-                ),
-            )
-        else
-            new{T,P}(vals)
-        end
-    end
 end
-function StrategicProfile(vals::Vector)
-    return StrategicProfile([FixedProfile(v) for v in vals])
+function StrategicProfile(vals::Vector{T}) where {T}
+    if T <: Array
+        throw(
+            ArgumentError(
+                "It is not possible to use a `Vector{<:Array}` as input " *
+                "to a `StrategicProfile`.",
+            ),
+        )
+    else
+        return StrategicProfile([FixedProfile(v) for v in vals])
+    end
 end
 
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
@@ -138,21 +135,18 @@ profile = ScenarioProfile([1, 2, 3, 4, 5])
 """
 struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
-    function ScenarioProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
-        if T <: Array
-            throw(
-                ArgumentError(
-                    "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `ScenarioProfile`.",
-                ),
-            )
-        else
-            new{T,P}(vals)
-        end
-    end
 end
-function ScenarioProfile(vals::Vector)
-    return ScenarioProfile([FixedProfile(v) for v in vals])
+function ScenarioProfile(vals::Vector{T}) where {T}
+    if T <: Array
+        throw(
+            ArgumentError(
+                "It is not possible to use a `Vector{<:Array}` as input " *
+                "to a `ScenarioProfile`.",
+            ),
+        )
+    else
+        return ScenarioProfile([FixedProfile(v) for v in vals])
+    end
 end
 
 function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
@@ -189,21 +183,18 @@ profile = RepresentativeProfile([1, 2, 3, 4, 5])
 """
 struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
-    function RepresentativeProfile(vals::Vector{P}) where {T,P<:TimeProfile{T}}
-        if T <: Array
-            throw(
-                ArgumentError(
-                    "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `RepresentativeProfile`.",
-                ),
-            )
-        else
-            new{T,P}(vals)
-        end
-    end
 end
-function RepresentativeProfile(vals::Vector)
-    return RepresentativeProfile([FixedProfile(v) for v in vals])
+function RepresentativeProfile(vals::Vector{T}) where {T}
+    if T <: Array
+        throw(
+            ArgumentError(
+                "It is not possible to use a `Vector{<:Array}` as input " *
+                "to a `RepresentativeProfile`.",
+            ),
+        )
+    else
+        return RepresentativeProfile([FixedProfile(v) for v in vals])
+    end
 end
 
 function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
@@ -246,23 +237,20 @@ profile = StrategicStochasticProfile([
 """
 struct StrategicStochasticProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
-    function StrategicStochasticProfile(
-        vals::Vector{<:Vector{P}},
-    ) where {T,P<:TimeProfile{T}}
-        if T <: Array
-            throw(
-                ArgumentError(
-                    "It is not possible to use a `Vector{<:Vector{<:Array}}` as input " *
-                    "to a `StrategicStochasticProfile`.",
-                ),
-            )
-        else
-            new{T,P}(vals)
-        end
-    end
 end
-function StrategicStochasticProfile(vals::Vector{<:Vector})
-    return StrategicStochasticProfile([[FixedProfile(v_2) for v_2 in v_1] for v_1 in vals])
+function StrategicStochasticProfile(vals::Vector{<:Vector{T}}) where {T}
+    if T <: Array
+        throw(
+            ArgumentError(
+                "It is not possible to use a `Vector{<:Vector{<:Array}}` as input " *
+                "to a `StrategicStochasticProfile`.",
+            ),
+        )
+    else
+        return StrategicStochasticProfile([
+            [FixedProfile(v_2) for v_2 in v_1] for v_1 in vals
+        ])
+    end
 end
 
 function _value_lookup(::HasStratTreeIndex, ssp::StrategicStochasticProfile, period)
