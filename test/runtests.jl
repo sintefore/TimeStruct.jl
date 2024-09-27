@@ -750,6 +750,7 @@ end
     fp = FixedProfile(12)
     @test fp[first(day)] == 12
     @test sum(fp[t] for t in day) == 12 * 24
+    @test sum(fp[day]) == 12 * 24
     fpadd = fp + 4
     @test sum(fpadd[t] for t in day) == 16 * 24
     fpsub = fp - 3
@@ -770,6 +771,7 @@ end
 
     op = OperationalProfile([2, 2, 2, 2, 1])
     @test sum(op[t] for t in day) == 4 * 2 + 20 * 1
+    @test sum(op[day]) == 4 * 2 + 20 * 1
     @test op[TimeStruct.SimplePeriod(7, 1)] == 1
     opunit = OperationalProfile([2, 3, 4], u"m/s")
     @test opunit[TimeStruct.SimplePeriod(6, 1)] == 4u"m/s"
@@ -790,13 +792,18 @@ end
     @test sum(fp[t_inv] == 12 for t_inv in strat_periods(day)) == 1
 
     ts = TwoLevel(5, 168, SimpleTimes(7, 24))
+    spers = strat_periods(ts)
     p1 = first(ts)
     @test sum(fp[t] for t in ts) == 12.0 * length(ts)
 
     sp1 = StrategicProfile([fp])
     @test sum(sp1[t] for t in ts) == 12.0 * length(ts)
+    @test sum(sp1[ts]) == 12.0 * length(ts)
+    @test sum(sp1[spers]) == 12.0 * length(spers)
     sp2 = StrategicProfile([op, op, fp])
     @test sum(sp2[t] for t in ts) == 2 * 11 + 3 * 84
+    @test sum(sp2[ts]) == 2 * 11 + 3 * 84
+    @test_throws ErrorException sp2[spers[1]]
     spadd = 1 + sp2
     @test spadd[p1] == 3
     spmin = sp2 - 3
@@ -815,10 +822,16 @@ end
     @test_throws ErrorException sp1["dummy"]
 
     tsc = TwoLevel(3, 168, OperationalScenarios(3, SimpleTimes(7, 24)))
+    spers = strat_periods(tsc)
+    opscens = opscenarios(tsc)
     @test sum(fp[t] for t in tsc) == 12.0 * length(tsc)
+    @test sum(fp[tsc]) == 12.0 * length(tsc)
+    @test sum(fp[opscens]) == 12.0 * length(opscens)
     scp = ScenarioProfile([op, 2 * op, 3 * op])
     @test sum(scp[t] for t in tsc) == 3 * (11 + 2 * 11 + 3 * 11)
-
+    @test sum(scp[tsc]) == 3 * (11 + 2 * 11 + 3 * 11)
+    @test_throws ErrorException scp[spers[1]]
+    @test_throws ErrorException scp[opscens[1]]
     @test_throws ErrorException scp["dummy"]
 
     scp2 = ScenarioProfile([
@@ -827,6 +840,7 @@ end
         OperationalProfile([4, 5]),
     ])
     @test sum(scp2[t] for t in tsc) == 201
+    @test sum(scp2[tsc]) == 201
 
     ssp = StrategicProfile([scp, scp2])
     @test sum(ssp[t] for t in tsc) == 200

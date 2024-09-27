@@ -1,11 +1,11 @@
 """
-    abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T}
+    abstract type AbstractRepresentativePeriod{T} <: TimeStructurePeriod{T}
 
 Abstract type used for time structures that represent a representative period.
 These periods are obtained when iterating through the representative periods of a time
 structure declared by the function [`repr_periods`](@ref).
 """
-abstract type AbstractRepresentativePeriod{T} <: TimeStructure{T} end
+abstract type AbstractRepresentativePeriod{T} <: TimeStructurePeriod{T} end
 
 function _rper(rp::AbstractRepresentativePeriod)
     return error("_rper() not implemented for $(typeof(rp))")

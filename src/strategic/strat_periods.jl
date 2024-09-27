@@ -1,11 +1,11 @@
 """
-    abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T}
+    abstract type AbstractStrategicPeriod{S,T} <: TimeStructurePeriod{T}
 
 Abstract type used for time structures that represent a strategic period.
 These periods are obtained when iterating through the strategic periods of a time
 structure declared by the function [`strat_periods`](@ref).
 """
-abstract type AbstractStrategicPeriod{S,T} <: TimeStructure{T} end
+abstract type AbstractStrategicPeriod{S,T} <: TimeStructurePeriod{T} end
 
 function _strat_per(sp::AbstractStrategicPeriod)
     return error("_strat_per() not implemented for $(typeof(sp))")

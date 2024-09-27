@@ -16,8 +16,8 @@ struct FixedProfile{T} <: TimeProfile{T}
         if T <: Array
             throw(
                 ArgumentError(
-                    "It is not possible to use an `Array` as input to `FixedProfile`."
-                )
+                    "It is not possible to use an `Array` as input to `FixedProfile`.",
+                ),
             )
         else
             new{T}(val)
@@ -25,14 +25,19 @@ struct FixedProfile{T} <: TimeProfile{T}
     end
 end
 
-function Base.getindex(fp::FixedProfile, _::T) where {T<:Union{TimePeriod,TimeStructure}}
+function Base.getindex(
+    fp::FixedProfile,
+    _::T,
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return fp.val
 end
 
 """
     OperationalProfile(vals::Vector{T}) where {T}
 
-Time profile with a value that varies with the operational time period.
+Time profile with a value that varies with the operational time period. This profile cannot
+be accessed using [`AbstractOperationalScenario`](@ref), [`AbstractRepresentativePeriod`](@ref),
+or [`AbstractStrategicPeriod`](@ref).
 
 If too few values are provided, the last provided value will be repeated.
 
@@ -48,8 +53,8 @@ struct OperationalProfile{T} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to an `OperationalProfileProfile`."
-                )
+                    "to an `OperationalProfileProfile`.",
+                ),
             )
         else
             new{T}(vals)
@@ -57,11 +62,11 @@ struct OperationalProfile{T} <: TimeProfile{T}
     end
 end
 
-function Base.getindex(
-    op::OperationalProfile,
-    i::T,
-) where {T<:TimePeriod}
+function Base.getindex(op::OperationalProfile, i::TimePeriod)
     return op.vals[_oper(i) > length(op.vals) ? end : _oper(i)]
+end
+function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
+    return error("Type $(typeof(i)) can not be used as index for an operational profile")
 end
 
 """
@@ -87,8 +92,8 @@ struct StrategicProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `StrategicProfile`."
-                )
+                    "to a `StrategicProfile`.",
+                ),
             )
         else
             new{T,P}(vals)
@@ -110,7 +115,7 @@ end
 function Base.getindex(
     sp::StrategicProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
@@ -118,7 +123,8 @@ end
     ScenarioProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     ScenarioProfile(vals::Vector)
 
-Time profile with a separate time profile for each scenario.
+Time profile with a separate time profile for each scenario. This profile cannot
+be accessed using [`AbstractRepresentativePeriod`](@ref) or [`AbstractStrategicPeriod`](@ref).
 
 If too few profiles are provided, the last given profile will be repeated.
 
@@ -137,8 +143,8 @@ struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `ScenarioProfile`."
-                )
+                    "to a `ScenarioProfile`.",
+                ),
             )
         else
             new{T,P}(vals)
@@ -160,7 +166,7 @@ end
 function Base.getindex(
     sp::ScenarioProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
@@ -168,7 +174,8 @@ end
     RepresentativeProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     RepresentativeProfile(vals::Vector)
 
-Time profile with a separate time profile for each representative period.
+Time profile with a separate time profile for each representative period. This profile cannot
+be accessed using [`AbstractStrategicPeriod`](@ref).
 
 If too few profiles are provided, the last given profile will be repeated.
 
@@ -187,8 +194,8 @@ struct RepresentativeProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to a `RepresentativeProfile`."
-                )
+                    "to a `RepresentativeProfile`.",
+                ),
             )
         else
             new{T,P}(vals)
@@ -212,7 +219,7 @@ end
 function Base.getindex(
     rp::RepresentativeProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
@@ -239,13 +246,15 @@ profile = StrategicStochasticProfile([
 """
 struct StrategicStochasticProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{<:Vector{P}}
-    function StrategicStochasticProfile(vals::Vector{<:Vector{P}}) where {T,P<:TimeProfile{T}}
+    function StrategicStochasticProfile(
+        vals::Vector{<:Vector{P}},
+    ) where {T,P<:TimeProfile{T}}
         if T <: Array
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Vector{<:Array}}` as input " *
-                    "to a `StrategicStochasticProfile`."
-                )
+                    "to a `StrategicStochasticProfile`.",
+                ),
             )
         else
             new{T,P}(vals)
@@ -271,7 +280,7 @@ end
 function Base.getindex(
     ssp::StrategicStochasticProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(StrategicTreeIndexable(T), ssp, period)
 end
 
@@ -280,8 +289,14 @@ Base.getindex(TP::TimeProfile, inds...) = [TP[i] for i in inds]
 function Base.getindex(
     TP::TimeProfile,
     inds::Vector{T},
-) where {T<:Union{TimePeriod,TimeStructure}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return [TP[i] for i in inds]
+end
+function Base.getindex(
+    TP::TimeProfile,
+    ts::T,
+) where {T<:Union{TimeStructure,TimeStructInnerIter,TimeStructOuterIter}}
+    return [TP[per] for per in ts]
 end
 
 function Base.getindex(TP::TimeProfile, inds::Any)
