@@ -930,6 +930,24 @@ end
             end
         end
 
+        # Test probabilities of operational scenarios
+        p_prob = Array{Any}(nothing, 2)
+        p_prob[1] = [probability(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability(osc) for osc in oscs] == p_prob[1]
+        end
+        p_scen = Array{Any}(nothing, 2)
+        p_scen[1] = [probability_scen(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability_scen(osc) for osc in oscs] == p_scen[1]
+        end
+        p_branch = Array{Any}(nothing, 2)
+        p_branch[1] = [probability_branch(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability_branch(osc) for osc in oscs] == p_branch[1]
+        end
+
+
         return ops_inv[1]
     end
 end
