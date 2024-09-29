@@ -728,23 +728,67 @@ end
 end
 
 @testitem "Multiple for time structures" begin
+
+    function test_multiple(periods)
+        m_scen = [mult_scen(osc) for osc in opscenarios(periods)]
+        m_scen_repr = [mult_scen(osc) for rp in repr_periods(periods) for osc in opscenarios(rp)]
+        m_scen_strat = [mult_scen(osc) for sp in strat_periods(periods) for rp in repr_periods(sp) for osc in opscenarios(rp)]
+        @test m_scen == m_scen_repr
+        @test m_scen == m_scen_strat
+
+        m_rp = [mult_repr(rp) for rp in repr_periods(periods)]
+        m_rp_strat = [mult_repr(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)]
+        @test m_rp == m_rp_strat
+
+        for sp in strat_periods(periods)
+            for rp in repr_periods(sp)
+                for osc in opscenarios(rp)
+                    for t in osc
+                        @test multiple(t) == mult_strat(sp) * mult_repr(rp) * mult_scen(osc)
+                    end
+                end
+            end
+        end
+    end
+
     periods = SimpleTimes(24, 1)
-    @test collect(mult_scen(os) for os in opscenarios(periods)) == [1.0]
-    @test collect(mult_repr(rp) for rp in repr_periods(periods)) == [1.0]
+    test_multiple(periods)
 
     opscen = OperationalScenarios(2, [SimpleTimes(10, 1), SimpleTimes(5, 3)], [0.4, 0.6])
-    @test collect(mult_scen(os) for os in opscenarios(opscen)) == [1.5, 1.0]
-    @test collect(mult_repr(rp) for rp in repr_periods(opscen)) == [1.0]
+    test_multiple(opscen)
 
     rep = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
-    @test collect(mult_scen(os) for os in opscenarios(rep)) == [1.5, 1.0, 1.5, 1.0]
-    @test collect(mult_repr(rp) for rp in repr_periods(rep)) == 20 / 15 .* [0.2, 0.8]
+    test_multiple(rep)
 
-    twolevel = TwoLevel(2, 1, rep)
-    @test collect(mult_scen(os) for os in opscenarios(twolevel)) ==
-          [1.5, 1.0, 1.5, 1.0, 1.5, 1.0, 1.5, 1.0]
-    @test collect(mult_repr(rp) for rp in repr_periods(twolevel)) ==
-          20 / 15 .* [0.2, 0.8, 0.2, 0.8]
+    twolevel_simple = TwoLevel(3, 1, periods)
+    test_multiple(twolevel_simple)
+
+    twolevel_oscen = TwoLevel(2, 1, opscen)
+    test_multiple(twolevel_simple)
+
+    twolevel_rep = TwoLevel(2, 1, rep)
+    test_multiple(twolevel_rep)
+
+    regtree_simple = regular_tree(
+        5,
+        [3, 2],
+        periods,
+    )
+    test_multiple(regtree_simple)
+
+    regtree_opscen = regular_tree(
+        5,
+        [3, 2],
+        opscen,
+    )
+    test_multiple(regtree_opscen)
+
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
+    )
+    test_multiple(regtree)
 end
 
 @testitem "Duration invariants" begin
