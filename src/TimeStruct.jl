@@ -48,7 +48,7 @@ export strat_periods, strategic_periods
 export regular_tree, strat_nodes, strategic_scenarios
 export withprev, chunk, chunk_duration
 export isfirst, duration, duration_strat, multiple
-export probability, probability_scen
+export probability, probability_branch, probability_scen
 export multiple_strat
 export mult_scen, mult_repr, mult_strat
 export start_time, end_time, remaining
