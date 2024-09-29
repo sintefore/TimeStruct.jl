@@ -63,7 +63,7 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructur
                     "The length of `rep_periods` cannot be less than the field `len` of `RepresentativePeriods`.",
                 ),
             )
-        elseif sum(period_share) > 1 + 1e-6 || sum(period_share) < 1 - 1e-6
+        elseif !isapprox(sum(period_share), 1; atol = 1e-6)
             @warn(
                 "The sum of the `period_share` vector is given by $(sum(period_share)). " *
                 "This can lead to unexpected behaviour."

@@ -50,7 +50,7 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
                     "The length of `probability` cannot be less than the field `len` of `OperationalScenarios`.",
                 ),
             )
-        elseif sum(probability) > 1 || sum(probability) < 1
+        elseif !isapprox(sum(probability), 1; atol = 1e-6)
             @warn(
                 "The sum of the probablity vector is given by $(sum(probability)). " *
                 "This can lead to unexpected behaviour."
