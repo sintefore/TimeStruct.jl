@@ -728,16 +728,20 @@ end
 end
 
 @testitem "Multiple for time structures" begin
-
     function test_multiple(periods)
         m_scen = [mult_scen(osc) for osc in opscenarios(periods)]
-        m_scen_repr = [mult_scen(osc) for rp in repr_periods(periods) for osc in opscenarios(rp)]
-        m_scen_strat = [mult_scen(osc) for sp in strat_periods(periods) for rp in repr_periods(sp) for osc in opscenarios(rp)]
+        m_scen_repr =
+            [mult_scen(osc) for rp in repr_periods(periods) for osc in opscenarios(rp)]
+        m_scen_strat = [
+            mult_scen(osc) for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for osc in opscenarios(rp)
+        ]
         @test m_scen == m_scen_repr
         @test m_scen == m_scen_strat
 
         m_rp = [mult_repr(rp) for rp in repr_periods(periods)]
-        m_rp_strat = [mult_repr(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)]
+        m_rp_strat =
+            [mult_repr(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)]
         @test m_rp == m_rp_strat
 
         for sp in strat_periods(periods)
@@ -769,18 +773,10 @@ end
     twolevel_rep = TwoLevel(2, 1, rep)
     test_multiple(twolevel_rep)
 
-    regtree_simple = regular_tree(
-        5,
-        [3, 2],
-        periods,
-    )
+    regtree_simple = regular_tree(5, [3, 2], periods)
     test_multiple(regtree_simple)
 
-    regtree_opscen = regular_tree(
-        5,
-        [3, 2],
-        opscen,
-    )
+    regtree_opscen = regular_tree(5, [3, 2], opscen)
     test_multiple(regtree_opscen)
 
     regtree = TimeStruct.regular_tree(
@@ -990,7 +986,6 @@ end
         for oscs in oscs_inv[2:end]
             @test [probability_branch(osc) for osc in oscs] == p_branch[1]
         end
-
 
         return ops_inv[1]
     end
