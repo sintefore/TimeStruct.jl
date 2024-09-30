@@ -12,6 +12,13 @@ function _rper(rp::AbstractRepresentativePeriod)
 end
 
 isfirst(rp::AbstractRepresentativePeriod) = _rper(rp) == 1
+
+"""
+    mult_repr(rp)
+
+Returns the multiplication factor to be used for this representative period when
+comparing with the representative periods structure it is part of.
+"""
 mult_repr(rp::AbstractRepresentativePeriod) = 1
 
 function Base.isless(rp1::AbstractRepresentativePeriod, rp2::AbstractRepresentativePeriod)

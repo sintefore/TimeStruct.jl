@@ -14,6 +14,24 @@ function probability(scen::AbstractOperationalScenario)
     return error("probabilty not implemented for type $(typeof(scen))")
 end
 
+"""
+    probability_scen(scen)
+
+The probability of a single scenario in a set of operational scenarios.
+"""
+probability_scen(scen::AbstractOperationalScenario) = probability(scen)
+
+"""
+    mult_scen(scen)
+
+Returns the multiplication factor to be used for this scenario when
+comparing with the overall set of operational scenarios.
+
+If all scenarios in a set of operational scenarios are of equal duration
+(preferred usage), this factor is equal to one. Otherwise this factor
+would be equal to the ratio of the scenario with longest duration to
+the duration of the given scenario.
+"""
 mult_scen(scen::AbstractOperationalScenario) = 1.0
 
 abstract type ScenarioIndexable end

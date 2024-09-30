@@ -157,7 +157,7 @@ function OperationalPeriod(osc::StratReprOpScenario, per)
 end
 
 function Base.show(io::IO, osc::StratReprOpScenario)
-    return print(io, "sp$(osc.sp)-rp$(_rper(osc))-sc$(osc.opscen)")
+    return print(io, "sp$(osc.sp)-rp$(_rper(osc))-sc$(osc.scen)")
 end
 
 # Add basic functions of iterators

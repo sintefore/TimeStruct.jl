@@ -82,6 +82,25 @@ chunk
 chunk_duration
 ```
 
+# Properties of time structures
+```@docs
+mult_scen
+```
+
+```@docs
+mult_repr
+```
+
+```@docs
+mult_strat
+```
+
+```@docs
+probability_scen
+```
+
+
+
 # Time profiles
 
 ```@docs

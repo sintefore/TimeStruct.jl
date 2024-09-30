@@ -25,13 +25,13 @@ function Base.iterate(w::WithPrev, state)
     return (isfirst(n[1]) ? nothing : state[1], n[1]), (n[1], n[2])
 end
 
-function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}) where {T,OP}
+function Base.iterate(w::WithPrev{StratTreeNodes{S,T,OP}}) where {S,T,OP}
     n = iterate(w.itr)
     n === nothing && return n
     return (nothing, n[1]), (n[1], n[2])
 end
 
-function Base.iterate(w::WithPrev{StratTreeNodes{T,OP}}, state) where {T,OP}
+function Base.iterate(w::WithPrev{StratTreeNodes{S,T,OP}}, state) where {S,T,OP}
     n = iterate(w.itr, state[2])
     n === nothing && return n
     return (n[1].parent, n[1]), (n[1], n[2])

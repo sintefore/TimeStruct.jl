@@ -727,6 +727,66 @@ end
     test_last(periods)
 end
 
+@testitem "Multiple for time structures" begin
+    function test_multiple(periods)
+        m_scen = [mult_scen(osc) for osc in opscenarios(periods)]
+        m_scen_repr =
+            [mult_scen(osc) for rp in repr_periods(periods) for osc in opscenarios(rp)]
+        m_scen_strat = [
+            mult_scen(osc) for sp in strat_periods(periods) for rp in repr_periods(sp)
+            for osc in opscenarios(rp)
+        ]
+        @test m_scen == m_scen_repr
+        @test m_scen == m_scen_strat
+
+        m_rp = [mult_repr(rp) for rp in repr_periods(periods)]
+        m_rp_strat =
+            [mult_repr(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)]
+        @test m_rp == m_rp_strat
+
+        for sp in strat_periods(periods)
+            for rp in repr_periods(sp)
+                for osc in opscenarios(rp)
+                    for t in osc
+                        @test multiple(t) == mult_strat(sp) * mult_repr(rp) * mult_scen(osc)
+                    end
+                end
+            end
+        end
+    end
+
+    periods = SimpleTimes(24, 1)
+    test_multiple(periods)
+
+    opscen = OperationalScenarios(2, [SimpleTimes(10, 1), SimpleTimes(5, 3)], [0.4, 0.6])
+    test_multiple(opscen)
+
+    rep = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    test_multiple(rep)
+
+    twolevel_simple = TwoLevel(3, 1, periods)
+    test_multiple(twolevel_simple)
+
+    twolevel_oscen = TwoLevel(2, 1, opscen)
+    test_multiple(twolevel_simple)
+
+    twolevel_rep = TwoLevel(2, 1, rep)
+    test_multiple(twolevel_rep)
+
+    regtree_simple = regular_tree(5, [3, 2], periods)
+    test_multiple(regtree_simple)
+
+    regtree_opscen = regular_tree(5, [3, 2], opscen)
+    test_multiple(regtree_opscen)
+
+    regtree = TimeStruct.regular_tree(
+        5,
+        [3, 2],
+        RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
+    )
+    test_multiple(regtree)
+end
+
 @testitem "Duration invariants" begin
 
     #=
@@ -922,6 +982,23 @@ end
             for rps in rps_inv[2:end]
                 @test rp == rps[i]
             end
+        end
+
+        # Test probabilities of operational scenarios
+        p_prob = Array{Any}(nothing, 2)
+        p_prob[1] = [probability(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability(osc) for osc in oscs] == p_prob[1]
+        end
+        p_scen = Array{Any}(nothing, 2)
+        p_scen[1] = [probability_scen(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability_scen(osc) for osc in oscs] == p_scen[1]
+        end
+        p_branch = Array{Any}(nothing, 2)
+        p_branch[1] = [probability_branch(osc) for osc in oscs_inv[1]]
+        for oscs in oscs_inv[2:end]
+            @test [probability_branch(osc) for osc in oscs] == p_branch[1]
         end
 
         return ops_inv[1]
