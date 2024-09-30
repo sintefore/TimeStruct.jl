@@ -23,9 +23,7 @@ _rper(rp::StratNodeReprPeriod) = rp.rp
 
 mult_strat(rp::StratNodeReprPeriod) = rp.mult_sp
 mult_repr(rp::StratNodeReprPeriod) = rp.mult_rp
-function multiple(rp::StratNodeReprPeriod, t::OperationalPeriod)
-    return t.multiple / rp.mult_sp
-end
+
 probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
 probability(rp::StratNodeReprPeriod) = rp.prob_branch
 
