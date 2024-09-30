@@ -4,11 +4,23 @@ Duration = Number
 """
     abstract type TimeStructure{T<:Duration}
 
-Abstract type representing different time structures that
-consists of one or more time periods. The type 'T' gives
-the data type used for the duration of the time periods.
+Abstract type representing different time structures that consists of one or more time
+periods.
+
+The type 'T' gives the data type used for the duration of the time periods.
 """
 abstract type TimeStructure{T<:Duration} end
+
+"""
+    abstract type TimeStructurePeriod{T} <: TimeStructure{T}
+
+Abstract type representing different time structures that consists of one or more time
+periods. It is used for `TimeStructure`s that can also act as index for periods, *e.g.*,
+[`AbstractStrategicPeriod`](@ref).
+
+The type 'T' gives the data type used for the duration of the time periods.
+"""
+abstract type TimeStructurePeriod{T} <: TimeStructure{T} end
 
 """
     abstract type TimeStructInnerIter{T<:Duration}

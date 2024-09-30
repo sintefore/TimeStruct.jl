@@ -3,6 +3,7 @@
 ## Internal supertypes
 
 ```@docs
+TimeStruct.TimeStructurePeriod
 TimeStruct.TimeStructInnerIter
 TimeStruct.TimeStructOuterIter
 ```

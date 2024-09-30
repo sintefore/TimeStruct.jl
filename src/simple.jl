@@ -1,9 +1,9 @@
 """
     struct SimpleTimes{T} <: TimeStructure{T}
 
-    SimpleTimes(len::Integer, duration::Vector{T}) where {T}
-    SimpleTimes(len::Integer, duration::Number)
-    SimpleTimes(dur::Vector{T}) where {T<:Number}
+    SimpleTimes(len::Integer, duration::Vector{T}) where {T<:Duration}
+    SimpleTimes(len::Integer, duration::Duration)
+    SimpleTimes(dur::Vector{T}) where {T<:Duration}
 
 A simple time structure consisting of consecutive time periods of varying duration.
 `SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
@@ -19,7 +19,7 @@ varying = SimpleTimes([2, 2, 2, 4, 10]) # 5 periods of varying length
 struct SimpleTimes{T} <: TimeStructure{T}
     len::Int
     duration::Vector{T}
-    function SimpleTimes(len::Integer, duration::Vector{T}) where {T}
+    function SimpleTimes(len::Integer, duration::Vector{T}) where {T<:Duration}
         if len > length(duration)
             throw(
                 ArgumentError(
@@ -31,10 +31,10 @@ struct SimpleTimes{T} <: TimeStructure{T}
         end
     end
 end
-function SimpleTimes(len::Integer, duration::Number)
+function SimpleTimes(len::Integer, duration::Duration)
     return SimpleTimes(len, fill(duration, len))
 end
-SimpleTimes(dur::Vector{T}) where {T<:Number} = SimpleTimes(length(dur), dur)
+SimpleTimes(dur::Vector{T}) where {T<:Duration} = SimpleTimes(length(dur), dur)
 
 _total_duration(st::SimpleTimes) = sum(st.duration)
 

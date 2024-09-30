@@ -1,11 +1,11 @@
 """
-    abstract type AbstractOperationalScenario{T} <: TimeStructure{T}
+    abstract type AbstractOperationalScenario{T} <: TimeStructurePeriod{T}
 
 Abstract type used for time structures that represent an operational scenario.
 These periods are obtained when iterating through the operational scenarios of a time
 structure declared by the function [`opscenarios`](@ref).
 """
-abstract type AbstractOperationalScenario{T} <: TimeStructure{T} end
+abstract type AbstractOperationalScenario{T} <: TimeStructurePeriod{T} end
 
 function _opscen(scen::AbstractOperationalScenario)
     return error("_opscen() not implemented for type $(typeof(scen))")
