@@ -241,7 +241,7 @@ function regular_tree(
 end
 
 """
-    struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
+    struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractStratPers{T}
 
 Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](@ref).
 It is automatically created through the function [`strat_periods`](@ref), and hence,
@@ -250,17 +250,20 @@ It is automatically created through the function [`strat_periods`](@ref), and he
 Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behaviour,
 although the meaning remains unchanged.
 """
-struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractTreeStructure{T}
+struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractStratPers{T}
     ts::TwoLevelTree{S,T,OP}
 end
 
 # Adding methods to existing Julia functions
 Base.length(sps::StratTreeNodes) = length(sps.ts.nodes)
-Base.eltype(_::Type{StratTreeNodes{T,OP}}) where {T,OP} = OP
+Base.eltype(_::Type{StratTreeNodes{S,T,OP}}) where {S,T,OP} = OP
 function Base.iterate(stps::StratTreeNodes, state = nothing)
     next = isnothing(state) ? 1 : state + 1
     next == length(stps) + 1 && return nothing
     return stps.ts.nodes[next], next
+end
+function Base.getindex(sps::StratTreeNodes, index::Int)
+    return sps.ts.nodes[index]
 end
 
 """

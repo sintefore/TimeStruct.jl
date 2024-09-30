@@ -39,6 +39,7 @@ TimeStruct.StrategicPeriod
 ### Iterator types
 
 ```@docs
+TimeStruct.AbstractStratPers
 TimeStruct.SingleStrategicPeriodWrapper
 TimeStruct.StratPers
 ```

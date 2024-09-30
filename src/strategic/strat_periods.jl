@@ -6,6 +6,13 @@ These periods are obtained when iterating through the strategic periods of a tim
 structure declared by the function [`strat_periods`](@ref).
 """
 abstract type AbstractStrategicPeriod{S,T} <: TimeStructurePeriod{T} end
+"""
+    abstract type AbstractStratPers{S,T} <: TimeStructInnerIter
+
+Abstract type used for time structures that represent a collection of strategic periods,
+obtained through calling the function [`strat_periods`](@ref).
+"""
+abstract type AbstractStratPers{T} <: TimeStructInnerIter{T} end
 
 function _strat_per(sp::AbstractStrategicPeriod)
     return error("_strat_per() not implemented for $(typeof(sp))")
@@ -77,13 +84,13 @@ end
 Base.last(sp::SingleStrategicPeriod) = last(sp.ts)
 
 """
-    struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructInnerIter{T}
+    struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStratPers{T}
 
 Type for iterating through the individual strategic periods of a time structure
 without [`TwoLevel`](@ref). It is automatically created through the function
 [`strat_periods`](@ref).
 """
-struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: TimeStructInnerIter{T}
+struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStratPers{T}
     ts::SP
 end
 
@@ -184,13 +191,13 @@ end
 multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
 """
-    struct StratPers{S,T,OP} <:TimeStructInnerIter{T}
+    struct StratPers{S,T,OP} <: AbstractStratPers{T}
 
 Type for iterating through the individual strategic periods of a
 [`TwoLevel`](@ref) time structure. It is automatically created through the
 function [`strat_periods`](@ref).
 """
-struct StratPers{S,T,OP} <: TimeStructInnerIter{T}
+struct StratPers{S,T,OP} <: AbstractStratPers{T}
     ts::TwoLevel{S,T,OP}
 end
 
@@ -237,7 +244,7 @@ function Base.getindex(sps::StratPers, index::Int)
     return StrategicPeriod(sps, index)
 end
 function Base.eachindex(sps::StratPers)
-    return eachindex(_oper_struct(sps).rep_periods)
+    return eachindex(_oper_struct(sps).operational)
 end
 function Base.last(sps::StratPers)
     return StrategicPeriod(sps, length(sps))
