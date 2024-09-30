@@ -53,7 +53,7 @@ struct OperationalProfile{T} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to an `OperationalProfileProfile`.",
+                    "to an `OperationalProfile`.",
                 ),
             )
         else
