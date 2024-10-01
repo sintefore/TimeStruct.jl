@@ -101,5 +101,3 @@ _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 _multiple_adj(ts::TimeStructure, per) = 1.0
 
 stripunit(val) = val
-
-multiple(ts::TimeStructure, t::TimePeriod) = 1.0
