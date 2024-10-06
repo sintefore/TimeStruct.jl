@@ -249,3 +249,13 @@ end
 function Base.last(sps::StratPers)
     return StrategicPeriod(sps, length(sps))
 end
+
+# Specialising for wrapping a single strategic period
+function Base.iterate(sps::SingleStrategicPeriodWrapper{T,SP}, state = nothing) where {T,SP<:AbstractStrategicPeriod}
+    !isnothing(state) && return nothing
+    return _oper_struct(sps), 1
+end
+function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP<:AbstractStrategicPeriod}
+    return SP
+end
+Base.last(sps::SingleStrategicPeriodWrapper{T,SP}) where {T,SP<:AbstractStrategicPeriod} = _oper_struct(sps)

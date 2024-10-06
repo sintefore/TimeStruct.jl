@@ -787,6 +787,16 @@ end
     test_multiple(regtree)
 end
 
+@testitem "Strategic periods of a strategic period" begin
+
+    twolevel = TwoLevel(5, 10, SimpleTimes(10,1))
+    sps = strat_periods(twolevel)
+
+    for sp in sps
+        @test sp == first(strat_periods(sp))
+    end
+end
+
 @testitem "Duration invariants" begin
 
     #=
