@@ -225,7 +225,10 @@ end
         op_per_strat::Real=1.0,
     ) where {S, T, OP<:TimeStructure{T}}
 
-Function for creating a regular tree.
+Function for creating a regular tree with a uniform structure for each strategic period.
+Each strategic period is of equal length as given by `duration` and will have the same
+operational time structure `ts`. The vector `branching` specifies the number of branches
+at each level of the tree. The branches at each level will have the same probability.
 """
 function regular_tree(
     duration::S,
