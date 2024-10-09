@@ -87,7 +87,7 @@ two_level_tree = regular_tree(3, [3,2], operational; op_per_strat = 52);
 
 The branching probabilities are equal for all branches as indicated in green in the figure.
 
-!!! note Constructors for `TwoLevelTree`
+!!! note "Constructors for TwoLevelTree"
     Currently, the functionality for creating  `TwoLevelTree`'s is limited. Future versions of the package 
     will expand this functionality to allow creating trees with varying probabilities and different operational 
     time structures for the nodes.
