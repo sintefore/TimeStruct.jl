@@ -71,11 +71,12 @@ periods = TwoLevel(3, [5, 5, 10], [repr, repr, repr], 365.0);
 
 If there is uncertainty at a strategic level, this can be incorporated using the [`TwoLevelTree`](@ref) 
 time structure. This structure is represented by a tree, with each node corresponding to a strategic period that contains an operational time structure.
+The operational time structure can be any combination of the *[described structures](https://sintefore.github.io/TimeStruct.jl/stable/manual/basic/#Operational-time-structures)*
 
-The following example demonstrates how to create a regular tree where each strategic 
-period spans 3 years and is represented by a week with daily resolution.  
+The following example demonstrates how to create a regular tree  (through the function [`regular_tree`](@ref)) 
+where each strategic period spans 3 years and is represented by a week with daily resolution.  
 The second  argument to the [`regular_tree`](@ref) function specifies the number 
-of branches at each level of the tree.
+of branches at each level of the tree, excluding the first level.
 ```@repl ts
 using TimeStruct
 operational = SimpleTimes(7, 1);
@@ -86,7 +87,7 @@ two_level_tree = regular_tree(3, [3,2], operational; op_per_strat = 52);
 
 The branching probabilities are equal for all branches as indicated in green in the figure.
 
-!!! note
+!!! note Constructors for `TwoLevelTree`
     Currently, the functionality for creating  `TwoLevelTree`'s is limited. Future versions of the package 
     will expand this functionality to allow creating trees with varying probabilities and different operational 
     time structures for the nodes.
