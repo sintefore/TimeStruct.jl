@@ -8,6 +8,7 @@ profiles that can be indexed by time periods.
 - [`ScenarioProfile`](@ref): Holds a separate time profile for each operational scenario
 - [`RepresentativeProfile`](@ref): Holds a separate time profile for each representative period
 - [`StrategicProfile`](@ref) : Holds a separate time profile for each strategic period
+- [`StrategicStochasticProfile`](@ref) : Holds a separate time profile for each strategic node in a strategic tree
 
 The following code example shows how these profile types can be combined in a flexible
 manner to produce different overall profiles.
