@@ -76,7 +76,7 @@ The operational time structure can be any combination of the *[described structu
 The following example demonstrates how to create a regular tree  (through the function [`regular_tree`](@ref)) 
 where each strategic period spans 3 years and is represented by a week with daily resolution.  
 The second  argument to the [`regular_tree`](@ref) function specifies the number 
-of branches at each level of the tree, excluding the first level.
+of branches at each stage of the tree, excluding the first stage.
 ```@repl ts
 using TimeStruct
 operational = SimpleTimes(7, 1);
