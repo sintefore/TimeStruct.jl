@@ -8,9 +8,9 @@ TimeStruct.TimeStructInnerIter
 TimeStruct.TimeStructOuterIter
 ```
 
-## [Strategic period types ([`TwoLevelTree`](@ref))](@id int-types-strat_tree)
+## [Strategic period types ([`TwoLevelTree`](@ref))](@id int-types-twoleveltree)
 
-### [Single types](@id int-types-strat_tree-single)
+### [Single types](@id int-types-twoleveltree-single)
 
 ```@docs
 TimeStruct.AbstractTreeNode
@@ -18,7 +18,7 @@ TimeStruct.StratNode
 TimeStruct.StrategicScenario
 ```
 
-### [Iterator types](@id int-types-strat_tree-iter)
+### [Iterator types](@id int-types-twoleveltree-iter)
 
 ```@docs
 TimeStruct.AbstractTreeStructure
@@ -44,9 +44,9 @@ TimeStruct.SingleStrategicPeriodWrapper
 TimeStruct.StratPers
 ```
 
-## [Representative period types](@id int-types-rep)
+## [Representative period types](@id int-types-repr)
 
-### [Single types](@id int-types-rep-single)
+### [Single types](@id int-types-repr-single)
 
 ```@docs
 TimeStruct.AbstractRepresentativePeriod
@@ -56,7 +56,7 @@ TimeStruct.StratReprPeriod
 TimeStruct.StratNodeReprPeriod
 ```
 
-### [Iterator types](@id int-types-rep-iter)
+### [Iterator types](@id int-types-repr-iter)
 
 ```@docs
 TimeStruct.SingleReprPeriodWrapper
