@@ -79,7 +79,6 @@ we have that:
 
 ```@repl rp
 sum(duration(t) * multiple(t) for t in periods)
-duration(periods)
 ```
 
 ## Operational scenarios
@@ -109,5 +108,4 @@ has a [`probability`](@ref)equal to the probability of its scenario. Thus we hav
 
 ```@repl os
 sum(duration(t) * probability(t) * multiple(t) for t in scenarios)
-duration(scenarios)
 ```
