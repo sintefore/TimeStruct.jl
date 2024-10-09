@@ -1,4 +1,4 @@
-# Discounting
+# [Discounting](@id man-disc)
 
 For multi-year investment optimization models it is common pratice to use an
 objective that is discounted to get the net present value of the investment.
