@@ -11,24 +11,42 @@ end
 
 Discounter(rate, ts) = Discounter(rate, 1.0, ts)
 
-_start_strat(t::TimePeriod, ts::TimeStructure{T}) where {T} = zero(T)
+_start_strat(sp::AbstractStrategicPeriod, ts::TimeStructure{T}) where {T} = zero(T)
 
-function _start_strat(t::OperationalPeriod, ts::TwoLevel{S,T}) where {S,T}
-    sp = _strat_per(t)
-    if sp == 1
-        return zero(S)
-    end
-
-    return sum(duration_strat(spp) for spp in strat_periods(ts) if _strat_per(spp) < sp)
+function _start_strat(sp::AbstractStrategicPeriod, ts::TwoLevel{S}) where {S}
+    return sum(duration_strat(spp) for spp in strat_periods(ts) if spp < sp; init = zero(S))
 end
 
-function _start_strat(sp::AbstractStrategicPeriod, ts::TwoLevel{S,T}) where {S,T}
-    if _strat_per(sp) == 1
-        return zero(S)
+function _start_strat(sp::StratNode, ts::TwoLevelTree{S}) where {S}
+    start = zero(S)
+    node = sp
+    while !isnothing(node)
+        start += duration_strat(node)
+        node = _parent(node)
     end
-
-    return sum(duration_strat(spp) for spp in strat_periods(ts) if spp < sp)
+    return start
 end
+
+function _sp_period(t::TimePeriod, ts::TimeStructure)
+    for sp in strat_periods(ts)
+        if _strat_per(sp) == _strat_per(t)
+            return sp
+        end
+    end
+    @error("Time period not part of any strategic period")
+end
+
+function _sp_period(t::TreePeriod, tree::TwoLevelTree)
+    for sp in strat_periods(tree)
+        if _strat_per(sp) == _strat_per(t) && _branch(sp) == _branch(t)
+            return sp
+        end
+    end
+    @error("Tree period not part of any strategic node")
+end
+
+_start_strat(t::TimePeriod, ts::TimeStructure) = _start_strat(_sp_period(t, ts), ts)
+
 
 function _to_year(start, timeunit_to_year)
     return start * timeunit_to_year
@@ -50,18 +68,9 @@ function discount(
     type = "start",
     timeunit_to_year = 1.0,
 )
-    start_year = _to_year(_start_strat(t, ts), timeunit_to_year)
-    duration_years = _to_year(duration(t), timeunit_to_year)
+    sp = _sp_period(t, ts)
 
-    multiplier = 1.0
-
-    if type == "start"
-        multiplier = discount_start(discount_rate, start_year)
-    elseif type == "avg"
-        multiplier = discount_avg(discount_rate, start_year, duration_years)
-    end
-
-    return multiplier
+    return discount(sp, ts, discount_rate; type, timeunit_to_year)
 end
 
 function discount(disc::Discounter, t::TimePeriod; type = "start", timeunit_to_year = 1.0)
