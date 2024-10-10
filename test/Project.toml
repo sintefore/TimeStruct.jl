@@ -11,4 +11,4 @@ TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
-Aqua = "0.7"
+Aqua = "0.8"

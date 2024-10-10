@@ -2,9 +2,9 @@
 using TimeStruct
 ```
 
-# Operational time structures
+# [Operational time structures](@id man-oper)
 
-## SimpleTimes
+## [SimpleTimes](@id man-oper-simple)
 
 The basic time structure is [`SimpleTimes`](@ref) which represents a continuous period of time divided into individual time periods of varying duration.
 The length of each time period is obtained by the [`duration(t)`](@ref) function.
@@ -16,7 +16,7 @@ durations = [duration(t) for t in periods]
 
 ![Illustration of SimpleTimes](./../figures/simple.png)
 
-## Calendar based
+## [Calendar based](@id man-oper-calendar)
 
 For some applications it is required to relate the time periods to actual calendar dates.
 This is supported by the time structure [`CalendarTimes`](@ref) that alllows for creation and iteration of a calendar based sequence of periods in combination with calendar arithmetic.
@@ -39,7 +39,36 @@ periods = CalendarTimes(DateTime(2023, 3, 25), tz"Europe/Berlin", 3, Day(1));
 duration.(periods)
 ```
 
-## Representative periods
+## [Operational scenarios](@id man-oper-osc)
+
+Operations often face uncertain operating conditions. In energy systems modeling, a typical example is the availability of wind and solar power.
+One method for accounting for this uncertainty is to have multiple operational scenarios that are used to evaluate the cost and feasibility of
+operations, where each scenario has a given probability of occurring.
+
+The time structure [`OperationalScenarios`](@ref) represents an unordered collection of
+operational scenarios where each scenario has a separate time structure and an associated
+probability.
+
+```@repl os
+using TimeStruct, JuMP
+scenarios = OperationalScenarios(
+    3,
+    [SimpleTimes(5,1), SimpleTimes(7,2), SimpleTimes(10,1)],
+    [0.3, 0.2, 0.5]
+);
+```
+
+![Illustration of OperationalScenarios](./../figures/scenario.png)
+
+Similar to representative periods, each period has a [`multiple`](@ref) that is defined
+relative to the maximum duration for all scenarios. In addition, each time period
+has a [`probability`](@ref)equal to the probability of its scenario. Thus we have that:
+
+```@repl os
+sum(duration(t) * probability(t) * multiple(t) for t in scenarios)
+```
+
+## [Representative periods](@id man-oper-repr)
 
 In some cases, a fine-scale representation for the operations of the infrastructure of the whole time horizon, is not feasible. A possible strategy is then to select one or more representative periods and use them to evaluate operational cost and feasibility. The time structure  [`RepresentativePeriods`](@ref) consists of an ordered sequence of representative periods that represents a longer period of time. Each
 representative period covers a specified share of the whole time period.
@@ -79,35 +108,4 @@ we have that:
 
 ```@repl rp
 sum(duration(t) * multiple(t) for t in periods)
-duration(periods)
-```
-
-## Operational scenarios
-
-Operations often face uncertain operating conditions. In energy systems modeling, a typical example is the availability of wind and solar power.
-One method for accounting for this uncertainty is to have multiple operational scenarios that are used to evaluate the cost and feasibility of
-operations, where each scenario has a given probability of occurring.
-
-The time structure [`OperationalScenarios`](@ref) represents an unordered collection of
-operational scenarios where each scenario has a separate time structure and an associated
-probability.
-
-```@repl os
-using TimeStruct, JuMP
-scenarios = OperationalScenarios(
-    3,
-    [SimpleTimes(5,1), SimpleTimes(7,2), SimpleTimes(10,1)],
-    [0.3, 0.2, 0.5]
-);
-```
-
-![Illustration of OperationalScenarios](./../figures/scenario.png)
-
-Similar to representative periods, each period has a [`multiple`](@ref) that is defined
-relative to the maximum duration for all scenarios. In addition, each time period
-has a [`probability`](@ref)equal to the probability of its scenario. Thus we have that:
-
-```@repl os
-sum(duration(t) * probability(t) * multiple(t) for t in scenarios)
-duration(scenarios)
 ```

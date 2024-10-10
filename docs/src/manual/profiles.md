@@ -1,12 +1,14 @@
-# Time profiles
+# [Time profiles](@id man-prof)
+
 To provide data for different time structures there is a flexible system of different time
 profiles that can be indexed by time periods.
 
 - [`FixedProfile`](@ref): Time profile with the same value for all time periods
 - [`OperationalProfile`](@ref): Time profile with values varying with operational time periods
-- [`RepresentativeProfile`](@ref): Holds a separate time profile for each representative period
 - [`ScenarioProfile`](@ref): Holds a separate time profile for each operational scenario
+- [`RepresentativeProfile`](@ref): Holds a separate time profile for each representative period
 - [`StrategicProfile`](@ref) : Holds a separate time profile for each strategic period
+- [`StrategicStochasticProfile`](@ref) : Holds a separate time profile for each strategic node in a strategic tree
 
 The following code example shows how these profile types can be combined in a flexible
 manner to produce different overall profiles.

@@ -1,4 +1,4 @@
-# Available time structures
+# [Available time structures](@id api-ts)
 
 ```@docs
 TimeStructure
@@ -29,29 +29,25 @@ TwoLevelTree
 regular_tree
 ```
 
-# Properties of time periods
+# [Properties of time structures](@id api-prop_ts)
 
 ```@docs
-duration
+mult_scen
 ```
 
 ```@docs
-isfirst
+mult_repr
 ```
 
 ```@docs
-multiple
+mult_strat
 ```
 
 ```@docs
-multiple_strat
+probability_scen
 ```
 
-```@docs
-probability
-```
-
-# Iterating time structures
+# [Iterating time structures](@id api-iter)
 
 ```@docs
 repr_periods
@@ -82,26 +78,29 @@ chunk
 chunk_duration
 ```
 
-# Properties of time structures
+# [Properties of time periods](@id api-prop_per)
+
 ```@docs
-mult_scen
+duration
 ```
 
 ```@docs
-mult_repr
+isfirst
 ```
 
 ```@docs
-mult_strat
+multiple
 ```
 
 ```@docs
-probability_scen
+multiple_strat
 ```
 
+```@docs
+probability
+```
 
-
-# Time profiles
+# [Time profiles](@id api-prof)
 
 ```@docs
 FixedProfile
@@ -127,7 +126,7 @@ StrategicProfile
 StrategicStochasticProfile
 ```
 
-# Discounting
+# [Discounting](@id api-disc)
 
 ```@docs
 discount

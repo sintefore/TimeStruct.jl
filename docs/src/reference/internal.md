@@ -1,6 +1,6 @@
-# Internal types
+# [Internal types](@id int-types)
 
-## Internal supertypes
+## [Internal supertypes](@id int-types-super)
 
 ```@docs
 TimeStruct.TimeStructurePeriod
@@ -8,9 +8,9 @@ TimeStruct.TimeStructInnerIter
 TimeStruct.TimeStructOuterIter
 ```
 
-## Strategic period types ([`TwoLevelTree`](@ref))
+## [Strategic period types ([`TwoLevelTree`](@ref))](@id int-types-twoleveltree)
 
-### Single types
+### [Single types](@id int-types-twoleveltree-single)
 
 ```@docs
 TimeStruct.AbstractTreeNode
@@ -18,7 +18,7 @@ TimeStruct.StratNode
 TimeStruct.StrategicScenario
 ```
 
-### Iterator types
+### [Iterator types](@id int-types-twoleveltree-iter)
 
 ```@docs
 TimeStruct.AbstractTreeStructure
@@ -26,9 +26,9 @@ TimeStruct.StratTreeNodes
 TimeStruct.StrategicScenarios
 ```
 
-## Strategic period types ([`TwoLevel`](@ref))
+## [Strategic period types ([`TwoLevel`](@ref))](@id int-types-strat_twolevel)
 
-### Single types
+### [Single types](@id int-types-strat_twolevel-single)
 
 ```@docs
 TimeStruct.AbstractStrategicPeriod
@@ -36,7 +36,7 @@ TimeStruct.SingleStrategicPeriod
 TimeStruct.StrategicPeriod
 ```
 
-### Iterator types
+### [Iterator types](@id int-types-strat_twolevel-iter)
 
 ```@docs
 TimeStruct.AbstractStratPers
@@ -44,9 +44,9 @@ TimeStruct.SingleStrategicPeriodWrapper
 TimeStruct.StratPers
 ```
 
-## Representative period types
+## [Representative period types](@id int-types-repr)
 
-### Single types
+### [Single types](@id int-types-repr-single)
 
 ```@docs
 TimeStruct.AbstractRepresentativePeriod
@@ -56,7 +56,7 @@ TimeStruct.StratReprPeriod
 TimeStruct.StratNodeReprPeriod
 ```
 
-### Iterator types
+### [Iterator types](@id int-types-repr-iter)
 
 ```@docs
 TimeStruct.SingleReprPeriodWrapper
@@ -65,9 +65,9 @@ TimeStruct.StratReprPers
 TimeStruct.StratNodeReprPers
 ```
 
-## Operational scenarios types
+## [Operational scenarios types](@id int-types-osc)
 
-### Single types
+### [Single types](@id int-types-osc-single)
 
 ```@docs
 TimeStruct.AbstractOperationalScenario
@@ -80,7 +80,7 @@ TimeStruct.StratNodeOpScenario
 TimeStruct.StratNodeReprOpScenario
 ```
 
-### Iterator types
+### [Iterator types](@id int-types-osc-iter)
 
 ```@docs
 TimeStruct.SingleScenarioWrapper
@@ -92,7 +92,7 @@ TimeStruct.StratNodeOpScens
 TimeStruct.StratNodeReprOpScens
 ```
 
-## Operational period types
+## [Operational period types](@id int-types-periods)
 
 ```@docs
 TimeStruct.TimePeriod
