@@ -1282,14 +1282,16 @@ end
     for sp in strat_periods(simple)
         for t in sp
             @test discount(sp, simple, 0.05) == discount(t, simple, 0.05)
-            @test discount(sp, simple, 0.05; type = "avg") == discount(t, simple, 0.05; type = "avg")
+            @test discount(sp, simple, 0.05; type = "avg") ==
+                  discount(t, simple, 0.05; type = "avg")
         end
     end
 
     for sp in strat_periods(periods)
         for t in sp
             @test discount(sp, periods, 0.05) == discount(t, periods, 0.05)
-            @test discount(sp, periods, 0.05; type = "avg") == discount(t, periods, 0.05; type = "avg")
+            @test discount(sp, periods, 0.05; type = "avg") ==
+                  discount(t, periods, 0.05; type = "avg")
         end
     end
 
@@ -1297,11 +1299,10 @@ end
     for sp in strat_periods(tree)
         for t in sp
             @test discount(sp, tree, 0.05) == discount(t, tree, 0.05)
-            @test discount(sp, tree, 0.05; type = "avg") == discount(t, tree, 0.05; type = "avg")
+            @test discount(sp, tree, 0.05; type = "avg") ==
+                  discount(t, tree, 0.05; type = "avg")
         end
     end
-
-
 end
 
 @testitem "Start and end times" begin

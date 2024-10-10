@@ -47,7 +47,6 @@ end
 
 _start_strat(t::TimePeriod, ts::TimeStructure) = _start_strat(_sp_period(t, ts), ts)
 
-
 function _to_year(start, timeunit_to_year)
     return start * timeunit_to_year
 end
