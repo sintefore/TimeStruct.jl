@@ -19,7 +19,7 @@ end
 
 function _start_strat(sp::StratNode, ts::TwoLevelTree{S}) where {S}
     start = zero(S)
-    node = sp
+    node = _parent(sp)
     while !isnothing(node)
         start += duration_strat(node)
         node = _parent(node)
