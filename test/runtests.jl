@@ -1288,7 +1288,7 @@ end
     end
 
     uniform_day = SimpleTimes(24, 1)
-    periods = TwoLevel(3, 5, uniform_day, op_per_strat=8760)
+    periods = TwoLevel(3, 5, uniform_day, op_per_strat = 8760)
     for sp in strat_periods(periods)
         for t in sp
             @test discount(sp, periods, 0.05) == discount(t, periods, 0.05)
@@ -1301,8 +1301,8 @@ end
     for sp in strat_periods(tree)
         sp_per = strat_periods(periods)[TimeStruct._strat_per(sp)]
         @test discount(sp, tree, 0.05) == discount(sp_per, periods, 0.05)
-        @test discount(sp, tree, 0.05; type = "avg") == 
-            discount(sp_per, periods, 0.05; type = "avg")
+        @test discount(sp, tree, 0.05; type = "avg") ==
+              discount(sp_per, periods, 0.05; type = "avg")
         for t in sp
             @test discount(sp, tree, 0.05) == discount(t, tree, 0.05)
             @test discount(sp, tree, 0.05; type = "avg") ==
