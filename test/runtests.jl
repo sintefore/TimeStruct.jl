@@ -1277,6 +1277,38 @@ end
 
     @test sum(objective_weight(sp, disc) for sp in strat_periods(periods_unit)) ≈ 8.435 atol =
         1e-3
+
+    simple = SimpleTimes(10, 2)
+    for sp in strat_periods(simple)
+        for t in sp
+            @test discount(sp, simple, 0.05) == discount(t, simple, 0.05)
+            @test discount(sp, simple, 0.05; type = "avg") ==
+                  discount(t, simple, 0.05; type = "avg")
+        end
+    end
+
+    uniform_day = SimpleTimes(24, 1)
+    periods = TwoLevel(3, 5, uniform_day, op_per_strat = 8760)
+    for sp in strat_periods(periods)
+        for t in sp
+            @test discount(sp, periods, 0.05) == discount(t, periods, 0.05)
+            @test discount(sp, periods, 0.05; type = "avg") ==
+                  discount(t, periods, 0.05; type = "avg")
+        end
+    end
+
+    tree = regular_tree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365)
+    for sp in strat_periods(tree)
+        sp_per = strat_periods(periods)[TimeStruct._strat_per(sp)]
+        @test discount(sp, tree, 0.05) == discount(sp_per, periods, 0.05)
+        @test discount(sp, tree, 0.05; type = "avg") ==
+              discount(sp_per, periods, 0.05; type = "avg")
+        for t in sp
+            @test discount(sp, tree, 0.05) == discount(t, tree, 0.05)
+            @test discount(sp, tree, 0.05; type = "avg") ==
+                  discount(t, tree, 0.05; type = "avg")
+        end
+    end
 end
 
 @testitem "Start and end times" begin
