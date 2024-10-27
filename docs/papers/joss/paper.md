@@ -1,5 +1,5 @@
 ---
-title: 'TimeStruct.jl; flexible multi-horizon time modelling in optimization models'
+title: 'TimeStruct.jl -- flexible multi-horizon time modelling in optimization models'
 tags:
   - Julia
   - JuMP
@@ -37,7 +37,7 @@ bibliography: paper.bib
 
 TimeStruct allows reuse of much of the code considering tracking of time and allows the main equations to be modelled in a straight-forward manner while supporting a wide range of time structures and easily switching between e.g. simple deterministic operational models and stochastic programming versions of the same model.
 
-The package is already used in several optimization packages developed at [SINTEF], e.g. EnergyModelsX, ZeroKyst and MaritimeNH3. (TODO: links/references)
+The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g. [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/) and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
 
 # Statement of need
 
@@ -55,11 +55,11 @@ For a full overview of the functionality of TimeStruct, please see the online [d
 
 During development and for operational analyses, simple time structures where e.g. time is divided into discrete time periods with (operational) decision variables in time period, can be useful. With TimeStruct, such structures can be easily used in any optimization model. The example in \autoref{fig:simple} shows the basic time structure `SimpleTimes` which represents a continuous period of time divided into individual time periods of varying duration. The length of each time period is obtained by the `duration(t)` function.
 
-![Simple time structure with only operational periods.\label{fig:simple}](simple.png)
+![Simple time structure with only operational periods.\label{fig:simple}](simple.pdf)
 
 One of the main motivations for the development of TimeStruct is to support multi-horizon time structures [@kaut2014multi]. As a simple example, the time structure `TwoLevel` allows for a two level approach, combining an ordered sequence of strategic periods (typically used for binary capacity expansion) with given duration and an associated operational time structure (for operational decisions using the available capacity in the associated strategic period) as illustrated in \autoref{fig:twolevel}.
 
-![A typical two-level time structure.\label{fig:twolevel}](twolevel.png)
+![A typical two-level time structure.\label{fig:twolevel}](twolevel.pdf)
 
 Using the interfaces defined in `TimeStruct` it is easy to write models that are valid across different time structures. 
 The following example shows a simple model with a production variable, $x$, defined for all operational time periods and a constraint on the maximum total production cost for each strategic period: 
@@ -95,9 +95,7 @@ $$
 
 Different time structures may be combined to construct more complex structures, consider as an example the combination of a `TwoLevel` time structure with more complex operational structures like `RepresentativePeriods` and `OperationalScenarios`. These may be used alone or in combination, as shown in \autoref{fig:two_complex}.
 
-![A more complex two-level time structure.\label{fig:two_complex}](two_complex.png)
-
-TODO: change to pdf versions of figures before submission.
+![A more complex two-level time structure.\label{fig:two_complex}](two_complex.pdf)
 
 `TimeStruct.jl` also provides data structures for representing parameter data, providing efficient representation and indexing by time period for data with varying level of redundancy. Functionality for computation of disount factors for each time period to facilitate calculation of present values is also included.
 
