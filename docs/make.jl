@@ -9,6 +9,7 @@ pages = [
         "Iteration utilities" => "manual/iteration.md",
         "Discounting" => "manual/discount.md",
     ],
+    "Contribute" => "contribute.md",
     "API reference" => "reference/api.md",
     "Internal reference" => "reference/internal.md",
 ]
