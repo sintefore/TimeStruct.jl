@@ -35,7 +35,7 @@ bibliography: paper.bib
 
 [TimeStruct](https://github.com/sintefore/TimeStruct.jl) is a Julia [@bezanson2017julia] package that provides an interface for abstracting time structures, primarily intended for use with the mathematical programming DSL JuMP [@Lubin2023].
 
-TimeStruct allows reusing much of the code considering tracking of time and allows the main equations to be modelled in a straight-forward manner while supporting a wide range of time structures and easily switching between, *e.g.*, simple deterministic operational models and stochastic programming versions of the same model.
+TimeStruct simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equation. Consequently, equations unaffected by the the chosen time structure, e.g., simple deterministic operational or stochastic programming models, must not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
 
 The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g. [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/) and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
 
