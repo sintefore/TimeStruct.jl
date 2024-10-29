@@ -41,7 +41,7 @@ The package is already used in several optimization packages developed at [SINTE
 
 # Statement of need
 
-For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model are developed. Time constraints can be tricky to implement correctly. They can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios. On example for this type of constraints is keeping track of a storage inventory over time or incorporate dispatch constraints.
+For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model are developed. Time constraints can be tricky to implement correctly. They can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios. One example for this type of constraints is keeping track of a storage inventory over time or incorporate dispatch constraints.
 
 Modellers typically use extra indices to keep track of time and scenarios, making the code harder to read, maintain and change to support other or multiple time structures. This complexity can be an obstacle during development, testing and debugging, as it is easier to work with simpler time structures.
 
@@ -103,7 +103,7 @@ Different time structures may be combined to construct more complex structures. 
 
 TimeStruct is used in multiple optimization models developed at SINTEF. One early application is in [EnergyModelsX](https://github.com/EnergyModelsX/) [@hellemo2024energymodelsx], simplifying the code in `EnergyModelsBase.jl` considerably, and allowing to add capabilities for stochastic programming versions of the model with little extra effort, see, *e.g.*, [@bodal2024hydrogen;@svendsmark2024developing] for example applications of EnergyModelsX.
 
-It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involves the use of TimeStruct [@kitch2024optimal].
+It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involve the use of TimeStruct [@kitch2024optimal].
 
 # Acknowledgements
 
