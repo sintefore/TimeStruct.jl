@@ -4,12 +4,12 @@ Contributing to `TimeStruct` can be achieved in several different ways.
 
 ## [File a bug report](@id con-bug_rep)
 
-Another approach to contributing to `TimeStruct` is through filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behaviour is occuring.
+One approach to contributing to `TimeStruct` is through filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behaviour is occuring.
 
 When filing a bug report, please follow the following guidelines:
 
 1. be certain that the bug is a bug and originating in `TimeStruct`:
-    - If the problem is within the results of your optimization problem, please be certain that you r optimization model is correctly set up.
+    - If the problem is within the results of your optimization problem, please be certain that your optimization model is correctly set up.
     - If the problem is only appearing for specific solvers, it is most likely not a bug in `TimeStruct`, but instead a problem of the solver wrapper for `MathOptInterface`.
       In this case, please contact the developers of the corresponding solver wrapper.
 2. label the issue as bug, and
@@ -23,7 +23,7 @@ Although `TimeStruct` was designed with the aim of flexibility with respect to i
 Feature requests can be achieved through two approaches:
 
 1. create an issue describing the aim of the feature request and
-2. incorporate the feature request through a fork of the repository.
+2. incorporate the feature request through a fork of the repository and open a pull request.
 
 ### [Create an Issue](@id con-feat_req-issue)
 
@@ -82,4 +82,4 @@ Once you are satisified with your changes, create a pull request towards the mai
 We will internally assign the relevant person to the pull request.
 
 You may receive quite a few comments with respect to the incorporation and how it may potentially affect other parts of the code.
-Please remaing patient as it may take potentially some time before we can respond to the changes, although we try to answer as fast as possible.
+Please remain patient as it may take potentially some time before we can respond to the changes, although we try to answer as fast as possible.
