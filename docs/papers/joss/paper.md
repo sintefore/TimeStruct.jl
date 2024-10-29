@@ -35,34 +35,34 @@ bibliography: paper.bib
 
 [TimeStruct](https://github.com/sintefore/TimeStruct.jl) is a Julia [@bezanson2017julia] package that provides an interface for abstracting time structures, primarily intended for use with the mathematical programming DSL JuMP [@Lubin2023].
 
-TimeStruct allows reuse of much of the code considering tracking of time and allows the main equations to be modelled in a straight-forward manner while supporting a wide range of time structures and easily switching between e.g. simple deterministic operational models and stochastic programming versions of the same model.
+TimeStruct simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equation. Consequently, equations unaffected by the the chosen time structure, e.g., simple deterministic operational or stochastic programming models, must not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
 
 The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g. [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/) and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
 
 # Statement of need
 
-For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model is developed. Time constraints can be tricky to get correct, and can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios, such as when keeping track of storage inventory over time.
+For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model are developed. Time constraints can be tricky to implement correctly. They can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios. One example for this type of constraints is keeping track of a storage inventory over time or incorporate dispatch constraints.
 
 Modellers typically use extra indices to keep track of time and scenarios, making the code harder to read, maintain and change to support other or multiple time structures. This complexity can be an obstacle during development, testing and debugging, as it is easier to work with simpler time structures.
 
-By abstracting out the time structures and providing a common interface, TimeStruct allows the modeller to concentrate on other properties of the model, keeping the code simpler while supporting a large variety of time structures (pure operational, strategic/investment periods and operational periods, including operational uncertainty and/or strategic uncertainty).
+By abstracting out the time structures and providing a common interface, TimeStruct allows the modeller to concentrate on other properties of the model, keeping the code simple while supporting a large variety of time structures (pure operational, strategic/investment periods and operational periods, including operational uncertainty and/or strategic uncertainty).
 
-By providing a common interface with time structure semantics, TimeStruct simplifies running a single model for different time structures, and may be used to develop decomposition techniques to exploit specific structures.
+Through providing a common interface with time structure semantics, TimeStruct simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
 
 # Example of use
 
 For a full overview of the functionality of TimeStruct, please see the online [documentation](https://sintefore.github.io/TimeStruct.jl/stable/).
 
-During development and for operational analyses, simple time structures where e.g. time is divided into discrete time periods with (operational) decision variables in time period, can be useful. With TimeStruct, such structures can be easily used in any optimization model. The example in \autoref{fig:simple} shows the basic time structure `SimpleTimes` which represents a continuous period of time divided into individual time periods of varying duration. The length of each time period is obtained by the `duration(t)` function.
+During development and for operational analyses, simple time structures where, *e.g.*, time is divided into discrete time periods with (operational) decision variables in time period, can be useful. With TimeStruct, such structures can be easily used in any optimization model. The example in \autoref{fig:simple} shows the basic time structure `SimpleTimes` which represents a continuous period of time divided into individual time periods of varying duration. The length of each time period is obtained by the `duration(t)` function.
 
 ![Simple time structure with only operational periods.\label{fig:simple}](simple.pdf)
 
-One of the main motivations for the development of TimeStruct is to support multi-horizon time structures [@kaut2014multi]. As a simple example, the time structure `TwoLevel` allows for a two level approach, combining an ordered sequence of strategic periods (typically used for binary capacity expansion) with given duration and an associated operational time structure (for operational decisions using the available capacity in the associated strategic period) as illustrated in \autoref{fig:twolevel}.
+One of the main motivations for the development of TimeStruct is to support multi-horizon time structures [@kaut2014multi]. As a simple example of a multi-horizon time structure, the time structure `TwoLevel` allows for a two level approach, combining an ordered sequence of strategic periods (typically used for binary capacity expansion) with given duration and an associated operational time structure (for operational decisions using the available capacity in the associated strategic period) as illustrated in \autoref{fig:twolevel}.
 
 ![A typical two-level time structure.\label{fig:twolevel}](twolevel.pdf)
 
-Using the interfaces defined in `TimeStruct` it is easy to write models that are valid across different time structures. 
-The following example shows a simple model with a production variable, $x$, defined for all operational time periods and a constraint on the maximum total production cost for each strategic period: 
+Using the interfaces defined in `TimeStruct`, it is easy to write models that are valid across different time structures.
+The following example shows a simple model with a production variable, $x$, defined for all operational time periods and a constraint on the maximum total production cost for each strategic period:
 ```julia
 using JuMP, TimeStruct
 function create_model(periods::TimeStructure, cost::TimeProfile, max_cost)
@@ -95,20 +95,17 @@ $$
 \end{aligned}
 $$
 
-Different time structures may be combined to construct more complex structures, consider as an example the combination of a `TwoLevel` time structure with more complex operational structures like `RepresentativePeriods` and `OperationalScenarios`. These may be used alone or in combination, as shown in \autoref{fig:two_complex}.
+Different time structures may be combined to construct more complex structures. One example is the combination of a `TwoLevel` time structure with more complex operational structures like `RepresentativePeriods` and `OperationalScenarios`. These may be used alone or in combination, as shown in \autoref{fig:two_complex}.
 
 ![A more complex two-level time structure.\label{fig:two_complex}](two_complex.pdf)
 
-`TimeStruct.jl` also provides data structures for representing parameter data, providing efficient representation and indexing by time period for data with varying level of redundancy. Functionality for computation of disount factors for each time period to facilitate calculation of present values is also included.
+`TimeStruct.jl` also provides data structures for representing parameter data, providing efficient representation and indexing by time period for data with varying level of redundancy. Functionality for computation of discount factors for each time period to facilitate calculation of present values is also included.
 
 # Example applications
 
-TimeStruct is used in multiple optimization models developed at SINTEF. One early application is in [EnergyModelsX](https://github.com/EnergyModelsX/) [@hellemo2024energymodelsx], simplifying the code in `EnergyModelsBase.jl` considerably, and allowing to add capabilities for stochastic programming versions of the model with little extra effort, see e.g. [@bodal2024hydrogen;@svendsmark2024developing] for examples of applications of EnergyModelsX.
+TimeStruct is used in multiple optimization models developed at SINTEF. One early application is in [EnergyModelsX](https://github.com/EnergyModelsX/) [@hellemo2024energymodelsx], simplifying the code in `EnergyModelsBase.jl` considerably, and allowing to add capabilities for stochastic programming versions of the model with little extra effort, see, *e.g.*, [@bodal2024hydrogen;@svendsmark2024developing] for example applications of EnergyModelsX.
 
-It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the
-rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing 
-activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involves the use of TimeStruct [@kitch2024optimal].   
-
+It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involve the use of TimeStruct [@kitch2024optimal].
 
 # Acknowledgements
 
