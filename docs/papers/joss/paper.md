@@ -83,13 +83,15 @@ $$
 3 x_{t1} + 3 x_{t2} + 3 x_{t3} + 3 x_{t4} + 3 x_{t5} \leq 10
 $$
 ```julia
-latex_formulation(create_model(TwoLevel(3, SimpleTimes(5,1)), FixedProfile(3), 10))
+latex_formulation(create_model(TwoLevel(3, SimpleTimes(5,1)), StrategicProfile([3, 4, 5]), 10))
 ```
 $$
 \begin{aligned}
-& 3 x_{sp1-t1} + 3 x_{sp1-t2} + 3 x_{sp1-t3} + 3 x_{sp1-t4} + 3 x_{sp1-t5} \leq 10\\
- & 3 x_{sp2-t1} + 3 x_{sp2-t2} + 3 x_{sp2-t3} + 3 x_{sp2-t4} + 3 x_{sp2-t5} \leq 10\\
- & 3 x_{sp3-t1} + 3 x_{sp3-t2} + 3 x_{sp3-t3} + 3 x_{sp3-t4} + 3 x_{sp3-t5} \leq 10\\
+\text{feasibility}\\
+\text{Subject to} \quad 
+ & 3 x_{sp1-t1} + 3 x_{sp1-t2} + 3 x_{sp1-t3} + 3 x_{sp1-t4} + 3 x_{sp1-t5} \leq 10\\
+ & 4 x_{sp2-t1} + 4 x_{sp2-t2} + 4 x_{sp2-t3} + 4 x_{sp2-t4} + 4 x_{sp2-t5} \leq 10\\
+ & 5 x_{sp3-t1} + 5 x_{sp3-t2} + 5 x_{sp3-t3} + 5 x_{sp3-t4} + 5 x_{sp3-t5} \leq 10\\
 \end{aligned}
 $$
 
