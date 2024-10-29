@@ -35,7 +35,7 @@ bibliography: paper.bib
 
 [TimeStruct](https://github.com/sintefore/TimeStruct.jl) is a Julia [@bezanson2017julia] package that provides an interface for abstracting time structures, primarily intended for use with the mathematical programming DSL JuMP [@Lubin2023].
 
-TimeStruct simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equation. Consequently, equations unaffected by the the chosen time structure, e.g., simple deterministic operational or stochastic programming models, must not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
+TimeStruct simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equations. Consequently, equations unaffected by the the chosen time structure, *e.g.*, simple deterministic operational or stochastic programming models, need not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
 
 The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g. [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/) and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
 
@@ -88,7 +88,7 @@ latex_formulation(create_model(TwoLevel(3, SimpleTimes(5,1)), StrategicProfile([
 $$
 \begin{aligned}
 \text{feasibility}\\
-\text{Subject to} \quad 
+\text{Subject to} \quad
  & 3 x_{sp1-t1} + 3 x_{sp1-t2} + 3 x_{sp1-t3} + 3 x_{sp1-t4} + 3 x_{sp1-t5} \leq 10\\
  & 4 x_{sp2-t1} + 4 x_{sp2-t2} + 4 x_{sp2-t3} + 4 x_{sp2-t4} + 4 x_{sp2-t5} \leq 10\\
  & 5 x_{sp3-t1} + 5 x_{sp3-t2} + 5 x_{sp3-t3} + 5 x_{sp3-t4} + 5 x_{sp3-t5} \leq 10\\
