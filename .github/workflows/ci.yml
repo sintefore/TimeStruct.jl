@@ -26,7 +26,7 @@ jobs:
             os: ubuntu-latest
             arch: x64
           - version: 'lts' # Long term stable version (Windows)
-            os: ubuntu-latest
+            os: windows-latest
             arch: x64
     steps:
       - uses: actions/checkout@v4
