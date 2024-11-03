@@ -58,6 +58,6 @@ export Discounter
 export discount
 export objective_weight
 
-export profilechart
+export profilechart, profilechart!
 
 end # module
