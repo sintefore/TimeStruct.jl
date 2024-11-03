@@ -11,12 +11,10 @@ function Makie.convert_arguments(P::PointBased, periods, profile::TimeProfile)
 end
 
 @recipe(ProfileChart) do scene
-    Attributes(
-        type = :stairs
-    )
+    return Attributes(type = :stairs)
 end
 
-function Makie.plot!(sc::ProfileChart{<:Tuple{<:TimeStructure, <:TimeProfile}})
+function Makie.plot!(sc::ProfileChart{<:Tuple{<:TimeStructure,<:TimeProfile}})
     periods = sc[1]
     profile = sc[2]
 
@@ -32,12 +30,10 @@ function Makie.plot(periods::TwoLevel, profile::TimeProfile)
     for (i, sp) in enumerate(strat_periods(periods))
         fig[1, i] = Axis(fig, title = "sp = $sp")
         for opscen in opscenarios(sp)
-            stairs!(fig[1, i ], opscen, profile; step = :post)
+            stairs!(fig[1, i], opscen, profile; step = :post)
         end
     end
-    fig
+    return fig
 end
-
-
 
 end
