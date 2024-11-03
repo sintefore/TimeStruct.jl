@@ -123,9 +123,15 @@ function end_oper_time(t::TimePeriod, ts::OperationalScenarios)
     return end_oper_time(t, ts.scenarios[_opscen(t)])
 end
 
+function end_oper_time(t::TimePeriod, opscen::AbstractOperationalScenario)
+    return end_oper_time(t, opscen.operational)
+end
+
+
 function end_oper_time(t::TimePeriod, ts::TwoLevel)
     return end_oper_time(t, ts.operational[_strat_per(t)])
 end
+
 
 function start_oper_time(t::TimePeriod, ts::TimeStructure)
     return end_oper_time(t, ts) - duration(t)
@@ -155,3 +161,6 @@ function Base.iterate(ts::TreeStructure, state = nothing)
 
     return TreePeriod(ts, next[1]), next[2]
 end
+
+function profilechart end
+function profilechart! end
