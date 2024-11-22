@@ -127,6 +127,10 @@ function end_oper_time(t::TimePeriod, opscen::AbstractOperationalScenario)
     return end_oper_time(t, opscen.operational)
 end
 
+function end_oper_time(t::TimePeriod, ts::RepresentativePeriods)
+    return end_oper_time(t, ts.rep_periods[_rper(t)])
+end
+
 function end_oper_time(t::TimePeriod, ts::TwoLevel)
     return end_oper_time(t, ts.operational[_strat_per(t)])
 end
@@ -162,3 +166,82 @@ end
 
 function profilechart end
 function profilechart! end
+
+_scen(sc::AbstractOperationalScenario) = "sc-$(TimeStruct._opscen(sc))"
+_repr(rp::AbstractRepresentativePeriod) = "rp-$(TimeStruct._rper(rp))"
+_strat(sp::AbstractStrategicPeriod) = "sp-$(TimeStruct._strat_per(sp))"
+
+function rowtable(profile::TimeProfile, periods::SimpleTimes; include_end = true)
+    rowtable = []
+    for t in periods
+        push!(rowtable, (t = start_oper_time(t, periods), value = profile[t]))
+    end
+    if include_end
+        last_period = last(periods)
+        push!(
+            rowtable,
+            (t = end_oper_time(last_period, periods), value = profile[last_period]),
+        )
+    end
+    return rowtable
+end
+
+function rowtable(profile::TimeProfile, periods::OperationalScenarios; include_end = true)
+    rowtable = []
+    for sc in opscenarios(periods)
+        for t in sc
+            push!(
+                rowtable,
+                (opscen = _scen(sc), t = start_oper_time(t, periods), value = profile[t]),
+            )
+        end
+        if include_end
+            last_period = last(sc)
+            push!(
+                rowtable,
+                (
+                    opscen = _scen(sc),
+                    t = end_oper_time(last_period, periods),
+                    value = profile[last_period],
+                ),
+            )
+        end
+    end
+    return rowtable
+end
+
+function rowtable(profile::TimeProfile, periods::TwoLevel; include_end = true)
+    rowtable = []
+    for sp in strat_periods(periods)
+        for rp in repr_periods(sp)
+            for sc in opscenarios(rp)
+                for t in sc
+                    push!(
+                        rowtable,
+                        (
+                            strat = _strat(sp),
+                            repr = _repr(rp),
+                            opscen = _scen(sc),
+                            t = start_oper_time(t, periods),
+                            value = profile[t],
+                        ),
+                    )
+                end
+                if include_end
+                    last_period = last(sc)
+                    push!(
+                        rowtable,
+                        (
+                            strat = _strat(sp),
+                            repr = _repr(rp),
+                            opscen = _scen(sc),
+                            t = end_oper_time(last_period, periods),
+                            value = profile[last_period],
+                        ),
+                    )
+                end
+            end
+        end
+    end
+    return rowtable
+end
