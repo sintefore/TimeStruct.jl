@@ -25,10 +25,10 @@ periods = SimpleTimes(10, 1)    # 10 periods of length 1
 income = FixedProfile(5.0)      # Fixed income profile 
 
 model = Model()
-@varible(model, x[periods] >= 0)
+@variable(model, x[periods] >= 0)
 
 @constraint(model, sum(x[t] for t in periods) <= 4)
-@objective(model, sum(income[t] * x[t] for t in periods))
+@objective(model, Min, sum(income[t] * x[t] for t in periods))
 ```
 
 ## Cite
