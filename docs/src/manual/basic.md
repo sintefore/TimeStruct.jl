@@ -19,7 +19,7 @@ durations = [duration(t) for t in periods]
 ## [Calendar based](@id man-oper-calendar)
 
 For some applications it is required to relate the time periods to actual calendar dates.
-This is supported by the time structure [`CalendarTimes`](@ref) that alllows for creation and iteration of a calendar based sequence of periods in combination with calendar arithmetic.
+This is supported by the time structure [`CalendarTimes`](@ref) that allows for creation and iteration of a calendar based sequence of periods in combination with calendar arithmetic.
 
 The following example shows the creation of a time structure with 12 months starting from
 the first of January 2024. The duration of each time period is given in hours by default, but it is possible to specify the time units to use by providing the period type to use:

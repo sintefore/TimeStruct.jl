@@ -15,7 +15,7 @@ periods = TwoLevel(
 
 ![Illustration of TwoLevel](./../figures/twolevel.png)
 
-The following example shows a typical usage of a [`TwoLevel`](@ref) strucure with investment
+The following example shows a typical usage of a [`TwoLevel`](@ref) structure with investment
 decisions on a strategic level and operational decision variables. It is possible to iterate
 through each strategic period using the [`strat_periods`](@ref)function.
 

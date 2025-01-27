@@ -4,7 +4,7 @@ Contributing to `TimeStruct` can be achieved in several different ways.
 
 ## [File a bug report](@id con-bug_rep)
 
-One approach to contributing to `TimeStruct` is through filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behaviour is occuring.
+One approach to contributing to `TimeStruct` is through filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behaviour is occurring.
 
 When filing a bug report, please follow the following guidelines:
 
@@ -78,7 +78,7 @@ It can be easier to include these changes after the pull request is accepted in 
 
 #### [Step 5: Create a pull request](@id con-feat_req-fork-step_5)
 
-Once you are satisified with your changes, create a pull request towards the main branch of the `TimeStruct` repository.
+Once you are satisfied with your changes, create a pull request towards the main branch of the `TimeStruct` repository.
 We will internally assign the relevant person to the pull request.
 
 You may receive quite a few comments with respect to the incorporation and how it may potentially affect other parts of the code.
