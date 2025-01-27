@@ -1,6 +1,6 @@
 # [Discounting](@id man-disc)
 
-For multi-year investment optimization models it is common pratice to use an
+For multi-year investment optimization models it is common practice to use an
 objective that is discounted to get the net present value of the investment.
 Since investment decisions usually are done on a strategic level, discount
 factors are also calculated based on strategic periods.
