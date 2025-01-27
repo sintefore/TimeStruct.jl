@@ -20,6 +20,11 @@ The main concept is a [`TimeStructure`](@ref) which is an abstract type that ena
     end
 ```
 
+## Why use TimeStruct?
+In complex optimization models, tracking relationships between time periods often requires substantial coding, especially with stochastic versions. Time constraints can introduce subtle bugs, particularly with linking constraints between periods or scenarios, like managing storage inventory or dispatch constraints. Extra indices for time and scenarios complicate the code, making it harder to read, maintain, and adapt.
+
+TimeStruct abstracts time structures, providing a common interface that simplifies the code and supports various time structures (operational, strategic/investment periods, and uncertainties). This abstraction allows modellers to focus on other model properties and facilitates running a single model for different time structures, and aids in the development of decomposition techniques.
+
 ## How to get started
 
 The package is registered in the general registry and can be installed in standard fashion
