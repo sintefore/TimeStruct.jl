@@ -49,6 +49,8 @@ By abstracting out the time structures and providing a common interface, TimeStr
 
 Through providing a common interface with time structure semantics, TimeStruct simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
 
+To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g. [@correia2016multi]) and scheduling problems (e.g. [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.  
+
 # Example of use
 
 For a full overview of the functionality of TimeStruct, please see the online [documentation](https://sintefore.github.io/TimeStruct.jl/stable/).
@@ -77,13 +79,17 @@ end
 This model will be valid for both examples above, producing one constraint for the `SimpleTimes` and three constraints for
 the strategic periods of the `TwoLevel` example.
 ```julia
-latex_formulation(create_model(SimpleTimes([1, 1, 1, 5, 5]), FixedProfile(3), 10))
+latex_formulation(
+  create_model(SimpleTimes([1, 1, 1, 5, 5]), FixedProfile(3), 10)
+)
 ```
 $$
 3 x_{t1} + 3 x_{t2} + 3 x_{t3} + 3 x_{t4} + 3 x_{t5} \leq 10
 $$
 ```julia
-latex_formulation(create_model(TwoLevel(3, SimpleTimes(5,1)), StrategicProfile([3, 4, 5]), 10))
+latex_formulation(
+  create_model(TwoLevel(3, SimpleTimes(5,1)), StrategicProfile([3, 4, 5]), 10)
+)
 ```
 $$
 \begin{aligned}
