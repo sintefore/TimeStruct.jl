@@ -49,7 +49,7 @@ By abstracting out the time structures and providing a common interface, TimeStr
 
 Through providing a common interface with time structure semantics, TimeStruct simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
 
-To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g. [@correia2016multi]) and scheduling problems (e.g. [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.  
+To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g., [@correia2016multi]) and scheduling problems (e.g., [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.  
 
 # Example of use
 
