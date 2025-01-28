@@ -581,7 +581,7 @@ end
     per = ops2[1]
     @test typeof(per) <: TimeStruct.SimplePeriod
 
-    @test multiple_strat(first(strat_periods(simple)), first(ops1)) == 1/10
+    @test multiple_strat(first(strat_periods(simple)), first(ops1)) == 1 / 10
 
     ops3 = [t for sc in opscenarios(simple) for t in sc]
     @test ops1 == ops3
