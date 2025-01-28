@@ -175,7 +175,7 @@ function Base.last(sp::StrategicPeriod)
 end
 
 """
-    multiple_strat(sp::StrategicPeriod, t)
+    multiple_strat(sp::AbstractStrategicPeriod, t)
 
 Returns the number of times a time period `t` should be accounted for
 when accumulating over one single unit of strategic time.
@@ -188,7 +188,7 @@ for sp in strategic_periods(periods)
 end
 ```
 """
-multiple_strat(sp::StrategicPeriod, t) = multiple(t) / duration_strat(sp)
+multiple_strat(sp::AbstractStrategicPeriod, t) = multiple(t) / duration_strat(sp)
 
 """
     struct StratPers{S,T,OP} <: AbstractStratPers{T}
