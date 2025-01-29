@@ -33,11 +33,11 @@ bibliography: paper.bib
 
 # Summary
 
-[TimeStruct](https://github.com/sintefore/TimeStruct.jl) is a Julia [@bezanson2017julia] package that provides an interface for abstracting time structures, primarily intended for use with the mathematical programming DSL JuMP [@Lubin2023].
+[`TimeStruct.jl`](https://github.com/sintefore/TimeStruct.jl) is a Julia [@bezanson2017julia] package that provides an interface for abstracting time structures, primarily intended for use with the mathematical programming DSL `JuMP.jl` [@Lubin2023].
 
-TimeStruct simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equations. Consequently, equations unaffected by the the chosen time structure, *e.g.*, simple deterministic operational or stochastic programming models, need not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
+`TimeStruct.jl` simplifies the writing of key equations in optimization problems through separation of the indexing sets and the equations. Consequently, equations unaffected by the the chosen time structure, e.g., simple deterministic operational or stochastic programming models, need not be adjusted when changing the time structures. Hence, it simplifies both model development and subsequent switching between different time structures.
 
-The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g. [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/) and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
+The package is already used in several optimization packages developed at [SINTEF](https://www.sintef.no/en/), e.g., [EnergyModelsX](https://github.com/EnergyModelsX/), [ZeroKyst](https://zerokyst.no/en/), and [MaritimeNH3](https://www.sintef.no/en/projects/2021/maritimenh3-enabling-implementation-of-ammonia-as-a-maritime-fuel/).
 
 # Statement of need
 
@@ -45,25 +45,25 @@ For complex optimization models, a significant amount of code is typically used 
 
 Modellers typically use extra indices to keep track of time and scenarios, making the code harder to read, maintain and change to support other or multiple time structures. This complexity can be an obstacle during development, testing and debugging, as it is easier to work with simpler time structures.
 
-By abstracting out the time structures and providing a common interface, TimeStruct allows the modeller to concentrate on other properties of the model, keeping the code simple while supporting a large variety of time structures (pure operational, strategic/investment periods and operational periods, including operational uncertainty and/or strategic uncertainty).
+By abstracting out the time structures and providing a common interface, `TimeStruct.jl` allows the modeller to concentrate on other properties of the model, keeping the code simple while supporting a large variety of time structures (pure operational, strategic/investment periods and operational periods, including operational uncertainty and/or strategic uncertainty).
 
-Through providing a common interface with time structure semantics, TimeStruct simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
+Through providing a common interface with time structure semantics, `TimeStruct.jl` simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
 
-To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g., [@correia2016multi]) and scheduling problems (e.g., [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.  
+To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g., [@correia2016multi]) and scheduling problems (e.g., [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.
 
 # Example of use
 
-For a full overview of the functionality of TimeStruct, please see the online [documentation](https://sintefore.github.io/TimeStruct.jl/stable/).
+For a full overview of the functionality of `TimeStruct.jl`, please see the online [documentation](https://sintefore.github.io/TimeStruct.jl/stable/).
 
-During development and for operational analyses, simple time structures where, *e.g.*, time is divided into discrete time periods with (operational) decision variables in time period, can be useful. With TimeStruct, such structures can be easily used in any optimization model. The example in \autoref{fig:simple} shows the basic time structure `SimpleTimes` which represents a continuous period of time divided into individual time periods of varying duration. The length of each time period is obtained by the `duration(t)` function.
+During development and for operational analyses, simple time structures where, e.g., time is divided into discrete time periods with (operational) decision variables in time period, can be useful. With `TimeStruct.jl`, such structures can be easily used in any optimization model. The example in \autoref{fig:simple} shows the basic time structure `SimpleTimes` which represents a continuous period of time divided into individual time periods of varying duration. The length of each time period is obtained by the `duration(t)` function.
 
 ![Simple time structure with only operational periods.\label{fig:simple}](simple.pdf)
 
-One of the main motivations for the development of TimeStruct is to support multi-horizon time structures [@kaut2014multi]. As a simple example of a multi-horizon time structure, the time structure `TwoLevel` allows for a two level approach, combining an ordered sequence of strategic periods (typically used for binary capacity expansion) with given duration and an associated operational time structure (for operational decisions using the available capacity in the associated strategic period) as illustrated in \autoref{fig:twolevel}.
+One of the main motivations for the development of `TimeStruct.jl` is to support multi-horizon time structures [@kaut2014multi]. As a simple example of a multi-horizon time structure, the time structure `TwoLevel` allows for a two level approach, combining an ordered sequence of strategic periods (typically used for binary capacity expansion) with given duration and an associated operational time structure (for operational decisions using the available capacity in the associated strategic period) as illustrated in \autoref{fig:twolevel}.
 
 ![A typical two-level time structure.\label{fig:twolevel}](twolevel.pdf)
 
-Using the interfaces defined in `TimeStruct`, it is easy to write models that are valid across different time structures.
+Using the interfaces defined in `TimeStruct.jl`, it is easy to write models that are valid across different time structures.
 The following example shows a simple model with a production variable, $x$, defined for all operational time periods and a constraint on the maximum total production cost for each strategic period:
 ```julia
 using JuMP, TimeStruct
@@ -107,9 +107,9 @@ Different time structures may be combined to construct more complex structures. 
 
 # Example applications
 
-TimeStruct is used in multiple optimization models developed at SINTEF. One early application is in [EnergyModelsX](https://github.com/EnergyModelsX/) [@hellemo2024energymodelsx], simplifying the code in `EnergyModelsBase.jl` considerably, and allowing to add capabilities for stochastic programming versions of the model with little extra effort, see, *e.g.*, [@bodal2024hydrogen;@svendsmark2024developing] for example applications of EnergyModelsX.
+`TimeStruct.jl` is used in multiple optimization models developed at SINTEF. One early application is in [EnergyModelsX](https://github.com/EnergyModelsX/) [@hellemo2024energymodelsx], simplifying the code in `EnergyModelsBase.jl` considerably, and allowing to add capabilities for stochastic programming versions of the model with little extra effort, see, e.g., [@bodal2024hydrogen;@svendsmark2024developing] for example applications of EnergyModelsX.
 
-It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involve the use of TimeStruct [@kitch2024optimal].
+It has also been used in the logistics models developed in the project 'Sirkulær masseforvaltning' for planning in the rock and gravel industry, as well as for hydrogen facility location optimization in the 'ZeroKyst' project. Ongoing activities in the EU funded projects 'H2GLASS' and 'FLEX4FACT' involve the use of `TimeStruct.jl` [@kitch2024optimal].
 
 # Acknowledgements
 
