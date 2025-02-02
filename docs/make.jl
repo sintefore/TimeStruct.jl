@@ -6,11 +6,7 @@ using TimeStruct
 for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
     for file in files
         if endswith(file, ".jl")
-            Literate.markdown(
-                joinpath(root, file),
-                root;
-                documenter = true,
-            )
+            Literate.markdown(joinpath(root, file), root; documenter = true)
         end
     end
 end
