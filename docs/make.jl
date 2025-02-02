@@ -1,7 +1,26 @@
-using Documenter, TimeStruct
+using Documenter
+using Literate
+using TimeStruct
+
+# Literate on tutorial folder
+for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
+    for file in files
+        if endswith(file, ".jl")
+            Literate.markdown(
+                joinpath(root, file),
+                root;
+                documenter = true,
+            )
+        end
+    end
+end
 
 pages = [
     "Introduction" => "index.md",
+    "Tutorials" => [
+        "Battery sizing" => "tutorials/battery_sizing.md",
+        "EnergyModelsX" => "tutorials/emx.md",
+    ],
     "Manual" => [
         "Operational time structures" => "manual/basic.md",
         "Multi-horizon" => "manual/multi.md",
