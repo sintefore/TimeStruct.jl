@@ -1,6 +1,7 @@
 # TimeStruct.jl
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10511398.svg)](https://doi.org/10.5281/zenodo.10511398)
 [![Build Status](https://github.com/sintefore/TimeStruct.jl/workflows/CI/badge.svg)](https://github.com/sintefore/TimeStruct.jl/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/sintefore/TimeStruct.jl/graph/badge.svg?token=W4UGEJD8TZ)](https://codecov.io/gh/sintefore/TimeStruct.jl)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
 [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://sintefore.github.io/TimeStruct.jl/dev/)
 
