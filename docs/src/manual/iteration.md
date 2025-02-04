@@ -8,7 +8,7 @@ using TimeStruct
 
 function iterate_ex(periods::TimeStructure)
     for t in periods
-        writeln(t)
+        println(t)
     end
 end
 ```
