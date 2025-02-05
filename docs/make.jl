@@ -16,8 +16,8 @@ pages = [
     "Tutorials" => [
         "Basic usage" => "tutorials/basic_usage.md",
         "Battery sizing" => "tutorials/battery_sizing.md",
-        "EnergyModelsX" => "tutorials/emx.md",
     ],
+    "Showcases" => ["EnergyModelsX" => "showcases/emx.md"],
     "Manual" => [
         "Operational time structures" => "manual/basic.md",
         "Multi-horizon" => "manual/multi.md",
