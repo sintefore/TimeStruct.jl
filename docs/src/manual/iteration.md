@@ -8,7 +8,7 @@ using TimeStruct
 
 function iterate_ex(periods::TimeStructure)
     for t in periods
-        writeln(t)
+        println(t)
     end
 end
 ```
@@ -25,7 +25,7 @@ periods = SimpleTimes(5, 1);
 collect(withprev(periods))
 ```
 
-## [Iteration with chunks of time periods](@id man-iter-chunck)
+## [Iteration with chunks of time periods](@id man-iter-chunk)
 
 Sometimes it is convenient to iterate through the time periods
 as chunks of a fixed number of periods or minimum duration, e.g. in production planning
@@ -97,7 +97,7 @@ for cref in all_constraints(m, AffExpr, MOI.LessThan{Float64}) # hide
 end # hide
 ```
 
-## [Chunks based on duration](@id man-iter-chunck_dur)
+## [Chunks based on duration](@id man-iter-chunk_dur)
 
 If working with a time structure that has varying duration for its time periods,
 it can be more convenient with chunks based on their combined duration.

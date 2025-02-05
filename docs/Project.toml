@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 TimeStruct = "f9ed5ce0-9f41-4eaa-96da-f38ab8df101c"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
