@@ -13,7 +13,10 @@ end
 
 pages = [
     "Introduction" => "index.md",
-    "Tutorials" => ["Battery sizing" => "tutorials/battery_sizing.md"],
+    "Tutorials" => [
+        "Basic usage" => "tutorials/basic_usage.md",
+        "Battery sizing" => "tutorials/battery_sizing.md",
+    ],
     "Showcases" => ["EnergyModelsX" => "showcases/emx.md"],
     "Manual" => [
         "Operational time structures" => "manual/basic.md",
