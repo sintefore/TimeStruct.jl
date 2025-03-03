@@ -1,5 +1,5 @@
 # TimeStruct.jl
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10511398.svg)](https://doi.org/10.5281/zenodo.10511398)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07578/status.svg)](https://doi.org/10.21105/joss.07578)
 [![Build Status](https://github.com/sintefore/TimeStruct.jl/workflows/CI/badge.svg)](https://github.com/sintefore/TimeStruct.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/sintefore/TimeStruct.jl/graph/badge.svg?token=W4UGEJD8TZ)](https://codecov.io/gh/sintefore/TimeStruct.jl)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
@@ -34,8 +34,21 @@ model = Model()
 
 ## Cite
 If you find TimeStruct useful in your work, we kindly request that you cite the
-following:
+following [paper](https://doi.org/10.21105/joss.07578):
 ```
+@article{Flatberg2025,
+  doi = {10.21105/joss.07578},
+  url = {https://doi.org/10.21105/joss.07578},
+  year = {2025},
+  publisher = {The Open Journal},
+  volume = {10},
+  number = {107},
+  pages = {7578},
+  author = {Truls Flatberg and Julian Straus and Lars Hellemo},
+  title = {TimeStruct.jl -- flexible multi-horizon time modelling in optimization models},
+  journal = {Journal of Open Source Software}
+} 
+
 @misc{TimeStruct.jl,
   author       = {Flatberg, Truls and Hellemo, Lars},
   title        = {{TimeStruct.jl: Flexible time structures in optimization modelling}},
