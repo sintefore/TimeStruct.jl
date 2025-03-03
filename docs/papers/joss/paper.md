@@ -41,7 +41,7 @@ The package is already used in several optimization packages developed at [SINTE
 
 # Statement of need
 
-For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model are developed. Time constraints can be tricky to implement correctly. They can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios. One example for this type of constraints is keeping track of a storage inventory over time or incorporate dispatch constraints.
+For complex optimization models, a significant amount of code is typically used to track the relationships between time periods, further complicated if stochastic versions of the model are developed. Time constraints can be tricky to implement correctly. They can be a source of subtle bugs, in particular when more complicated structures are involved in models with linking constraints between time periods or scenarios. One example of these types of constraints is in keeping track of a storage inventory over time or incorporating dispatch constraints.
 
 Modellers typically use extra indices to keep track of time and scenarios, making the code harder to read, maintain and change to support other or multiple time structures. This complexity can be an obstacle during development, testing and debugging, as it is easier to work with simpler time structures.
 
@@ -49,7 +49,7 @@ By abstracting out the time structures and providing a common interface, `TimeSt
 
 Through providing a common interface with time structure semantics, `TimeStruct.jl` simplifies running a single model for different time structures. It may be hence used to develop decomposition techniques to exploit specific structures.
 
-To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times], [@Tulipa]), as well as in facility location (e.g., [@correia2016multi]) and scheduling problems (e.g., [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.
+To the best of the authors' knowledge, no software packages with similar functionality currently exist. There are several examples of optimization models that incorporate complex time structures, particularly within energy modeling (e.g., [@times;@Tulipa]), as well as in facility location (e.g., [@correia2016multi]) and scheduling problems (e.g., [@iyer1998optimal]) where strategic decisions are separated from operational decisions. However, the time structures in these models are tailored to their specific applications and are tightly integrated with the models themselves, making it difficult to reuse them directly in other contexts.
 
 # Example of use
 
