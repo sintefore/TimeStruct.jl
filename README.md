@@ -48,16 +48,6 @@ following [paper](https://doi.org/10.21105/joss.07578):
   title = {TimeStruct.jl -- flexible multi-horizon time modelling in optimization models},
   journal = {Journal of Open Source Software}
 } 
-
-@misc{TimeStruct.jl,
-  author       = {Flatberg, Truls and Hellemo, Lars},
-  title        = {{TimeStruct.jl: Flexible time structures in optimization modelling}},
-  month        = Jan,
-  year         = 2024,
-  doi          = {10.5281/zenodo.10511398},
-  publisher    = {Zenodo},
-  url          = {https://zenodo.org/records/10511398}
-}
 ```
 
 
