@@ -115,8 +115,30 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     return next, n[2]
 end
 
-function end_oper_time(t::TimePeriod, ts::SimpleTimes)
+"""
+    end_oper_time(t, ts)
+
+Get the operational end time of the time period `t` in the time structure `ts`.
+
+The operational end time is equal to the sum of the durations of all previous
+operational time periods in its operational time structure, including its own
+duration.
+
+The current implementation is not computationally efficient and should be
+avoided if using this in loops for time structures with many time periods.
+If this is the case, consider implementing a local tracking of ent time
+using the duration of the time periods.
+"""
+function end_oper_time(t::TimePeriod, ts::TimeStructure)
+    error("end_oper_time not implemented for time structure: $(ts)")
+end
+
+function end_oper_time(t::TimePeriod, ts::Union{SimpleTimes, CalendarTimes})
     return sum(duration(tt) for tt in ts if _oper(tt) <= _oper(t))
+end
+
+function end_oper_time(t::TimePeriod, ts::RepresentativePeriods)
+    return end_oper_time(t, ts.rep_periods[_rper(t)])
 end
 
 function end_oper_time(t::TimePeriod, ts::OperationalScenarios)
@@ -127,6 +149,19 @@ function end_oper_time(t::TimePeriod, ts::TwoLevel)
     return end_oper_time(t, ts.operational[_strat_per(t)])
 end
 
+"""
+    start_oper_time(t, ts)
+
+Get the operational start time of the time period `t` in the time structure `ts`.
+
+The operational start time is equal to the sum of the durations of all previous
+operational time periods in its operational time structure.
+
+The current implementation is not computationally efficient and should be
+avoided if using this in loops for time structures with many time periods.
+If this is the case, consider implementing a local tracking of start time
+using the duration of the time periods.
+"""
 function start_oper_time(t::TimePeriod, ts::TimeStructure)
     return end_oper_time(t, ts) - duration(t)
 end

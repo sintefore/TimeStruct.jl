@@ -1365,6 +1365,7 @@ end
 
 @testitem "Start and end times" begin
     using Unitful
+    using Dates
 
     uniform_day = SimpleTimes(24, 1)
     periods = TwoLevel(10, 8760, uniform_day)
@@ -1382,10 +1383,24 @@ end
     tsc = TwoLevel(3, 168u"hr", OperationalScenarios(3, SimpleTimes(7, 24u"hr")))
     start_t = collect(start_oper_time(t, tsc) for t in tsc)
     end_t = collect(end_oper_time(t, tsc) for t in tsc)
-
     @test start_t[1] == 0u"hr"
     @test end_t[1] == 24u"hr"
     @test start_t[9] == end_t[8]
+
+    trep = TwoLevel(3, 10, RepresentativePeriods(2, 5, SimpleTimes(5, 1)))
+    for t in trep
+        @test end_oper_time(t, trep)  - start_oper_time(t, trep) == duration(t)
+    end
+
+    year = CalendarTimes(DateTime(2024, 1, 1), 12, Month(1))
+    start_t = collect(start_oper_time(t, year) for t in year)
+    end_t = collect(end_oper_time(t, year) for t in year)
+
+    @test start_t[3] == (31 + 29) * 24
+    for t in year
+        @test end_oper_time(t, year)  - start_oper_time(t, year) == duration(t)
+    end
+
 end
 
 @testitem "Dataframes" begin
