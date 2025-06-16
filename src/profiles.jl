@@ -1,5 +1,7 @@
 abstract type TimeProfile{T} end
 
+profilevaluetype(_::TimeProfile{T}) where {T} = T
+
 """
     FixedProfile(val)
 
@@ -31,6 +33,8 @@ function Base.getindex(
 ) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return fp.val
 end
+
+Base.convert(::Type{T}, fp::FixedProfile{S}) where {T,S} = FixedProfile(convert(T, fp.val))
 
 """
     OperationalProfile(vals::Vector{T}) where {T}
@@ -69,6 +73,11 @@ function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
     return error("Type $(typeof(i)) can not be used as index for an operational profile")
 end
 
+Base.convert(::Type{T}, op::OperationalProfile{T}) where {T} = op
+function Base.convert(::Type{T}, op::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(convert.(T, op.vals))
+end
+
 """
     StrategicProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     StrategicProfile(vals::Vector)
@@ -99,6 +108,14 @@ function StrategicProfile(vals::Vector{T}) where {T}
     else
         return StrategicProfile([FixedProfile(v) for v in vals])
     end
+end
+function StrategicProfile(vals::Vector{T}) where {T<:TimeProfile}
+    ET = promote_type((profilevaluetype(v) for v in vals)...)
+    return StrategicProfile(convert.(ET, vals))
+end
+Base.convert(::Type{T}, sp::StrategicProfile{T}) where {T} = sp
+function Base.convert(::Type{T}, sp::StrategicProfile{S}) where {T,S}
+    return StrategicProfile(convert.(T, sp.vals))
 end
 
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
@@ -136,6 +153,16 @@ profile = ScenarioProfile([1, 2, 3, 4, 5])
 struct ScenarioProfile{T,P<:TimeProfile{T}} <: TimeProfile{T}
     vals::Vector{P}
 end
+
+function ScenarioProfile(vals::Vector{T}) where {T<:TimeProfile}
+    ET = promote_type((profilevaluetype(v) for v in vals)...)
+    return ScenarioProfile(convert.(ET, vals))
+end
+Base.convert(::Type{T}, sp::ScenarioProfile{T}) where {T} = sp
+function Base.convert(::Type{T}, sp::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile(convert.(T, sp.vals))
+end
+
 function ScenarioProfile(vals::Vector{T}) where {T}
     if T <: Array
         throw(
@@ -196,6 +223,14 @@ function RepresentativeProfile(vals::Vector{T}) where {T}
         return RepresentativeProfile([FixedProfile(v) for v in vals])
     end
 end
+function RepresentativeProfile(vals::Vector{T}) where {T<:TimeProfile}
+    ET = promote_type((profilevaluetype(v) for v in vals)...)
+    return RepresentativeProfile(convert.(ET, vals))
+end
+Base.convert(::Type{T}, rp::RepresentativeProfile{T}) where {T} = rp
+function Base.convert(::Type{T}, rp::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile(convert.(T, rp.vals))
+end
 
 function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
     return rp.vals[_rper(period) > length(rp.vals) ? end : _rper(period)][period]
@@ -251,6 +286,15 @@ function StrategicStochasticProfile(vals::Vector{<:Vector{T}}) where {T}
             [FixedProfile(v_2) for v_2 in v_1] for v_1 in vals
         ])
     end
+end
+function StrategicStochasticProfile(vals::Vector{<:Vector{T}}) where {T<:TimeProfile}
+    ET = promote_type((profilevaluetype(v_2) for v_1 in vals for v_2 in v_1)...)
+    return StrategicStochasticProfile([convert.(ET, v) for v in vals])
+end
+
+Base.convert(::Type{T}, ssp::StrategicStochasticProfile{T}) where {T} = ssp
+function Base.convert(::Type{T}, ssp::StrategicStochasticProfile{S}) where {T,S}
+    return StrategicStochasticProfile([convert.(T, v) for v in ssp.vals])
 end
 
 function _value_lookup(::HasStratTreeIndex, ssp::StrategicStochasticProfile, period)
