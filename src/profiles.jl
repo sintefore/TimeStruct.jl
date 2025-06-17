@@ -38,7 +38,7 @@ Base.convert(::Type{FixedProfile{T}}, fp::FixedProfile{T}) where {T} = fp
 function Base.convert(::Type{FixedProfile{T}}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
-function Base.convert(::Type{T}, fp::FixedProfile{S}) where {T<:Number,S}
+function Base.convert(::Type{T}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
 
