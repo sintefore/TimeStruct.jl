@@ -1226,6 +1226,16 @@ end
     @test TimeStruct.profilevaluetype(ssp) == Float64
     ssp_int = convert(Int64, ssp)
     @test TimeStruct.profilevaluetype(ssp_int) == Int64
+
+    v = [FixedProfile(1.0)]
+    push!(v, FixedProfile(2.0))
+    push!(v, FixedProfile(3))
+    @test typeof(v) == Vector{FixedProfile{Float64}}
+
+    v = [OperationalProfile([1.0, 2.0, 3.0])]
+    push!(v, OperationalProfile([4.0, 5.0]))
+    push!(v, OperationalProfile([6, 7]))
+    @test typeof(v) == Vector{OperationalProfile{Float64}}
 end
 
 @testitem "Iteration utilities" begin
