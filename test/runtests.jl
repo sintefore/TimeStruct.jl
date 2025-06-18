@@ -1199,6 +1199,45 @@ end
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
 end
 
+@testitem "Profile conversion" begin
+    fp = FixedProfile(12)
+    @test convert(Float64, fp) == FixedProfile(12.0)
+
+    op_int = OperationalProfile([1, 2, 3])
+    op_float = convert(Float64, op_int)
+    @test typeof(op_float) == OperationalProfile{Float64}
+
+    sp = ScenarioProfile([op_int, op_float])
+    @test TimeStruct.profilevaluetype(sp) == Float64
+    sp_int = convert(Int64, sp)
+    @test TimeStruct.profilevaluetype(sp_int) == Int64
+
+    rp = RepresentativeProfile([sp, sp_int])
+    @test TimeStruct.profilevaluetype(rp) == Float64
+    rp_int = convert(Int64, rp)
+    @test TimeStruct.profilevaluetype(rp_int) == Int64
+
+    stp = StrategicProfile([sp, rp, 2 * rp])
+    @test TimeStruct.profilevaluetype(stp) == Float64
+    stp_int = convert(Int64, stp)
+    @test TimeStruct.profilevaluetype(stp_int) == Int64
+
+    ssp = StrategicStochasticProfile([[sp, rp], [2 * sp, 3 * rp]])
+    @test TimeStruct.profilevaluetype(ssp) == Float64
+    ssp_int = convert(Int64, ssp)
+    @test TimeStruct.profilevaluetype(ssp_int) == Int64
+
+    v = [FixedProfile(1.0)]
+    push!(v, FixedProfile(2.0))
+    push!(v, FixedProfile(3))
+    @test typeof(v) == Vector{FixedProfile{Float64}}
+
+    v = [OperationalProfile([1.0, 2.0, 3.0])]
+    push!(v, OperationalProfile([4.0, 5.0]))
+    push!(v, OperationalProfile([6, 7]))
+    @test typeof(v) == Vector{OperationalProfile{Float64}}
+end
+
 @testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
