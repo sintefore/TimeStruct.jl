@@ -96,6 +96,10 @@ _rper(t::TimePeriod) = 1
 _strat_per(t::TimePeriod) = 1
 _branch(t::TimePeriod) = 1
 
+# Returns the underlying time period for a hierarchical time period.
+# The default implementation is to return the time period itself.
+_period(t) = t
+
 _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 
 _multiple_adj(ts::TimeStructure, per) = 1.0

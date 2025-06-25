@@ -135,7 +135,9 @@ function Base.convert(::Type{T}, sp::StrategicProfile{S}) where {T,S}
 end
 
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
-    return sp.vals[_strat_per(period) > length(sp.vals) ? end : _strat_per(period)][period]
+    return sp.vals[_strat_per(period) > length(sp.vals) ? end : _strat_per(period)][_period(
+        period,
+    )]
 end
 
 function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
@@ -199,7 +201,9 @@ function ScenarioProfile(vals::Vector{T}) where {T}
 end
 
 function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
-    return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][period]
+    return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][_period(
+        period,
+    )]
 end
 
 function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
@@ -261,7 +265,7 @@ function Base.convert(::Type{T}, rp::RepresentativeProfile{S}) where {T,S}
 end
 
 function _value_lookup(::HasReprIndex, rp::RepresentativeProfile, period)
-    return rp.vals[_rper(period) > length(rp.vals) ? end : _rper(period)][period]
+    return rp.vals[_rper(period) > length(rp.vals) ? end : _rper(period)][_period(period)]
 end
 
 function _value_lookup(::NoReprIndex, rp::RepresentativeProfile, period)
@@ -333,7 +337,7 @@ end
 function _value_lookup(::HasStratTreeIndex, ssp::StrategicStochasticProfile, period)
     sp_prof = ssp.vals[_strat_per(period) > length(ssp.vals) ? end : _strat_per(period)]
     branch_prof = sp_prof[_branch(period) > length(sp_prof) ? end : _branch(period)]
-    return branch_prof[period]
+    return branch_prof[_period(period)]
 end
 
 function _value_lookup(::NoStratTreeIndex, ssp::StrategicStochasticProfile, period)
