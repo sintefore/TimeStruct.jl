@@ -135,7 +135,9 @@ function Base.convert(::Type{T}, sp::StrategicProfile{S}) where {T,S}
 end
 
 function _value_lookup(::HasStratIndex, sp::StrategicProfile, period)
-    return sp.vals[_strat_per(period) > length(sp.vals) ? end : _strat_per(period)][_period(period)]
+    return sp.vals[_strat_per(period) > length(sp.vals) ? end : _strat_per(period)][_period(
+        period,
+    )]
 end
 
 function _value_lookup(::NoStratIndex, sp::StrategicProfile, period)
@@ -199,7 +201,9 @@ function ScenarioProfile(vals::Vector{T}) where {T}
 end
 
 function _value_lookup(::HasScenarioIndex, sp::ScenarioProfile, period)
-    return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][_period(period)]
+    return sp.vals[_opscen(period) > length(sp.vals) ? end : _opscen(period)][_period(
+        period,
+    )]
 end
 
 function _value_lookup(::NoScenarioIndex, sp::ScenarioProfile, period)
