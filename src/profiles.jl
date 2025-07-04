@@ -37,7 +37,6 @@ end
 function Base.convert(::Type{FixedProfile{T}}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
-_internal_convert(::Type{FixedProfile{T}}, fp::FixedProfile{T}) where {T} = fp
 function _internal_convert(::Type{T}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
@@ -82,8 +81,6 @@ end
 function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
 end
-_internal_convert(::Type{OperationalProfile{T}}, op::OperationalProfile{T}) where {T} = op
-_internal_convert(::Type{T}, op::OperationalProfile{T}) where {T} = op
 function _internal_convert(::Type{T}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
 end
@@ -123,13 +120,7 @@ function StrategicProfile(vals::Vector{T}) where {T<:TimeProfile}
     ET = promote_type((profilevaluetype(v) for v in vals)...)
     return StrategicProfile(_internal_convert.(ET, vals))
 end
-function _internal_convert(
-    ::Type{StrategicProfile{T,P}},
-    sp::StrategicProfile{T,P},
-) where {T,P<:TimeProfile{T}}
-    return sp
-end
-_internal_convert(::Type{T}, sp::StrategicProfile{T}) where {T} = sp
+
 function _internal_convert(::Type{T}, sp::StrategicProfile{S}) where {T,S}
     return StrategicProfile(_internal_convert.(T, sp.vals))
 end
@@ -176,13 +167,7 @@ function ScenarioProfile(vals::Vector{T}) where {T<:TimeProfile}
     ET = promote_type((profilevaluetype(v) for v in vals)...)
     return ScenarioProfile(_internal_convert.(ET, vals))
 end
-function _internal_convert(
-    ::Type{ScenarioProfile{T,P}},
-    sp::ScenarioProfile{T,P},
-) where {T,P<:TimeProfile{T}}
-    return sp
-end
-_internal_convert(::Type{T}, sp::ScenarioProfile{T}) where {T} = sp
+
 function _internal_convert(::Type{T}, sp::ScenarioProfile{S}) where {T,S}
     return ScenarioProfile(_internal_convert.(T, sp.vals))
 end
@@ -253,13 +238,7 @@ function RepresentativeProfile(vals::Vector{T}) where {T<:TimeProfile}
     ET = promote_type((profilevaluetype(v) for v in vals)...)
     return RepresentativeProfile(_internal_convert.(ET, vals))
 end
-function _internal_convert(
-    ::Type{RepresentativeProfile{T,P}},
-    rp::RepresentativeProfile{T,P},
-) where {T,P<:TimeProfile{T}}
-    return rp
-end
-_internal_convert(::Type{T}, rp::RepresentativeProfile{T}) where {T} = rp
+
 function _internal_convert(::Type{T}, rp::RepresentativeProfile{S}) where {T,S}
     return RepresentativeProfile(_internal_convert.(T, rp.vals))
 end
@@ -323,13 +302,7 @@ function StrategicStochasticProfile(vals::Vector{<:Vector{T}}) where {T<:TimePro
     ET = promote_type((profilevaluetype(v_2) for v_1 in vals for v_2 in v_1)...)
     return StrategicStochasticProfile([_internal_convert.(ET, v) for v in vals])
 end
-function _internal_convert(
-    ::Type{StrategicStochasticProfile{T,P}},
-    ssp::StrategicStochasticProfile{T,P},
-) where {T,P<:TimeProfile{T}}
-    return ssp
-end
-_internal_convert(::Type{T}, ssp::StrategicStochasticProfile{T}) where {T} = ssp
+
 function _internal_convert(::Type{T}, ssp::StrategicStochasticProfile{S}) where {T,S}
     return StrategicStochasticProfile([_internal_convert.(T, v) for v in ssp.vals])
 end
