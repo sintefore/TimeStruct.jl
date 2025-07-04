@@ -1224,7 +1224,6 @@ end
     rp_int = TimeStruct._internal_convert(Int64, rp_int)
     @test TimeStruct.profilevaluetype(rp_int) == Int64
 
-
     stp = StrategicProfile([sp, rp, 2 * rp])
     @test TimeStruct.profilevaluetype(stp) == Float64
     stp_int = TimeStruct._internal_convert(Int64, stp)
