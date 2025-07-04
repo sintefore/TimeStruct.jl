@@ -34,10 +34,10 @@ function Base.getindex(
     return fp.val
 end
 
-_internal_convert(::Type{FixedProfile{T}}, fp::FixedProfile{T}) where {T} = fp
-function _internal_convert(::Type{FixedProfile{T}}, fp::FixedProfile{S}) where {T,S}
+function Base.convert(::Type{FixedProfile{T}}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
+_internal_convert(::Type{FixedProfile{T}}, fp::FixedProfile{T}) where {T} = fp
 function _internal_convert(::Type{T}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
@@ -79,13 +79,10 @@ function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
     return error("Type $(typeof(i)) can not be used as index for an operational profile")
 end
 
-_internal_convert(::Type{OperationalProfile{T}}, op::OperationalProfile{T}) where {T} = op
-function _internal_convert(
-    ::Type{OperationalProfile{T}},
-    op::OperationalProfile{S},
-) where {T,S}
+function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
 end
+_internal_convert(::Type{OperationalProfile{T}}, op::OperationalProfile{T}) where {T} = op
 _internal_convert(::Type{T}, op::OperationalProfile{T}) where {T} = op
 function _internal_convert(::Type{T}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
