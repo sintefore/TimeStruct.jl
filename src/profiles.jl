@@ -37,6 +37,7 @@ end
 function Base.convert(::Type{FixedProfile{T}}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
+_internal_convert(::Type{T}, fp::FixedProfile{T}) where {T} = fp
 function _internal_convert(::Type{T}, fp::FixedProfile{S}) where {T,S}
     return FixedProfile(convert(T, fp.val))
 end
@@ -81,6 +82,7 @@ end
 function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
 end
+_internal_convert(::Type{T}, op::OperationalProfile{T}) where {T} = op
 function _internal_convert(::Type{T}, op::OperationalProfile{S}) where {T,S}
     return OperationalProfile(convert.(T, op.vals))
 end
@@ -121,6 +123,7 @@ function StrategicProfile(vals::Vector{T}) where {T<:TimeProfile}
     return StrategicProfile(_internal_convert.(ET, vals))
 end
 
+_internal_convert(::Type{T}, sp::StrategicProfile{T}) where {T} = sp
 function _internal_convert(::Type{T}, sp::StrategicProfile{S}) where {T,S}
     return StrategicProfile(_internal_convert.(T, sp.vals))
 end
@@ -168,6 +171,7 @@ function ScenarioProfile(vals::Vector{T}) where {T<:TimeProfile}
     return ScenarioProfile(_internal_convert.(ET, vals))
 end
 
+_internal_convert(::Type{T}, sp::ScenarioProfile{T}) where {T} = sp
 function _internal_convert(::Type{T}, sp::ScenarioProfile{S}) where {T,S}
     return ScenarioProfile(_internal_convert.(T, sp.vals))
 end
@@ -239,6 +243,7 @@ function RepresentativeProfile(vals::Vector{T}) where {T<:TimeProfile}
     return RepresentativeProfile(_internal_convert.(ET, vals))
 end
 
+_internal_convert(::Type{T}, rp::RepresentativeProfile{T}) where {T} = rp
 function _internal_convert(::Type{T}, rp::RepresentativeProfile{S}) where {T,S}
     return RepresentativeProfile(_internal_convert.(T, rp.vals))
 end
@@ -303,6 +308,7 @@ function StrategicStochasticProfile(vals::Vector{<:Vector{T}}) where {T<:TimePro
     return StrategicStochasticProfile([_internal_convert.(ET, v) for v in vals])
 end
 
+_internal_convert(::Type{T}, ssp::StrategicStochasticProfile{T}) where {T} = ssp
 function _internal_convert(::Type{T}, ssp::StrategicStochasticProfile{S}) where {T,S}
     return StrategicStochasticProfile([_internal_convert.(T, v) for v in ssp.vals])
 end

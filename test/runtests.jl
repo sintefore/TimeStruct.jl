@@ -1201,30 +1201,42 @@ end
 
 @testitem "Profile conversion" begin
     fp = FixedProfile(12)
+    @test TimeStruct._internal_convert(Int64, fp) == FixedProfile(12)
     @test TimeStruct._internal_convert(Float64, fp) == FixedProfile(12.0)
 
     op_int = OperationalProfile([1, 2, 3])
     op_float = TimeStruct._internal_convert(Float64, op_int)
     @test typeof(op_float) == OperationalProfile{Float64}
+    op_int = TimeStruct._internal_convert(Int64, op_int)
+    @test TimeStruct.profilevaluetype(op_int) == Int64
 
     sp = ScenarioProfile([op_int, op_float])
     @test TimeStruct.profilevaluetype(sp) == Float64
     sp_int = TimeStruct._internal_convert(Int64, sp)
+    @test TimeStruct.profilevaluetype(sp_int) == Int64
+    sp_int = TimeStruct._internal_convert(Int64, sp_int)
     @test TimeStruct.profilevaluetype(sp_int) == Int64
 
     rp = RepresentativeProfile([sp, sp_int])
     @test TimeStruct.profilevaluetype(rp) == Float64
     rp_int = TimeStruct._internal_convert(Int64, rp)
     @test TimeStruct.profilevaluetype(rp_int) == Int64
+    rp_int = TimeStruct._internal_convert(Int64, rp_int)
+    @test TimeStruct.profilevaluetype(rp_int) == Int64
+
 
     stp = StrategicProfile([sp, rp, 2 * rp])
     @test TimeStruct.profilevaluetype(stp) == Float64
     stp_int = TimeStruct._internal_convert(Int64, stp)
     @test TimeStruct.profilevaluetype(stp_int) == Int64
+    stp_int = TimeStruct._internal_convert(Int64, stp_int)
+    @test TimeStruct.profilevaluetype(stp_int) == Int64
 
     ssp = StrategicStochasticProfile([[sp, rp], [2 * sp, 3 * rp]])
     @test TimeStruct.profilevaluetype(ssp) == Float64
     ssp_int = TimeStruct._internal_convert(Int64, ssp)
+    @test TimeStruct.profilevaluetype(ssp_int) == Int64
+    ssp_int = TimeStruct._internal_convert(Int64, ssp_int)
     @test TimeStruct.profilevaluetype(ssp_int) == Int64
 
     v = [FixedProfile(1.0)]
