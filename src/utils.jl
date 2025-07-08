@@ -64,7 +64,6 @@ function Base.iterate(w::WithNext, state = nothing)
     return (n[1], next), (n[1], n[2])
 end
 
-
 struct Chunk{I}
     itr::I
     ns::Int
