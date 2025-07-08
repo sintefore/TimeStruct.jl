@@ -25,6 +25,9 @@ periods = SimpleTimes(5, 1);
 collect(withprev(periods))
 ```
 
+A variant of this is the [`withnext`](@ref) iterator that returns
+the current and next period (or `nothing` if none).
+
 ## [Iteration with chunks of time periods](@id man-iter-chunk)
 
 Sometimes it is convenient to iterate through the time periods
