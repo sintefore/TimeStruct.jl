@@ -1257,6 +1257,10 @@ end
     @test collect(withprev(uniform_week))[25] ==
           (nothing, TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1), 1.0))
 
+    @test last(collect(withnext(uniform_day)))[2] === nothing
+    @test collect(withnext(uniform_week))[24] ==
+          (TimeStruct.OperationalPeriod(1, TimeStruct.SimplePeriod(24, 1), 1.0), nothing)
+
     periods = SimpleTimes(10, 1)
 
     per_next = collect(collect(ts) for ts in chunk(periods, 5))

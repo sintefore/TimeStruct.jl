@@ -37,6 +37,34 @@ function Base.iterate(w::WithPrev{StratTreeNodes{S,T,OP}}, state) where {S,T,OP}
     return (n[1].parent, n[1]), (n[1], n[2])
 end
 
+struct WithNext{I}
+    itr::I
+end
+
+"""
+    withnext(iter)
+
+Iterator wrapper that yields `(t, next)` where `next`
+is the next time period or `nothing` for the last
+time period.
+"""
+withnext(iter) = WithNext(iter)
+Base.length(w::WithNext) = length(w.itr)
+Base.size(w::WithNext) = size(w.itr)
+
+function Base.iterate(w::WithNext, state = nothing)
+    n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state[2])
+    n === nothing && return n
+    nn = iterate(w.itr, n[2])
+    if isnothing(nn) || isfirst(nn[1])
+        next = nothing
+    else
+        next = nn[1]
+    end
+    return (n[1], next), (n[1], n[2])
+end
+
+
 struct Chunk{I}
     itr::I
     ns::Int
