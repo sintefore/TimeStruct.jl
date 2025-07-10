@@ -130,10 +130,10 @@ If this is the case, consider implementing a local tracking of end time
 using the duration of the time periods.
 """
 function end_oper_time(t::TimePeriod, ts::TimeStructure)
-    error("end_oper_time not implemented for time structure: $(ts)")
+    return error("end_oper_time not implemented for time structure: $(ts)")
 end
 
-function end_oper_time(t::TimePeriod, ts::Union{SimpleTimes, CalendarTimes})
+function end_oper_time(t::TimePeriod, ts::Union{SimpleTimes,CalendarTimes})
     return sum(duration(tt) for tt in ts if _oper(tt) <= _oper(t))
 end
 
