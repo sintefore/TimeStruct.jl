@@ -1278,8 +1278,6 @@ end
 
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
 
-    collect(withnext(strat_periods(two_level_tree)))
-
     periods = SimpleTimes(10, 1)
 
     per_next = collect(collect(ts) for ts in chunk(periods, 5))
