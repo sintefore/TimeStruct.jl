@@ -100,6 +100,15 @@ multiple_strat
 probability
 ```
 
+```@docs
+start_oper_time
+```
+
+```@docs
+end_oper_time
+```
+
+
 # [Time profiles](@id api-prof)
 
 ```@docs

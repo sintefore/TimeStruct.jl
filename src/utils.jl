@@ -126,7 +126,7 @@ duration.
 
 The current implementation is not computationally efficient and should be
 avoided if using this in loops for time structures with many time periods.
-If this is the case, consider implementing a local tracking of ent time
+If this is the case, consider implementing a local tracking of end time
 using the duration of the time periods.
 """
 function end_oper_time(t::TimePeriod, ts::TimeStructure)
