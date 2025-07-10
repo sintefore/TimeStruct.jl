@@ -47,6 +47,10 @@ end
 Iterator wrapper that yields `(t, next)` where `next`
 is the next time period or `nothing` for the last
 time period.
+
+Note that this iterator can not be used when iterating the
+nodes of a strategic tree structure, as the next
+node is not uniquely defined in that case.
 """
 withnext(iter) = WithNext(iter)
 Base.length(w::WithNext) = length(w.itr)
@@ -62,6 +66,12 @@ function Base.iterate(w::WithNext, state = nothing)
         next = nn[1]
     end
     return (n[1], next), (n[1], n[2])
+end
+
+function WithNext(_::StratTreeNodes{S,T,OP}) where {S,T,OP}
+    return error(
+        "withnext can not be used when iterating nodes of a strategic tree structure.",
+    )
 end
 
 struct Chunk{I}
