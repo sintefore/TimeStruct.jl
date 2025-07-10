@@ -124,10 +124,11 @@ The operational end time is equal to the sum of the durations of all previous
 operational time periods in its operational time structure, including its own
 duration.
 
-The current implementation is not computationally efficient and should be
-avoided if using this in loops for time structures with many time periods.
-If this is the case, consider implementing a local tracking of end time
-using the duration of the time periods.
+!!! warning
+    The current implementation is not computationally efficient and should be
+    avoided if using this in loops for time structures with many time periods.
+    If this is the case, consider implementing a local tracking of end time
+    using the duration of the time periods.
 """
 function end_oper_time(t::TimePeriod, ts::TimeStructure)
     return error("end_oper_time not implemented for time structure: $(ts)")
@@ -149,6 +150,12 @@ function end_oper_time(t::TimePeriod, ts::TwoLevel)
     return end_oper_time(t, ts.operational[_strat_per(t)])
 end
 
+function end_oper_time(t::TimePeriod, ts::TwoLevelTree)
+    node = filter(n -> _strat_per(n) == _strat_per(t) && _branch(n) == _branch(t), ts.nodes)
+    @assert length(node) == 1
+    return end_oper_time(t, node[1].operational)
+end
+
 """
     start_oper_time(t, ts)
 
@@ -157,10 +164,11 @@ Get the operational start time of the time period `t` in the time structure `ts`
 The operational start time is equal to the sum of the durations of all previous
 operational time periods in its operational time structure.
 
-The current implementation is not computationally efficient and should be
-avoided if using this in loops for time structures with many time periods.
-If this is the case, consider implementing a local tracking of start time
-using the duration of the time periods.
+!!! warning
+    The current implementation is not computationally efficient and should be
+    avoided if using this in loops for time structures with many time periods.
+    If this is the case, consider implementing a local tracking of start time
+    using the duration of the time periods.
 """
 function start_oper_time(t::TimePeriod, ts::TimeStructure)
     return end_oper_time(t, ts) - duration(t)

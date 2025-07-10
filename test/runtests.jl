@@ -1400,6 +1400,11 @@ end
     for t in year
         @test end_oper_time(t, year) - start_oper_time(t, year) == duration(t)
     end
+
+    reg_tree = regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    for t in reg_tree
+        @test end_oper_time(t, reg_tree) - start_oper_time(t, reg_tree) == duration(t)
+    end
 end
 
 @testitem "Dataframes" begin
