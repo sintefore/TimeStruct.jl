@@ -1252,10 +1252,31 @@ end
 @testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
+    uw_col = collect(uniform_week)
 
-    @test first(withprev(uniform_day))[1] === nothing
-    @test collect(withprev(uniform_week))[25] ==
-          (nothing, TimeStruct.OperationalPeriod(2, TimeStruct.SimplePeriod(1, 1), 1.0))
+    for (k, t) in enumerate(withprev(uniform_week))
+        @test length(t) == 2
+        @test t[1] == (TimeStruct.isfirst(t[2]) ? nothing : uw_col[k-1])
+        @test t[2] == uw_col[k]
+    end
+
+    for (k, t) in enumerate(withnext(uniform_week))
+        @test length(t) == 2
+        @test t[1] == uw_col[k]
+        if k < length(uw_col)
+            @test t[2] == (TimeStruct.isfirst(uw_col[k+1]) ? nothing : uw_col[k+1])
+        else
+            @test t[2] === nothing
+        end
+    end
+
+    two_level_tree = regular_tree(5, [3, 2], uniform_day)
+
+    for (prev, n) in withprev(strat_periods(two_level_tree))
+        @test n.parent == prev
+    end
+
+    @test_throws ErrorException withnext(strat_periods(two_level_tree))
 
     periods = SimpleTimes(10, 1)
 

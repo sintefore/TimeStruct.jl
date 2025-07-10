@@ -71,6 +71,10 @@ withprev
 ```
 
 ```@docs
+withnext
+```
+
+```@docs
 chunk
 ```
 
