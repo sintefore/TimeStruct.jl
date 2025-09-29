@@ -76,16 +76,15 @@ function discount(disc::Discounter, t::TimePeriod; type = "start", timeunit_to_y
     return discount(t, disc.ts, disc.discount_rate; type, timeunit_to_year)
 end
 
-function discount_avg(discount_rate, start_year, duration_years)
-    if discount_rate > 0
-        δ = 1 / (1 + discount_rate)
-        m =
-            (δ^start_year - δ^(start_year + duration_years)) / log(1 + discount_rate) /
-            duration_years
-        return m
-    else
-        return 1.0
+function discount_avg(discount_rate, start_year, duration_years; resolution::Int = 0)
+    discount_rate == 0 && return 1.0
+    δ = 1 / (1 + discount_rate)
+    if resolution == 0
+        return (δ^start_year - δ^(start_year + duration_years)) / log(1 + discount_rate) /
+               duration_years
     end
+    return sum(δ^(start_year + i / resolution) for i in 0:(resolution*duration_years-1)) /
+           (resolution * duration_years)
 end
 
 function discount_start(discount_rate, start_year)
@@ -107,6 +106,8 @@ function discount(
         return discount_start(discount_rate, start_year)
     elseif type == "avg"
         return discount_avg(discount_rate, start_year, duration_years)
+    elseif type == "avg_year"
+        return discount_avg(discount_rate, start_year, duration_years; resolution = 1)
     end
 end
 

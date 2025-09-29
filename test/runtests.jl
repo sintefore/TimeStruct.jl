@@ -1335,6 +1335,11 @@ end
         @test discount(disc, t) == δ^(i - 1)
     end
 
+    for sp in strat_periods(uniform_years)
+        @test discount(sp, uniform_years, 0.06; type = "avg") <
+              discount(sp, uniform_years, 0.06; type = "avg_year")
+    end
+
     @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1)
