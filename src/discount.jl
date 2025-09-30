@@ -123,7 +123,14 @@ end
 
 Returns an overall weight to be used for a time period `t`
 in the objective function considering both discounting,
-probability and possible multiplicity.
+probability and possible multiplicity. There are two types of discounting
+available, either discounting to the start of the strategic period
+containing the time period (`type="start"`) or calculating an approximate
+value for the average discount factor over the whole strategic period.
+The average can be calculated either as a continuous average (`type="avg"`) or
+as a discrete average that discounts to the start of each year (`type="avg_year"`).
+The `timeunit_to_year` parameter is used to convert the time units of
+strategic periods in the time structure to years (default value = 1.0).
 """
 function objective_weight(
     t::TimePeriod,
