@@ -56,9 +56,13 @@ end
 
 Calculates the discount factor to be used for a time period `t`
 using a fixed 'discount_rate`. There are two types of discounting
-available, either discounting to the start of the time period
-or calculating an approximate value for the average discount factor
-over the whole time period (`type="avg"`).
+available, either discounting to the start of the strategic period
+containing the time period (`type="start"`) or calculating an approximate
+value for the average discount factor over the whole strategic period.
+The average can be calculated either as a continuous average (`type="avg"`) or
+as a discrete average that discounts to the start of each year (`type="avg_year"`).
+The `timeunit_to_year` parameter is used to convert the time units of
+strategic periods in the time structure to years (default value = 1.0).
 """
 function discount(
     t::TimePeriod,
@@ -76,15 +80,15 @@ function discount(disc::Discounter, t::TimePeriod; type = "start", timeunit_to_y
     return discount(t, disc.ts, disc.discount_rate; type, timeunit_to_year)
 end
 
-function discount_avg(discount_rate, start_year, duration_years; resolution::Int = 0)
-    discount_rate == 0 && return 1.0
+function discount_avg(discount_rate, start_year, duration_years)
     δ = 1 / (1 + discount_rate)
-    if resolution == 0
-        return (δ^start_year - δ^(start_year + duration_years)) / log(1 + discount_rate) /
-               duration_years
-    end
-    return sum(δ^(start_year + i / resolution) for i in 0:(resolution*duration_years-1)) /
-           (resolution * duration_years)
+    return (δ^start_year - δ^(start_year + duration_years)) / log(1 + discount_rate) /
+           duration_years
+end
+
+function discount_avg_year(discount_rate, start_year, duration_years)
+    δ = 1 / (1 + discount_rate)
+    return sum(δ^(start_year + i) for i in 0:(duration_years-1)) / duration_years
 end
 
 function discount_start(discount_rate, start_year)
@@ -99,16 +103,19 @@ function discount(
     type = "start",
     timeunit_to_year = 1.0,
 )
-    start_year = _to_year(_start_strat(sp, ts), timeunit_to_year)
-    duration_years = _to_year(duration_strat(sp), timeunit_to_year)
-
-    if type == "start"
-        return discount_start(discount_rate, start_year)
-    elseif type == "avg"
-        return discount_avg(discount_rate, start_year, duration_years)
-    elseif type == "avg_year"
-        return discount_avg(discount_rate, start_year, duration_years; resolution = 1)
+    discount_factor = 1.0
+    if discount_rate > 0
+        start_year = _to_year(_start_strat(sp, ts), timeunit_to_year)
+        duration_years = _to_year(duration_strat(sp), timeunit_to_year)
+        if type == "start"
+            discount_factor = discount_start(discount_rate, start_year)
+        elseif type == "avg"
+            discount_factor = discount_avg(discount_rate, start_year, duration_years)
+        elseif type == "avg_year"
+            discount_factor = discount_avg_year(discount_rate, start_year, duration_years)
+        end
     end
+    return discount_factor
 end
 
 """
