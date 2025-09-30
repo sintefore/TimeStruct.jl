@@ -27,6 +27,10 @@ struct FixedProfile{T} <: TimeProfile{T}
     end
 end
 
+function Base.show(io::IO, fp::FixedProfile)
+    return print(io, fp.val)
+end
+
 function Base.getindex(
     fp::FixedProfile,
     _::T,
@@ -77,6 +81,22 @@ function Base.getindex(op::OperationalProfile, i::TimePeriod)
 end
 function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
     return error("Type $(typeof(i)) can not be used as index for an operational profile")
+end
+
+function _print_values(vals; delim = ',', max_elems = 10)
+    n = length(vals)
+    sep = delim * " "
+    if n <= max_elems
+        return join(vals, sep)
+    end
+    nshow = round(Int, max_elems / 2)
+    seq1 = vals[1:nshow]
+    seq2 = vals[(end-nshow+1):end]
+    return join(seq1, sep) * sep * "... " * sep * join(seq2, sep)
+end
+
+function Base.show(io::IO, op::OperationalProfile)
+    return print(io, "OperationalProfile[", _print_values(op.vals), "]")
 end
 
 function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
@@ -145,6 +165,10 @@ function Base.getindex(
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
+function Base.show(io::IO, sp::StrategicProfile)
+    return print(io, "StrategicProfile[", _print_values(sp.vals), "]")
+end
+
 """
     ScenarioProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     ScenarioProfile(vals::Vector)
@@ -206,6 +230,10 @@ function Base.getindex(
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
+function Base.show(io::IO, sp::ScenarioProfile)
+    return print(io, "ScenarioProfile[", _print_values(sp.vals), "]")
+end
+
 """
     RepresentativeProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     RepresentativeProfile(vals::Vector)
@@ -263,6 +291,10 @@ function Base.getindex(
     period::T,
 ) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
+end
+
+function Base.show(io::IO, rp::RepresentativeProfile)
+    return print(io, "RepresentativeProfile[", _print_values(rp.vals), "]")
 end
 
 """
