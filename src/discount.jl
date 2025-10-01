@@ -27,7 +27,11 @@ function _start_strat(sp::StratNode, ts::TwoLevelTree{S}) where {S}
     return start
 end
 
-function _sp_period(t::TimePeriod, ts::TimeStructure)
+DiscPeriods = Union{TimePeriod,AbstractOperationalScenario,AbstractRepresentativePeriod}
+
+_start_strat(t::DiscPeriods, ts::TimeStructure) = _start_strat(_sp_period(t, ts), ts)
+
+function _sp_period(t::DiscPeriods, ts::TimeStructure)
     for sp in strat_periods(ts)
         if _strat_per(sp) == _strat_per(t)
             return sp
@@ -44,8 +48,6 @@ function _sp_period(t::TreePeriod, tree::TwoLevelTree)
     end
     @error("Tree period not part of any strategic node")
 end
-
-_start_strat(t::TimePeriod, ts::TimeStructure) = _start_strat(_sp_period(t, ts), ts)
 
 function _to_year(start, timeunit_to_year)
     return start * timeunit_to_year
@@ -65,7 +67,7 @@ The `timeunit_to_year` parameter is used to convert the time units of
 strategic periods in the time structure to years (default value = 1.0).
 """
 function discount(
-    t::TimePeriod,
+    t::DiscPeriods,
     ts::TimeStructure,
     discount_rate;
     type = "start",
@@ -133,7 +135,7 @@ The `timeunit_to_year` parameter is used to convert the time units of
 strategic periods in the time structure to years (default value = 1.0).
 """
 function objective_weight(
-    t::TimePeriod,
+    t::DiscPeriods,
     ts::TimeStructure,
     discount_rate;
     type = "start",
@@ -144,7 +146,7 @@ function objective_weight(
            multiple(t)
 end
 
-function objective_weight(t::TimePeriod, disc::Discounter; type = "start")
+function objective_weight(t::DiscPeriods, disc::Discounter; type = "start")
     return objective_weight(
         t,
         disc.ts,
