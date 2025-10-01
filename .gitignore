@@ -3,3 +3,4 @@
 /test/Manifest.toml
 docs/build
 docs/Manifest.toml
+docs/src/tutorials/*.md

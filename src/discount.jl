@@ -1,16 +1,29 @@
 DiscPeriods = Union{TimePeriod,AbstractOperationalScenario,AbstractRepresentativePeriod}
 
 """
-    Discounter(discount_rate, timeunit_to_year, ts)
+    Discounter(discount_rate, ts::TimeStructure)
+    Discounter(discount_rate, timeunit_to_year, ts::TimeStructure)
 
-Structure to hold discount information to be used for a time structure.
+Structure to hold discount information to be used for a time structure `ts`. The
+`discount_rate` is an absolute discount rate while the parameter `timeunit_to_year` is used
+convert the time units of strategic periods in the time structure to years (default value = 1.0).
+
+As an example, consider the following time structure:
+
+```julia
+# Modelling of a day with hourly resolution for 50 years with a resolution of 5 years
+periods = TwoLevel(10, 5 * 8760, SimpleTimes(24, 1))
+
+# The parameter `timeunit_to_year` must in this case be 1 year / 8760 h
+disc = Discounter(0.04, 1 / 8760, periods)
+```
 """
 struct Discounter
     discount_rate::Any
     timeunit_to_year::Any
     ts::TimeStructure
 end
-Discounter(rate, ts) = Discounter(rate, 1.0, ts)
+Discounter(discount_rate, ts::TimeStructure) = Discounter(discount_rate, 1.0, ts)
 
 _start_strat(sp::AbstractStrategicPeriod, ts::TimeStructure{T}) where {T} = zero(T)
 function _start_strat(sp::AbstractStrategicPeriod, ts::TwoLevel{S}) where {S}
@@ -50,17 +63,30 @@ function _to_year(start, timeunit_to_year)
 end
 
 """
-    discount(t, time_struct, discount_rate; type, timeunit_to_year)
+    discount(t::Union{TimePeriod,TimeStructurePeriod}, time_struct::TimeStructure, discount_rate; type = "start", timeunit_to_year=1.0)
+    discount(disc::Discounter, t::Union{TimePeriod,TimeStructurePeriod}; type = "start")
 
-Calculates the discount factor to be used for a time period `t`
-using a fixed 'discount_rate`. There are two types of discounting
-available, either discounting to the start of the strategic period
-containing the time period (`type="start"`) or calculating an approximate
-value for the average discount factor over the whole strategic period.
-The average can be calculated either as a continuous average (`type="avg"`) or
-as a discrete average that discounts to the start of each year (`type="avg_year"`).
-The `timeunit_to_year` parameter is used to convert the time units of
-strategic periods in the time structure to years (default value = 1.0).
+Calculates the discount factor to be used for a time period `t` using a fixed `discount_rate`.
+The function can be either called using a [`Discounter`](@ref) type or by specifying the
+parameters (time structure `ts`, `discount_rate` and potentially `timeunit_to_year`) directly.
+
+There are two types of discounting available:
+
+1. Discounting to the start of the strategic period containing the time period:\n
+   This can be achieved through specifying `type="start"`. It is useful for investment costs
+2. Discounting to the average of the over the whole strategic period:\n
+   The average can be calculated either as a continuous average (`type="avg"`) or as a
+   discrete average that discounts to the start of each year (`type="avg_year"`). Average
+   discounting is useful for operational costs.
+
+The `timeunit_to_year` parameter is used to convert the time units of strategic periods in
+the time structure to years (default value = 1.0).
+
+!!! tip "Comparison with `objective_weight`"
+    Both [`objective_weight`](@ref) and `discount` can serve similar purposes. Compared to
+    [`objective_weight`](@ref), `discount` only calculates the discount factor for a given
+    time period. If `t` is an [`AbstractStrategicPeriod`](@ref), both are
+    equivalent.
 """
 function discount(
     t::Union{TimePeriod,TimeStructurePeriod},
@@ -111,18 +137,32 @@ function discount_start(discount_rate, start_year)
 end
 
 """
-    objective_weight(t, time_struct, discount_rate; type, timeunit_to_year)
+    objective_weight(t::Union{TimePeriod,TimeStructurePeriod}, ts::TimeStructure, discount_rate; type = "start", timeunit_to_year = 1.0)
+    objective_weight(t::Union{TimePeriod,TimeStructurePeriod}, disc::Discounter; type = "start")
 
-Returns an overall weight to be used for a time period `t`
-in the objective function considering both discounting,
-probability and possible multiplicity. There are two types of discounting
-available, either discounting to the start of the strategic period
-containing the time period (`type="start"`) or calculating an approximate
-value for the average discount factor over the whole strategic period.
-The average can be calculated either as a continuous average (`type="avg"`) or
-as a discrete average that discounts to the start of each year (`type="avg_year"`).
-The `timeunit_to_year` parameter is used to convert the time units of
-strategic periods in the time structure to years (default value = 1.0).
+
+Calculates the overall objective weight for a time period `t` using a fixed `discount_rate`.
+The weight consideres both discounting, the probability and potential multiplicity of `t`
+The function can be either called using a [`Discounter`](@ref) type or by specifying the
+parameters (time structure `ts`, `discount_rate` and potentially `timeunit_to_year`) directly.
+
+There are two types of discounting available:
+
+1. Discounting to the start of the strategic period containing the time period:\n
+   This can be achieved through specifying `type="start"`. It is useful for investment costs
+2. Discounting to the average of the over the whole strategic period:\n
+   The average can be calculated either as a continuous average (`type="avg"`) or as a
+   discrete average that discounts to the start of each year (`type="avg_year"`). Average
+   discounting is useful for operational costs.
+
+The `timeunit_to_year` parameter is used to convert the time units of strategic periods in
+the time structure to years (default value = 1.0).
+
+!!! tip "Comparison with `discount`"
+    Both [`discount`](@ref) and `objective_weight` can serve similar purposes. Compared to
+    [`discount`](@ref), `objective_weight` includes as well the probablity and multiplicity
+    of a given time period. If `t` is an [`AbstractStrategicPeriod`](@ref), both are
+    equivalent.
 """
 function objective_weight(
     t::Union{TimePeriod,TimeStructurePeriod},
