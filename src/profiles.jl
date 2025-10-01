@@ -459,7 +459,7 @@ function _print_values_indent(vals, indent_level; max_lines = 5)
     nshow = round(Int, max_lines / 2 - m + 1)
     seq1 = vals[1:max(nshow, 2)]
     seq2 = vals[(end-max(nshow, 1)+1):end]
-    indent = " " ^ (indent_level * 2)
+    indent = " "^(indent_level * 2)
     return join([_print_profile(v, indent_level) for v in seq1], ",\n") *
            ",\n" *
            indent *
@@ -467,7 +467,7 @@ function _print_values_indent(vals, indent_level; max_lines = 5)
            join([_print_profile(v, indent_level) for v in seq2], ",\n")
 end
 
-_indent(n) = " " ^ (n * 2)
+_indent(n) = " "^(n * 2)
 
 function _profile_name(p::TimeProfile{T}, indent_level) where {T}
     profile_name = "$(typeof(p).name.name)"
