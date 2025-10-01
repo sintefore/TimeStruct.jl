@@ -1335,15 +1335,30 @@ end
         @test discount(disc, t) == δ^(i - 1)
     end
 
+    @test sum(
+        discount(sp, uniform_years, 0.06; type = "avg_year") for
+        sp in strat_periods(uniform_years)
+    ) ≈ 7.8017 atol = 1e-3
+
     @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1)
-    periods = TwoLevel(10, 8760, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, uniform_day)
 
     @test sum(
-        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") for
         sp in strat_periods(periods)
-    ) ≈ 8.435 atol = 1e-3
+    ) ≈ 4.825 atol = 1e-3
+
+    @test sum(
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
+        for sp in strat_periods(periods)
+    ) ≈ 4.468 atol = 1e-3
+
+    @test sum(
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg") for
+        sp in strat_periods(periods)
+    ) ≈ 4.382 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
