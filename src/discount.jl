@@ -38,24 +38,19 @@ function _start_strat(sp::StratNode, ts::TwoLevelTree{S}) where {S}
     end
     return start
 end
-_start_strat(t::DiscPeriods, ts::TimeStructure) = _start_strat(_sp_period(t, ts), ts)
 
 _sp_period(sp::AbstractStrategicPeriod, _::TimeStructure) = sp
 function _sp_period(t::DiscPeriods, ts::TimeStructure)
-    for sp in strat_periods(ts)
-        if _strat_per(sp) == _strat_per(t)
-            return sp
-        end
-    end
-    @error("Time period not part of any strategic period")
+    sps = collect(strat_periods(ts))
+    per = findfirst(sp -> _strat_per(sp) == _strat_per(t), sps)
+    isnothing(per) && throw(ErrorException("Time period not part of any strategic period"))
+    return sps[per]
 end
 function _sp_period(t::TreePeriod, tree::TwoLevelTree)
-    for sp in strat_periods(tree)
-        if _strat_per(sp) == _strat_per(t) && _branch(sp) == _branch(t)
-            return sp
-        end
-    end
-    @error("Tree period not part of any strategic node")
+    sps = collect(strat_periods(tree))
+    per = findfirst(sp -> _strat_per(sp) == _strat_per(t) && _branch(sp) == _branch(t), sps)
+    isnothing(per) && throw(ErrorException("Tree period not part of any strategic node"))
+    return sps[per]
 end
 
 function _to_year(start, timeunit_to_year)
@@ -117,7 +112,7 @@ function discount(
 )
     ts = disc.ts
     timeunit_to_year = disc.timeunit_to_year
-    return discount(_sp_period(t, ts), ts, disc.discount_rate; type, timeunit_to_year)
+    return discount(t, ts, disc.discount_rate; type, timeunit_to_year)
 end
 
 function discount_avg(discount_rate, start_year, duration_years)

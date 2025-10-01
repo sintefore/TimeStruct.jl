@@ -1406,6 +1406,8 @@ end
                   discount(t, periods, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.OperationalPeriod(5, TimeStruct.SimplePeriod(1, 1), 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, periods)
 
     tree = regular_tree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365)
     for sp in strat_periods(tree)
@@ -1419,6 +1421,8 @@ end
                   discount(t, tree, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.TreePeriod(2, 3, TimeStruct.SimplePeriod(1, 1), 1.0, 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, tree)
 end
 
 @testitem "Start and end times" begin
