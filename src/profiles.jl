@@ -28,7 +28,7 @@ struct FixedProfile{T} <: TimeProfile{T}
 end
 
 function Base.show(io::IO, fp::FixedProfile)
-    return print(io, fp.val)
+    return print(io, _print_profile(fp))
 end
 
 function Base.getindex(
@@ -83,20 +83,8 @@ function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
     return error("Type $(typeof(i)) can not be used as index for an operational profile")
 end
 
-function _print_values(vals; delim = ',', max_elems = 10)
-    n = length(vals)
-    sep = delim * " "
-    if n <= max_elems
-        return join(vals, sep)
-    end
-    nshow = round(Int, max_elems / 2)
-    seq1 = vals[1:nshow]
-    seq2 = vals[(end-nshow+1):end]
-    return join(seq1, sep) * sep * "... " * sep * join(seq2, sep)
-end
-
 function Base.show(io::IO, op::OperationalProfile)
-    return print(io, "OperationalProfile[", _print_values(op.vals), "]")
+    return print(io, _print_profile(op))
 end
 
 function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
@@ -166,7 +154,7 @@ function Base.getindex(
 end
 
 function Base.show(io::IO, sp::StrategicProfile)
-    return print(io, "StrategicProfile[", _print_values(sp.vals), "]")
+    return print(io, _print_profile(sp))
 end
 
 """
@@ -231,7 +219,7 @@ function Base.getindex(
 end
 
 function Base.show(io::IO, sp::ScenarioProfile)
-    return print(io, "ScenarioProfile[", _print_values(sp.vals), "]")
+    return print(io, _print_profile(sp))
 end
 
 """
@@ -439,4 +427,57 @@ function /(a::ScenarioProfile{T}, b::Number) where {T}
 end
 function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
+end
+
+function _print_values(vals; delim = ' ', max_elems = 6)
+    n = length(vals)
+    sep = delim * " "
+    if n <= max_elems
+        return join(vals, sep)
+    end
+    nshow = round(Int, max_elems / 2)
+    seq1 = vals[1:nshow]
+    seq2 = vals[(end-nshow+1):end]
+    return join(seq1, sep) * sep * "..." * sep * join(seq2, sep)
+end
+
+_layers(vals::Vector) = maximum(_layers(v) for v in vals)
+_layers(p::TimeProfile) = _layers(p.vals) + 1
+_layers(p::FixedProfile) = 1
+_layers(p::OperationalProfile) = 1
+
+function _print_values_indent(vals, indent_level; max_lines = 5)
+    n = length(vals)
+    m = _layers(vals)
+    if n <= max_lines - 2m + 2
+        return join([_print_profile(v, indent_level) for v in vals], ",\n")
+    end
+    nshow = round(Int, max_lines / 2 - m + 1)
+    seq1 = vals[1:max(nshow, 2)]
+    seq2 = vals[(end-max(nshow, 1)+1):end]
+    indent = " " ^ (indent_level * 2)
+    return join([_print_profile(v, indent_level) for v in seq1], ",\n") *
+           ",\n" *
+           indent *
+           "⋮\n" *
+           join([_print_profile(v, indent_level) for v in seq2], ",\n")
+end
+
+_indent(n) = " " ^ (n * 2)
+
+function _print_profile(p::TimeProfile, indent_level = 0)
+    return _indent(indent_level) *
+           "$(typeof(p))[\n" *
+           _print_values_indent(p.vals, indent_level + 1) *
+           "\n" *
+           _indent(indent_level) *
+           "]"
+end
+
+function _print_profile(fp::FixedProfile, indent_level = 0)
+    return _indent(indent_level) * "$(typeof(fp))[" * string(fp.val) * "]"
+end
+
+function _print_profile(op::OperationalProfile, indent_level = 0)
+    return _indent(indent_level) * "$(typeof(op))[" * _print_values(op.vals) * "]"
 end
