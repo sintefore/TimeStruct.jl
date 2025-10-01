@@ -429,16 +429,20 @@ function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
 
-function _print_values(vals; delim = ' ', max_elems = 6)
+_display_val(val) = val
+_display_val(val::Float64) = round(val; digits = 5)
+_display_val(val::Float32) = round(val; digits = 5)
+
+function _print_values(vals; delim = ' ', max_elems = 10)
     n = length(vals)
     sep = delim * " "
     if n <= max_elems
         return join(vals, sep)
     end
     nshow = round(Int, max_elems / 2)
-    seq1 = vals[1:nshow]
-    seq2 = vals[(end-nshow+1):end]
-    return join(seq1, sep) * sep * "..." * sep * join(seq2, sep)
+    seq1 = _display_val.(vals[1:nshow])
+    seq2 = _display_val.(vals[(end-nshow+1):end])
+    return join(seq1, sep) * sep * "…" * sep * join(seq2, sep)
 end
 
 _layers(vals::Vector) = maximum(_layers(v) for v in vals)
@@ -465,9 +469,18 @@ end
 
 _indent(n) = " " ^ (n * 2)
 
+function _profile_name(p::TimeProfile{T}, indent_level) where {T}
+    profile_name = "$(typeof(p).name.name)"
+    if indent_level == 0
+        profile_name = profile_name * " with eltype $(T): "
+    end
+    return profile_name
+end
+
 function _print_profile(p::TimeProfile, indent_level = 0)
     return _indent(indent_level) *
-           "$(typeof(p))[\n" *
+           _profile_name(p, indent_level) *
+           "[\n" *
            _print_values_indent(p.vals, indent_level + 1) *
            "\n" *
            _indent(indent_level) *
@@ -475,9 +488,17 @@ function _print_profile(p::TimeProfile, indent_level = 0)
 end
 
 function _print_profile(fp::FixedProfile, indent_level = 0)
-    return _indent(indent_level) * "$(typeof(fp))[" * string(fp.val) * "]"
+    return _indent(indent_level) *
+           _profile_name(fp, indent_level) *
+           "[" *
+           string(fp.val) *
+           "]"
 end
 
 function _print_profile(op::OperationalProfile, indent_level = 0)
-    return _indent(indent_level) * "$(typeof(op))[" * _print_values(op.vals) * "]"
+    return _indent(indent_level) *
+           _profile_name(op, indent_level) *
+           "[" *
+           _print_values(op.vals) *
+           "]"
 end
