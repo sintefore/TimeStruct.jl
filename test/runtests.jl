@@ -1351,6 +1351,11 @@ end
     ) ≈ 4.825 atol = 1e-3
 
     @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(uniform_day) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+
+    @test sum(
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
         for sp in strat_periods(periods)
     ) ≈ 4.468 atol = 1e-3
@@ -1359,6 +1364,23 @@ end
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg") for
         sp in strat_periods(periods)
     ) ≈ 4.382 atol = 1e-3
+
+    oscs = OperationalScenarios(2, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, oscs)
+
+    @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(oscs) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+    oscs
+
+    rps = RepresentativePeriods(2, 1, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, rps)
+
+    @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(rps) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
@@ -1384,6 +1406,8 @@ end
                   discount(t, periods, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.OperationalPeriod(5, TimeStruct.SimplePeriod(1, 1), 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, periods)
 
     tree = regular_tree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365)
     for sp in strat_periods(tree)
@@ -1397,6 +1421,8 @@ end
                   discount(t, tree, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.TreePeriod(2, 3, TimeStruct.SimplePeriod(1, 1), 1.0, 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, tree)
 end
 
 @testitem "Start and end times" begin

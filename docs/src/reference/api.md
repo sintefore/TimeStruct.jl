@@ -1,154 +1,89 @@
-# [Available time structures](@id api-ts)
+# [Interface for using `TimeStruct](@id api)
+
+## [Available time structures](@id api-ts)
+
+### [Abstract supertypes](@id api-ts-abstract)
 
 ```@docs
 TimeStructure
 ```
 
+### [Conecrete types](@id api-ts-con)
+
 ```@docs
 SimpleTimes
-```
-
-```@docs
 CalendarTimes
-```
-
-```@docs
-RepresentativePeriods
-```
-
-```@docs
 OperationalScenarios
-```
-
-```@docs
+RepresentativePeriods
 TwoLevel
-```
-
-```@docs
 TwoLevelTree
 regular_tree
 ```
 
-# [Properties of time structures](@id api-prop_ts)
+## [Properties of time structures](@id api-prop_ts)
 
 ```@docs
 mult_scen
-```
-
-```@docs
 mult_repr
-```
-
-```@docs
 mult_strat
-```
-
-```@docs
 probability_scen
 ```
 
-# [Iterating time structures](@id api-iter)
+## [Iterating time structures](@id api-iter)
+
+### [For individual time structures](@id api-iter-ts)
 
 ```@docs
 repr_periods
-```
-
-```@docs
 opscenarios
-```
-
-```@docs
 strat_periods
 strategic_periods
-```
-
-```@docs
 strategic_scenarios
 ```
 
+### [Specialized iterators](@id api-iter-spec)
+
 ```@docs
 withprev
-```
-
-```@docs
 withnext
-```
-
-```@docs
 chunk
-```
-
-```@docs
 chunk_duration
 ```
 
-# [Properties of time periods](@id api-prop_per)
+## [Properties of time periods](@id api-prop_per)
 
 ```@docs
 duration
-```
-
-```@docs
 isfirst
-```
-
-```@docs
 multiple
-```
-
-```@docs
 multiple_strat
-```
-
-```@docs
 probability
-```
-
-```@docs
 start_oper_time
-```
-
-```@docs
 end_oper_time
 ```
 
-
-# [Time profiles](@id api-prof)
+## [Time profiles](@id api-prof)
 
 ```@docs
 FixedProfile
-```
-
-```@docs
 OperationalProfile
-```
-
-```@docs
 RepresentativeProfile
-```
-
-```@docs
 ScenarioProfile
-```
-
-```@docs
 StrategicProfile
-```
-
-```@docs
 StrategicStochasticProfile
 ```
 
-# [Discounting](@id api-disc)
+## [Discounting](@id api-disc)
 
-```@docs
-discount
-```
-
-```@docs
-objective_weight
-```
+### [Type](@id api-disc-type)
 
 ```@docs
 Discounter
+```
+
+### [Functions](@id api-disc-type)
+
+```@docs
+discount
+objective_weight
 ```
