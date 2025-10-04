@@ -27,10 +27,6 @@ struct FixedProfile{T} <: TimeProfile{T}
     end
 end
 
-function Base.show(io::IO, fp::FixedProfile)
-    return print(io, _print_profile(fp))
-end
-
 function Base.getindex(
     fp::FixedProfile,
     _::T,
@@ -81,10 +77,6 @@ function Base.getindex(op::OperationalProfile, i::TimePeriod)
 end
 function Base.getindex(op::OperationalProfile, i::TimeStructurePeriod)
     return error("Type $(typeof(i)) can not be used as index for an operational profile")
-end
-
-function Base.show(io::IO, op::OperationalProfile)
-    return print(io, _print_profile(op))
 end
 
 function Base.convert(::Type{OperationalProfile{T}}, op::OperationalProfile{S}) where {T,S}
@@ -153,10 +145,6 @@ function Base.getindex(
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
-function Base.show(io::IO, sp::StrategicProfile)
-    return print(io, _print_profile(sp))
-end
-
 """
     ScenarioProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     ScenarioProfile(vals::Vector)
@@ -218,10 +206,6 @@ function Base.getindex(
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
-function Base.show(io::IO, sp::ScenarioProfile)
-    return print(io, _print_profile(sp))
-end
-
 """
     RepresentativeProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     RepresentativeProfile(vals::Vector)
@@ -279,10 +263,6 @@ function Base.getindex(
     period::T,
 ) where {T<:Union{TimePeriod,TimeStructurePeriod}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
-end
-
-function Base.show(io::IO, rp::RepresentativeProfile)
-    return print(io, "RepresentativeProfile[", _print_values(rp.vals), "]")
 end
 
 """
@@ -429,11 +409,13 @@ function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
 
+# Profile printing
+
 _display_val(val) = val
 _display_val(val::Float64) = round(val; digits = 5)
 _display_val(val::Float32) = round(val; digits = 5)
 
-function _print_values(vals; delim = ' ', max_elems = 10)
+function _print_values(vals; delim = ',', max_elems = 10)
     n = length(vals)
     sep = delim * " "
     if n <= max_elems
@@ -442,7 +424,7 @@ function _print_values(vals; delim = ' ', max_elems = 10)
     nshow = round(Int, max_elems / 2)
     seq1 = _display_val.(vals[1:nshow])
     seq2 = _display_val.(vals[(end-nshow+1):end])
-    return join(seq1, sep) * sep * "…" * sep * join(seq2, sep)
+    return join(seq1, sep) * "  …  " * join(seq2, sep)
 end
 
 _layers(vals::Vector) = maximum(_layers(v) for v in vals)
@@ -454,23 +436,25 @@ function _print_values_indent(vals, indent_level; max_lines = 5)
     n = length(vals)
     m = _layers(vals)
     if n <= max_lines - 2m + 2
-        return join([_print_profile(v, indent_level) for v in vals], ",\n")
+        return join([_print_profile(v, indent_level) for v in vals], "\n")
     end
     nshow = round(Int, max_lines / 2 - m + 1)
     seq1 = vals[1:max(nshow, 2)]
     seq2 = vals[(end-max(nshow, 1)+1):end]
     indent = " "^(indent_level * 2)
-    return join([_print_profile(v, indent_level) for v in seq1], ",\n") *
-           ",\n" *
+    return join([_print_profile(v, indent_level) for v in seq1], "\n") *
+           "\n" *
            indent *
            "⋮\n" *
-           join([_print_profile(v, indent_level) for v in seq2], ",\n")
+           join([_print_profile(v, indent_level) for v in seq2], "\n")
 end
 
 _indent(n) = " "^(n * 2)
+_length(p::TimeProfile) = "$(length(p.vals))-element "
+_length(p::FixedProfile) = ""
 
 function _profile_name(p::TimeProfile{T}, indent_level) where {T}
-    profile_name = "$(typeof(p).name.name)"
+    profile_name = _length(p) * "$(typeof(p).name.name)"
     if indent_level == 0
         profile_name = profile_name * " with eltype $(T): "
     end
@@ -480,6 +464,8 @@ end
 function _print_profile(p::TimeProfile, indent_level = 0)
     return _indent(indent_level) *
            _profile_name(p, indent_level) *
+           "\n" *
+           _indent(indent_level) *
            "[\n" *
            _print_values_indent(p.vals, indent_level + 1) *
            "\n" *
@@ -501,4 +487,16 @@ function _print_profile(op::OperationalProfile, indent_level = 0)
            "[" *
            _print_values(op.vals) *
            "]"
+end
+
+function Base.summary(io::IO, p::TimeProfile{T}) where {T}
+    return print(io, _length(p) * "$(typeof(p).name.name) with eltype $T")
+end
+
+function Base.show(io::IO, p::TimeProfile)
+    if get(io, :compact, false)
+        summary(io, p)
+    else
+        print(io, _print_profile(p))
+    end
 end
