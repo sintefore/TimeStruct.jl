@@ -408,3 +408,95 @@ end
 function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
+
+# Profile printing
+
+_display_val(val) = val
+_display_val(val::Float64) = round(val; digits = 5)
+_display_val(val::Float32) = round(val; digits = 5)
+
+function _print_values(vals; delim = ',', max_elems = 10)
+    n = length(vals)
+    sep = delim * " "
+    if n <= max_elems
+        return join(vals, sep)
+    end
+    nshow = round(Int, max_elems / 2)
+    seq1 = _display_val.(vals[1:nshow])
+    seq2 = _display_val.(vals[(end-nshow+1):end])
+    return join(seq1, sep) * "  …  " * join(seq2, sep)
+end
+
+_layers(vals::Vector) = maximum(_layers(v) for v in vals)
+_layers(p::TimeProfile) = _layers(p.vals) + 1
+_layers(p::FixedProfile) = 1
+_layers(p::OperationalProfile) = 1
+
+function _print_values_indent(vals, indent_level; max_lines = 5)
+    n = length(vals)
+    m = _layers(vals)
+    if n <= max_lines - 2m + 2
+        return join([_print_profile(v, indent_level) for v in vals], "\n")
+    end
+    nshow = round(Int, max_lines / 2 - m + 1)
+    seq1 = vals[1:max(nshow, 2)]
+    seq2 = vals[(end-max(nshow, 1)+1):end]
+    indent = " "^(indent_level * 2)
+    return join([_print_profile(v, indent_level) for v in seq1], "\n") *
+           "\n" *
+           indent *
+           "⋮\n" *
+           join([_print_profile(v, indent_level) for v in seq2], "\n")
+end
+
+_indent(n) = " "^(n * 2)
+_length(p::TimeProfile) = "$(length(p.vals))-element "
+_length(p::FixedProfile) = ""
+
+function _profile_name(p::TimeProfile{T}, indent_level) where {T}
+    profile_name = _length(p) * "$(typeof(p).name.name)"
+    if indent_level == 0
+        profile_name = profile_name * " with eltype $(T): "
+    end
+    return profile_name
+end
+
+function _print_profile(p::TimeProfile, indent_level = 0)
+    return _indent(indent_level) *
+           _profile_name(p, indent_level) *
+           "\n" *
+           _indent(indent_level) *
+           "[\n" *
+           _print_values_indent(p.vals, indent_level + 1) *
+           "\n" *
+           _indent(indent_level) *
+           "]"
+end
+
+function _print_profile(fp::FixedProfile, indent_level = 0)
+    return _indent(indent_level) *
+           _profile_name(fp, indent_level) *
+           "[" *
+           string(fp.val) *
+           "]"
+end
+
+function _print_profile(op::OperationalProfile, indent_level = 0)
+    return _indent(indent_level) *
+           _profile_name(op, indent_level) *
+           "[" *
+           _print_values(op.vals) *
+           "]"
+end
+
+function Base.summary(io::IO, p::TimeProfile{T}) where {T}
+    return print(io, _length(p) * "$(typeof(p).name.name) with eltype $T")
+end
+
+function Base.show(io::IO, p::TimeProfile)
+    if get(io, :compact, false)
+        summary(io, p)
+    else
+        print(io, _print_profile(p))
+    end
+end
