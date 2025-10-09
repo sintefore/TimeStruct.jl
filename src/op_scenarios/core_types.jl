@@ -12,7 +12,8 @@ and an associated probability. These scenarios are in general represented as
 [`SimpleTimes`](@ref).
 
 !!! note
-    - All scenarios must use the same type for the duration, _.i.e._, either Integer or Float.
+    - The `TimeStructure`s of all operational scenarios must use the same type for the
+      duration, *.i.e.*, either Integer or Float.
     - If the `probability` is not specified, it assigns the same probability to each scenario.
     - It is possible that `sum(probability)` is larger or smaller than 1. This can lead to
       problems in your application. Hence, it is advised to scale it. Currently, a warning
@@ -20,8 +21,10 @@ and an associated probability. These scenarios are in general represented as
       correspond to a breaking change.
 
 ## Example
+
 The following examples create a time structure with 2 operational scenarios corresponding to
 a single day with equal probability.
+
 ```julia
 day = SimpleTimes(24, 1)
 OperationalScenarios(2, day)

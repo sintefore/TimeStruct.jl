@@ -105,7 +105,7 @@ end
 """
     struct StrategicScenario
 
-Desription of an individual strategic scenario. It includes all strategic nodes
+Description of an individual strategic scenario. It includes all strategic nodes
 corresponding to a scenario, including the probability. It can be utilized within a
 decomposition algorithm.
 """
@@ -162,8 +162,8 @@ function Base.iterate(scs::StrategicScenarios, state = 1)
     node = getleaf(scs.ts, state)
     prob = probability_branch(node)
     nodes = [node]
-    while !isnothing(node.parent)
-        node = node.parent
+    while !isnothing(_parent(node))
+        node = _parent(node)
         pushfirst!(nodes, node)
     end
 
