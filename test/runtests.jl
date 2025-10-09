@@ -917,6 +917,56 @@ end
     @test sum(sspdiv[t] for t in tsc) == 200 / 0.5
 end
 
+@testitem "TreeNode constructors" begin
+    # Different structures to be used
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
+    oscs = OperationalScenarios(2, week)
+    rps = RepresentativePeriods(2, 1, day)
+
+    leaf_node = TreeNode(2, day)
+    @test leaf_node.duration == 2
+    @test leaf_node.ts == day
+    @test leaf_node.probability == [1]
+    @test leaf_node.children == [nothing]
+
+    lin_node = TreeNode(5, week, leaf_node)
+    @test lin_node.duration == 5
+    @test lin_node.ts == week
+    @test lin_node.probability == [1]
+    @test lin_node.children == [leaf_node]
+
+    all_equal_node = TreeNode(10, oscs, 3, leaf_node)
+    @test all_equal_node.duration == 10
+    @test all_equal_node.ts == oscs
+    @test all_equal_node.probability == [1, 1, 1]/3
+    @test all_equal_node.children == [leaf_node, leaf_node, leaf_node]
+
+    prob_equal_node = TreeNode(20, rps, [leaf_node, lin_node])
+    @test prob_equal_node.duration == 20
+    @test prob_equal_node.ts == rps
+    @test prob_equal_node.probability == [1, 1]/2
+    @test prob_equal_node.children == [leaf_node, lin_node]
+
+    children_equal_node = TreeNode(20, rps, [0.6, 0.4], leaf_node)
+    @test children_equal_node.duration == 20
+    @test children_equal_node.ts == rps
+    @test children_equal_node.probability == [0.6, 0.4]
+    @test children_equal_node.children == [leaf_node, leaf_node]
+
+    unequal_node = TreeNode(25, day, [0.3, 0.7], [leaf_node, lin_node])
+    @test unequal_node.duration == 25
+    @test unequal_node.ts == day
+    @test unequal_node.probability == [0.3, 0.7]
+    @test unequal_node.children == [leaf_node, lin_node]
+
+    @test_throws ArgumentError TreeNode(25, day, [0.3], [leaf_node, lin_node])
+    msg =
+        "The sum of the probablity vector is given by 0.8. " *
+        "This can lead to unexpected behaviour."
+    @test_logs (:warn, msg) TreeNode(25, day, [0.5, 0.3], lin_node)
+end
+
 # Function for testing all iterators. Can be beneficial for all other tests as well
 @testmodule TwoLevelTreeTest begin
     using TimeStruct, Test
