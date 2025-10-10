@@ -19,7 +19,8 @@ has an associated share that specifies how much of the total duration that
 is attributed to it.
 
 !!! note
-    - All representative periods must use the same type for the `TimeStructure`.
+    - The `TimeStructure`s of all representative periods must use the same type for the
+      duration, *.i.e.*, either Integer or Float.
     - If the field `period_share` is not specified, it assigns the same probability to each
       representative period.
     - It is possible that `sum(period_share)` is larger or smaller than 1. This can lead to
@@ -29,7 +30,8 @@ is attributed to it.
     - If you include [`OperationalScenarios`](@ref) in your time structure, it is important
       that the scenarios are within the representative periods, and not the other way.
 
-### Example
+## Example
+
 ```julia
 # A year represented by two days with hourly resolution and relative shares of 0.7 and 0.3
 RepresentativePeriods(8760, [0.7, 0.3], [SimpleTimes(24, 1), SimpleTimes(24,1)])

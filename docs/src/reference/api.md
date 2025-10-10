@@ -17,6 +17,7 @@ OperationalScenarios
 RepresentativePeriods
 TwoLevel
 TwoLevelTree
+TreeNode
 regular_tree
 ```
 

@@ -73,30 +73,46 @@ If there is uncertainty at a strategic level, this can be incorporated using the
 time structure. This structure is represented by a tree, with each node corresponding to a strategic period that contains an operational time structure.
 The operational time structure can be any combination of the *[described structures](@ref man-oper)*.
 
-The following example demonstrates how to create a regular tree  (through the function [`regular_tree`](@ref))
-where each strategic period spans 3 years and is represented by a week with daily resolution.
-The second  argument to the [`regular_tree`](@ref) function specifies the number
-of branches at each stage of the tree, excluding the first stage.
+The following example demonstrates how to create a regular tree through a constructor (`TwoLevelTree(duration::S, branching::Vector, ts::OP; op_per_strat::Float64 = 1.0) where {S,T,OP<:TimeStructure{T}}`) where each strategic period spans 3 years and is represented by a week with daily resolution.
+The second  argument of the constructor function specifies the number of branches at each stage of the tree, excluding the first stage.
+
 ```@repl ts
 using TimeStruct
-operational = SimpleTimes(7, 1);
-two_level_tree = regular_tree(3, [3,2], operational; op_per_strat = 52);
+week = SimpleTimes(7, 1);
+two_level_tree = TwoLevelTree(3, [3, 2], week; op_per_strat = 52.0);
 ```
 
 ![Illustration of TwoLevelTree](./../figures/two_level_tree.png)
 
 The branching probabilities are equal for all branches as indicated in green in the figure.
 
-!!! note "Constructors for TwoLevelTree"
-    Currently, the functionality for creating  `TwoLevelTree`'s is limited. Future versions of the package
-    will expand this functionality to allow creating trees with varying probabilities and different operational
-    time structures for the nodes.
+We also provide the possibility of having differing tree structures through the application of the [`TreeNode`](@ref) type.
+A [`TreeNode`](@ref) approach for above's time structure would be given by
 
+```@repl ts
+using TimeStruct
+week = SimpleTimes(7, 1);
+two_level_tree = TwoLevelTree(
+    TreeNode(3, week, [
+        TreeNode(3, week, 2,
+            TreeNode(3, week)
+        )
+        TreeNode(3, week, [0.5, 0.5],
+            TreeNode(3, week)
+        )
+        TreeNode(3, week, [
+            TreeNode(3, week),
+            TreeNode(3, week),
+        ])
+    ]);
+    op_per_strat = 52.0
+)
+```
 
-Similar as for [`TwoLevel`](@ref), the strategic nodes can be iterated using [`strat_periods`](@ref). It is possible to connect the nodes to their predecessor by
-iterating using the [`withprev`](@ref) iterator that returns a tuple with the parent or nothing if no parent, together with the node itself. This provides
-the flexibility to track decisions in the tree as shown by the following example that allows investment into new capacity in each strategic node
-while tracking the accumulated capacity.
+Similar as for [`TwoLevel`](@ref), the strategic nodes can be iterated using [`strat_periods`](@ref).
+It is possible to connect the nodes to their predecessor by iterating using the [`withprev`](@ref) iterator that returns a tuple with the parent or nothing if no parent, together with the node itself.
+This provides the flexibility to track decisions in the tree as shown by the following example that allows investment into new capacity in each strategic node while tracking the accumulated capacity.
+
 ```@repl ts
 using JuMP
 
@@ -110,10 +126,11 @@ for (prev, sp) in withprev(strat_pers)
     end
 end
 ```
-To ensure consistency across the tree, it is possible to iterate through all strategic scenarios
-in the tree using [`strategic_scenarios`](@ref). Here each scenario is a path from the root node
-to one of the leaves of the tree. In the example above, if we only allow one investment in the
-planning period, this can be added by restricting the number of investments in each scenario:
+
+To ensure consistency across the tree, it is possible to iterate through all strategic scenarios in the tree using [`strategic_scenarios`](@ref).
+Here each scenario is a path from the root node to one of the leaves of the tree.
+In the example above, if we only allow one investment in the planning period, this can be added by restricting the number of investments in each scenario:
+
 ```@repl ts
 for sc in strategic_scenarios(two_level_tree)
     @constraint(m, sum(invest[sp] for sp in sc) <= 1)

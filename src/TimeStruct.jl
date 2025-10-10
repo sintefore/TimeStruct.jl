@@ -34,6 +34,8 @@ export RepresentativePeriods
 export TwoLevel
 export TwoLevelTree
 
+export TreeNode
+
 export TimeProfile
 export FixedProfile
 export OperationalProfile

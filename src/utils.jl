@@ -83,11 +83,15 @@ end
 """
     chunk(iter, n; cyclic = false)
 
-Iterator wrapper that yields chunks where each chunk is an iterator over at most
-`n` consecutive time periods starting at each time period of the original iterator.
+Iterator wrapper that yields chunks where each chunk is an iterator over at most `n`
+consecutive time periods starting at each time period of the original iterator.
 
-It is possible to get the `n` consecutive time periods in a cyclic fashion, by
-setting `cyclic` to true.
+It is possible to get the `n` consecutive time periods in a cyclic fashion, by setting
+`cyclic` to true.
+
+!!! warning "TwoLevelTree"
+    Usage of the function for the strategic periods of a [`TwoLevelTree`](@ref) time
+    structure results in an error.
 """
 chunk(iter, n; cyclic = false) = Chunk(iter, n, cyclic)
 Base.length(w::Chunk) = length(w.itr)
@@ -102,6 +106,12 @@ function Base.iterate(w::Chunk, state = nothing)
     end
     next = Iterators.take(isnothing(state) ? itr : Iterators.rest(itr, state), w.ns)
     return next, n[2]
+end
+
+function chunk(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+    return error(
+        "`chunk` can not be used when iterating nodes of a strategic tree structure.",
+    )
 end
 
 struct TakeDuration{I}
@@ -132,8 +142,12 @@ end
 """
     chunk_duration(iter, dur)
 
-Iterator wrapper that yields chunks based on duration where each chunk is an iterator over the following
-time periods until at least `dur` time is covered or the end is reached.
+Iterator wrapper that yields chunks based on duration where each chunk is an iterator over
+the following time periods until at least `dur` time is covered or the end is reached.
+
+!!! warning "TwoLevelTree"
+    Usage of the function for the strategic periods of a [`TwoLevelTree`](@ref) time
+    structure results in an error.
 """
 chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
 
@@ -150,6 +164,12 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     end
     next = take_duration(isnothing(state) ? itr : Iterators.rest(itr, state...), w.duration)
     return next, n[2]
+end
+
+function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+    return error(
+        "`chunk_duration` can not be used when iterating nodes of a strategic tree structure.",
+    )
 end
 
 """
