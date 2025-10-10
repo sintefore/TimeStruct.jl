@@ -238,6 +238,7 @@ end
 
 Iterative addition of a `TreeNode` `node` to a `Vector{<:StratNode}` .
 """
+# Ignored docstring, just fyi in this case
 function add_node!(
     nodes::Vector{<:StratNode},
     node::TreeNode{S, T, OP, U},
@@ -300,7 +301,7 @@ function regular_tree(
     ts::OP;
     op_per_strat::Real = 1.0,
 ) where {S,T,OP<:TimeStructure{T}}
-    op_per_strat = float(op_per_strat)
+    op_per_strat = convert(Float64, op_per_strat)
     return TwoLevelTree(duration, branching, ts; op_per_strat)
 end
 
