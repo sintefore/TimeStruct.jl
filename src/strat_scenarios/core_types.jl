@@ -53,12 +53,12 @@ mutable struct TwoLevelTree{S,T,OP<:AbstractTreeNode{S,T}} <: TimeStructure{T}
     nodes::Vector{OP}
     op_per_strat::Float64
 end
-function TwoLevelTree(parent::TreeNode; op_per_strat=1.0)
+function TwoLevelTree(parent::TreeNode; op_per_strat = 1.0)
     nodes = StratNode[]
 
     add_node!(nodes, parent, nothing, 1.0, 1, op_per_strat)
     nodes = convert(Array{typejoin(typeof.(nodes)...)}, nodes)
-    len = maximum([_strat_per(sn) for sn ∈ nodes])
+    len = maximum([_strat_per(sn) for sn in nodes])
 
     return TwoLevelTree(len, nodes[1], nodes, op_per_strat)
 end
@@ -69,12 +69,11 @@ function TwoLevelTree(
     op_per_strat::Float64 = 1.0,
 ) where {S,T,OP<:TimeStructure{T}}
     node = TreeNode(duration, ts)
-    for k ∈ reverse(branching)
+    for k in reverse(branching)
         node = TreeNode(duration, ts, k, node)
     end
     return TwoLevelTree(node; op_per_strat)
 end
-
 
 function _multiple_adj(itr::TwoLevelTree, n)
     mult =
@@ -241,13 +240,12 @@ Iterative addition of a `TreeNode` `node` to a `Vector{<:StratNode}` .
 # Ignored docstring, just fyi in this case
 function add_node!(
     nodes::Vector{<:StratNode},
-    node::TreeNode{S, T, OP, U},
+    node::TreeNode{S,T,OP,U},
     parent::Union{Nothing,StratNode},
     prob::Float64,
     sp::Int64,
     op_per_strat::Real,
 ) where {S,T,OP<:TimeStructure{T},U}
-
     oper = node.ts
     new_node = StratNode(
         sp,

@@ -166,7 +166,6 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     return next, n[2]
 end
 
-
 function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
     return error(
         "`chunk_duration` can not be used when iterating nodes of a strategic tree structure.",

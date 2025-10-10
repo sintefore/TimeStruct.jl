@@ -978,18 +978,22 @@ end
 
     # Equivalent structure using `TreeNode` and the different constructors
     regtree_3 = TwoLevelTree(
-            TreeNode(5, day, [
-                TreeNode(5, day, 2,
-                    TreeNode(5, day, TreeNode(5, day))
+        TreeNode(
+            5,
+            day,
+            [
+                TreeNode(5, day, 2, TreeNode(5, day, TreeNode(5, day)))
+                TreeNode(5, day, [0.5, 0.5], TreeNode(5, day, TreeNode(5, day)))
+                TreeNode(
+                    5,
+                    day,
+                    [
+                        TreeNode(5, day, TreeNode(5, day)),
+                        TreeNode(5, day, TreeNode(5, day)),
+                    ],
                 )
-                TreeNode(5, day, [0.5, 0.5],
-                    TreeNode(5, day, TreeNode(5, day))
-                )
-                TreeNode(5, day, [
-                    TreeNode(5, day, TreeNode(5, day)),
-                    TreeNode(5, day, TreeNode(5, day)),
-                ])
-            ])
+            ],
+        ),
     )
 
     # Test that they are equivalent
@@ -1153,8 +1157,7 @@ end
 end
 
 @testitem "TwoLevelTree with RepresentativePeriods" setup = [TwoLevelTreeTest] begin
-    regtree =
-        TwoLevelTree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
+    regtree = TwoLevelTree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
     n_sp = 10
     n_rp = n_sp * 2
     n_op = n_rp * 5
