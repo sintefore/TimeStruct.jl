@@ -198,7 +198,7 @@ This function returns a type for iterating through the individual strategic scen
 input `TimeStructure`.
 
 When the `TimeStructure` is a [`TwoLevel`](@ref), `strategic_scenarios` returns a Vector with
-the the `TwoLevle` as single entry.
+the `TwoLevel` as a single entry.
 """
 strategic_scenarios(ts::TwoLevel) = [ts]
 
