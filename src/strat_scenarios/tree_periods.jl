@@ -192,3 +192,6 @@ function TreeNode(
     len = length(probability)
     return TreeNode(duration, ts, probability, fill(children, len))
 end
+
+duration_strat(n::TreeNode) = n.duration
+children(n::TreeNode) = n.children

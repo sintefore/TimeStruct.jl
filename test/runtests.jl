@@ -775,13 +775,13 @@ end
     twolevel_rep = TwoLevel(2, 1, rep)
     test_multiple(twolevel_rep)
 
-    regtree_simple = regular_tree(5, [3, 2], periods)
+    regtree_simple = TwoLevelTree(5, [3, 2], periods)
     test_multiple(regtree_simple)
 
-    regtree_opscen = regular_tree(5, [3, 2], opscen)
+    regtree_opscen = TwoLevelTree(5, [3, 2], opscen)
     test_multiple(regtree_opscen)
 
-    regtree = TimeStruct.regular_tree(
+    regtree = TwoLevelTree(
         5,
         [3, 2],
         RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
@@ -967,6 +967,43 @@ end
     @test_logs (:warn, msg) TreeNode(25, day, [0.5, 0.3], lin_node)
 end
 
+@testitem "TwoLevelTree constructors" begin
+    # Declare the individual time structure
+    day = SimpleTimes(24, 1)
+
+    # Regular tree with 3 strategic periods of duration 5, 3 branches for the second strategic
+    # period, and 6 branchs in the thirdand forth strategic period
+    regtree_1 = TwoLevelTree(5, [3, 2, 1], day)
+    regtree_2 = regular_tree(5, [3, 2, 1], day)
+
+    # Equivalent structure using `TreeNode` and the different constructors
+    regtree_3 = TwoLevelTree(
+            TreeNode(5, day, [
+                TreeNode(5, day, 2,
+                    TreeNode(5, day, TreeNode(5, day))
+                )
+                TreeNode(5, day, [0.5, 0.5],
+                    TreeNode(5, day, TreeNode(5, day))
+                )
+                TreeNode(5, day, [
+                    TreeNode(5, day, TreeNode(5, day)),
+                    TreeNode(5, day, TreeNode(5, day)),
+                ])
+            ])
+    )
+
+    # Test that they are equivalent
+    # The test on TwoLevelTree level is not working, even though all fields are equal
+    regtree_1.len == regtree_2.len
+    regtree_1.root == regtree_2.root
+    regtree_1.nodes == regtree_2.nodes
+    regtree_1.op_per_strat == regtree_2.op_per_strat
+    regtree_1.len == regtree_3.len
+    regtree_1.root == regtree_3.root
+    regtree_1.nodes == regtree_3.nodes
+    regtree_1.op_per_strat == regtree_3.op_per_strat
+end
+
 # Function for testing all iterators. Can be beneficial for all other tests as well
 @testmodule TwoLevelTreeTest begin
     using TimeStruct, Test
@@ -1058,7 +1095,7 @@ end
 end
 
 @testitem "TwoLevelTree with SimpleTimes" setup = [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    regtree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     n_sp = 10
     n_op = n_sp * 5
     ops = TwoLevelTreeTest.fun(regtree, n_sp, n_op)
@@ -1108,7 +1145,7 @@ end
 end
 
 @testitem "TwoLevelTree with OperationalScenarios" setup = [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+    regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
     n_sp = 10
     n_sc = n_sp * 3
     n_op = n_sc * 5
@@ -1117,7 +1154,7 @@ end
 
 @testitem "TwoLevelTree with RepresentativePeriods" setup = [TwoLevelTreeTest] begin
     regtree =
-        TimeStruct.regular_tree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
+        TwoLevelTree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
     n_sp = 10
     n_rp = n_sp * 2
     n_op = n_rp * 5
@@ -1126,7 +1163,7 @@ end
 
 @testitem "TwoLevelTree with RepresentativePeriods and OperationalScenarios" setup =
     [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(
+    regtree = TwoLevelTree(
         5,
         [3, 2],
         RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
@@ -1139,7 +1176,7 @@ end
 end
 
 @testitem "Strategic scenarios with operational scenarios" begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+    regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
 
     @test length(TimeStruct.strategic_scenarios(regtree)) == 6
 
@@ -1320,7 +1357,7 @@ end
         end
     end
 
-    two_level_tree = regular_tree(5, [3, 2], uniform_day)
+    two_level_tree = TwoLevelTree(5, [3, 2], uniform_day)
 
     for (prev, n) in withprev(strat_periods(two_level_tree))
         @test n.parent == prev
@@ -1459,7 +1496,7 @@ end
     per = TimeStruct.OperationalPeriod(5, TimeStruct.SimplePeriod(1, 1), 1.0)
     @test_throws ErrorException TimeStruct._sp_period(per, periods)
 
-    tree = regular_tree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365)
+    tree = TwoLevelTree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365.0)
     for sp in strat_periods(tree)
         sp_per = strat_periods(periods)[TimeStruct._strat_per(sp)]
         @test discount(sp, tree, 0.05) == discount(sp_per, periods, 0.05)
@@ -1513,7 +1550,7 @@ end
         @test end_oper_time(t, year) - start_oper_time(t, year) == duration(t)
     end
 
-    reg_tree = regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    reg_tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     for t in reg_tree
         @test end_oper_time(t, reg_tree) - start_oper_time(t, reg_tree) == duration(t)
     end

@@ -1,10 +1,51 @@
 """
     mutable struct TwoLevelTree{S,T,OP<:AbstractTreeNode{S,T}} <: TimeStructure{T}
 
-Time structure allowing for a tree structure for the strategic level.
+    TwoLevelTree(node::TreeNode; op_per_strat=8760.0)
+    TwoLevelTree(duration::S, branching::Vector, ts::OP; op_per_strat::Float64 = 1.0) where {S,T,OP<:TimeStructure{T}}
 
-For each strategic node in the tree a separate time structure is used for
-operational decisions. Iterating the structure will go through all operational periods.
+Time structure allowing for a tree structure for the strategic level. For each strategic
+node in the tree a separate time structure is used for operational decisions. Iterating the
+structure will go through all operational periods.
+
+The default approach for creating a `TwoLevelTree` is by providing the root `[TreeNode`](@ref)
+with all its children nodes. In the case of a regular structure, that is all children nodes
+have the same `duration`, time structure `ts`, probability, and children itself, you can use
+a simplified constructor with the `branching` vector. The vector `branching` specifies the
+number of branchings at each stage of the tree, excluding the first stage. The branches at
+each stage will all have equal probability, duration, and time structure.
+
+!!! warning "Additional iteratores"
+    `TwoLevelTree` utilize a separate [`withprev`](@ref) method which is equivalent to the
+    existing method for the other time structures. [`withnext`](@ref), [`chunk](@ref) and
+    [`chunk_duration`](@ref) are not implemented and will result in an error when used.
+
+## Example
+
+```julia
+# Declare the individual time structure
+day = SimpleTimes(24, 1)
+
+# Regular tree with 3 strategic periods of duration 5, 3 branches for the second strategic
+# period, and 6 branchs in the thirdand forth strategic period
+regtree_1 = TwoLevelTree(5, [3, 2, 1], day)
+
+# Equivalent structure using `TreeNode` and the different constructors
+regtree_2 = TwoLevelTree(
+    TreeNode(5, day, [
+        TreeNode(5, day, 2,
+            TreeNode(5, day, TreeNode(5, day))
+        )
+        TreeNode(5, day, [0.5, 0.5],
+            TreeNode(5, day, TreeNode(5, day))
+        )
+        TreeNode(5, day, [
+            TreeNode(5, day, TreeNode(5, day)),
+            TreeNode(5, day, TreeNode(5, day)),
+        ])
+    ])
+)
+```
 """
 mutable struct TwoLevelTree{S,T,OP<:AbstractTreeNode{S,T}} <: TimeStructure{T}
     len::Int
@@ -12,13 +53,28 @@ mutable struct TwoLevelTree{S,T,OP<:AbstractTreeNode{S,T}} <: TimeStructure{T}
     nodes::Vector{OP}
     op_per_strat::Float64
 end
+function TwoLevelTree(parent::TreeNode; op_per_strat=1.0)
+    nodes = StratNode[]
 
-function TwoLevelTree{S,T,OP}(
-    nodes::Vector{OP},
-    op_per_strat,
-) where {S,T,OP<:AbstractTreeNode{S,T}}
-    return TwoLevelTree{S,T,OP}(0, nothing, nodes, op_per_strat)
+    add_node!(nodes, parent, nothing, 1.0, 1, op_per_strat)
+    nodes = convert(Array{typejoin(typeof.(nodes)...)}, nodes)
+    len = maximum([_strat_per(sn) for sn ∈ nodes])
+
+    return TwoLevelTree(len, nodes[1], nodes, op_per_strat)
 end
+function TwoLevelTree(
+    duration::S,
+    branching::Vector,
+    ts::OP;
+    op_per_strat::Float64 = 1.0,
+) where {S,T,OP<:TimeStructure{T}}
+    node = TreeNode(duration, ts)
+    for k ∈ reverse(branching)
+        node = TreeNode(duration, ts, k, node)
+    end
+    return TwoLevelTree(node; op_per_strat)
+end
+
 
 function _multiple_adj(itr::TwoLevelTree, n)
     mult =
@@ -171,49 +227,46 @@ function Base.iterate(scs::StrategicScenarios, state = 1)
 end
 
 """
-    add_node(
-        tree::TwoLevelTree{T, StratNode{S, T, OP}},
-        parent,
-        sp,
-        duration::S,
-        branch_prob,
-        branching,
-        oper::OP,
-    ) where {S, T, OP<:TimeStructure{T}}
+    add_node!(
+        nodes::Vector{<:StratNode},
+        node::TreeNode{S, T, OP, U},
+        parent::Union{Nothing,StratNode},
+        prob::Float64,
+        sp::Int64,
+        op_per_strat::Real,
+    ) where {S,T,OP<:TimeStructure{T},U}
 
-Iterative addition of nodes.
+Iterative addition of a `TreeNode` `node` to a `Vector{<:StratNode}` .
 """
-# Add nodes iteratively in a depth first manner
-function add_node(
-    tree::TwoLevelTree{S,T,StratNode{S,T,OP}},
-    parent,
-    sp,
-    duration::S,
-    branch_prob,
-    branching,
-    oper::OP,
-) where {S,T,OP<:TimeStructure{T}}
-    prob_branch = branch_prob * (isnothing(parent) ? 1.0 : parent.prob_branch)
-    mult_sp = duration * tree.op_per_strat / _total_duration(oper)
-    node = StratNode{S,T,OP}(
+function add_node!(
+    nodes::Vector{<:StratNode},
+    node::TreeNode{S, T, OP, U},
+    parent::Union{Nothing,StratNode},
+    prob::Float64,
+    sp::Int64,
+    op_per_strat::Real,
+) where {S,T,OP<:TimeStructure{T},U}
+
+    oper = node.ts
+    new_node = StratNode(
         sp,
-        branches(tree, sp) + 1,
-        duration,
-        mult_sp,
-        prob_branch,
+        count(n -> _strat_per(n) == sp, nodes) + 1,
+        duration_strat(node),
+        duration_strat(node) * op_per_strat / _total_duration(oper),
+        prob,
         parent,
         oper,
     )
-    push!(tree.nodes, node)
-    if isnothing(parent)
-        tree.root = node
-    end
+    push!(nodes, new_node)
 
-    if sp < tree.len
-        for i in 1:branching[sp]
-            # TODO: consider branching probability as input, but use uniform for now
-            add_node(tree, node, sp + 1, duration, 1.0 / branching[sp], branching, oper)
-        end
+    # Iterate through the children and add their nodes
+    for (sub_prob, sub_tn) in zip(node.probability, children(node))
+        # Continue when reaching leaf node
+        isnothing(sub_tn) && continue
+
+        # Add the new node
+        total_prob = prob * sub_prob
+        add_node!(nodes, sub_tn, new_node, total_prob, sp+1, op_per_strat)
     end
 end
 
@@ -223,13 +276,23 @@ end
         branching::Vector,
         ts::OP;
         op_per_strat::Real=1.0,
-    ) where {S, T, OP<:TimeStructure{T}}
+    ) where {S,T,OP<:TimeStructure{T}}
 
 Function for creating a regular tree with a uniform structure for each strategic period.
+
 Each strategic period is of equal length as given by `duration` and will have the same
 operational time structure `ts`. The vector `branching` specifies the number of branchings
 at each stage of the tree, excluding the first stage. The branches at each stage will
 all have equal probability.
+
+!!! note "Deprecated function"
+    This function is deprecated and will be removed in a later release. The new function is
+    given by
+
+    ```julia
+    TwoLevelTree(duration, branching, ts; op_per_strat)
+    ```
+
 """
 function regular_tree(
     duration::S,
@@ -237,11 +300,8 @@ function regular_tree(
     ts::OP;
     op_per_strat::Real = 1.0,
 ) where {S,T,OP<:TimeStructure{T}}
-    tree = TwoLevelTree{S,T,StratNode{S,T,OP}}(Vector{StratNode{S,T,OP}}(), op_per_strat)
-    tree.len = length(branching) + 1
-    add_node(tree, nothing, 1, duration, 1.0, branching, ts)
-
-    return tree
+    op_per_strat = float(op_per_strat)
+    return TwoLevelTree(duration, branching, ts; op_per_strat)
 end
 
 """
