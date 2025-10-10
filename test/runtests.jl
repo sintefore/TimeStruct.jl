@@ -939,13 +939,13 @@ end
     all_equal_node = TreeNode(10, oscs, 3, leaf_node)
     @test all_equal_node.duration == 10
     @test all_equal_node.ts == oscs
-    @test all_equal_node.probability == [1, 1, 1]/3
+    @test all_equal_node.probability == [1, 1, 1] / 3
     @test all_equal_node.children == [leaf_node, leaf_node, leaf_node]
 
     prob_equal_node = TreeNode(20, rps, [leaf_node, lin_node])
     @test prob_equal_node.duration == 20
     @test prob_equal_node.ts == rps
-    @test prob_equal_node.probability == [1, 1]/2
+    @test prob_equal_node.probability == [1, 1] / 2
     @test prob_equal_node.children == [leaf_node, lin_node]
 
     children_equal_node = TreeNode(20, rps, [0.6, 0.4], leaf_node)
@@ -1367,6 +1367,8 @@ end
     end
 
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
+    @test_throws ErrorException chunk(strat_periods(two_level_tree))
+    @test_throws ErrorException chunk_duration(strat_periods(two_level_tree))
 
     periods = SimpleTimes(10, 1)
 

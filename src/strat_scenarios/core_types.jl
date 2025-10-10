@@ -265,7 +265,7 @@ function add_node!(
 
         # Add the new node
         total_prob = prob * sub_prob
-        add_node!(nodes, sub_tn, new_node, total_prob, sp+1, op_per_strat)
+        add_node!(nodes, sub_tn, new_node, total_prob, sp + 1, op_per_strat)
     end
 end
 
