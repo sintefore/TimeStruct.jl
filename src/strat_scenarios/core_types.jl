@@ -190,15 +190,17 @@ struct StrategicScenarios
 end
 
 """
+    strategic_scenarios(ts::TwoLevel)
     strategic_scenarios(ts::TwoLevelTree)
 
 This function returns a type for iterating through the individual strategic scenarios of a
 `TwoLevelTree`. The type of the iterator is dependent on the type of the
 input `TimeStructure`.
 
-When the `TimeStructure` is a `TimeStructure`, `strategic_scenarios` returns a
+When the `TimeStructure` is a [`TwoLevel`](@ref), `strategic_scenarios` returns a Vector with
+the the `TwoLevle` as single entry.
 """
-strategic_scenarios(two_level::TwoLevel) = [two_level]
+strategic_scenarios(ts::TwoLevel) = [ts]
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strategic_scenarios` returns the

@@ -1367,8 +1367,8 @@ end
     end
 
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
-    @test_throws ErrorException chunk(strat_periods(two_level_tree))
-    @test_throws ErrorException chunk_duration(strat_periods(two_level_tree))
+    @test_throws ErrorException chunk(strat_periods(two_level_tree), 2)
+    @test_throws ErrorException chunk_duration(strat_periods(two_level_tree), 2)
 
     periods = SimpleTimes(10, 1)
 
