@@ -369,11 +369,14 @@ end
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
 
-    sp = collect(strat_periods(ts))
+    sps = collect(strat_periods(ts))
 
     # Test that collect is working correctly
-    ops = collect(sp[1])
-    @test sum(ops[it] == op for (it, op) in enumerate(sp[1])) == 24
+    ops = collect(sps[1])
+    @test sum(ops[it] == op for (it, op) in enumerate(sps[1])) == 24
+
+    # Test that the branch probability is 1
+    @test all(probability_branch(sp) == 1.0 for sp in sps)
 end
 
 @testitem "TwoLevel with units" begin

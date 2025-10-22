@@ -28,6 +28,7 @@ mult_scen
 mult_repr
 mult_strat
 probability_scen
+probability_branch
 ```
 
 ## [Iterating time structures](@id api-iter)
