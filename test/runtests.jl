@@ -1212,11 +1212,20 @@ end
 
 @testitem "Strategic scenarios with operational scenarios" begin
     regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+    op_type = OperationalScenarios{Int64,SimpleTimes{Int64}}
+    stratnode_type = TimeStruct.StratNode{Int64,Int64,op_type}
+    scens = strategic_scenarios(regtree)
 
-    @test length(TimeStruct.strategic_scenarios(regtree)) == 6
+    @test eltype(scens) == TimeStruct.StrategicScenario{Int64,Int64,stratnode_type}
+    @test length(scens) == 6
 
-    for sc in TimeStruct.strategic_scenarios(regtree)
+    # Tests that should work but are broken due to inequality
+    @test last(scens) != scens[6]
+
+    for (k, sc) in enumerate(scens)
         @test length(sc) == length(collect(sc))
+        @test repr(sc) == "scen$(k)"
+        @test eltype(typeof(sc)) == stratnode_type
 
         for (prev_sp, sp) in withprev(sc)
             if !isnothing(prev_sp)
@@ -1229,11 +1238,9 @@ end
 @testitem "TwoLevel as a tree" begin
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
 
-    scens = TimeStruct.strategic_scenarios(two_level)
+    scens = strategic_scenarios(two_level)
     @test length(scens) == 1
-    sps = collect(
-        sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc)
-    )
+    sps = collect(sp for sc in strategic_scenarios(two_level) for sp in strat_periods(sc))
     @test length(sps) == 5
 end
 
