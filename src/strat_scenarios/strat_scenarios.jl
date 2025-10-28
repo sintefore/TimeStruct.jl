@@ -35,12 +35,6 @@ end
 Base.last(sc::SingleStrategicScenario) = last(sc.ts)
 
 """
-When the `TimeStructure` is a [`SingleStrategicScenario`](@ref), `strat_periods` returns the
-value of its internal [`TimeStructure`](@ref).
-"""
-strat_periods(sc::SingleStrategicScenario) = strat_periods(sc.ts)
-
-"""
     struct SingleStrategicScenarioWrapper{T,SC<:TimeStructure{T}} <: AbstractStratScens{T}
 
 Type for iterating through the individual strategic periods of a time structure
@@ -61,6 +55,14 @@ function Base.eltype(::Type{SingleStrategicScenarioWrapper{T,SC}}) where {T,SC}
     return SingleStrategicScenario{T,SC}
 end
 Base.last(scs::SingleStrategicScenarioWrapper) = SingleStrategicScenario(scs.ts)
+
+"""
+When the `TimeStructure` is a [`SingleStrategicScenario`](@ref) or
+[`SingleStrategicScenarioWrapper`](@ref), `strat_periods` returns the value of its internal
+[`TimeStructure`](@ref).
+"""
+strat_periods(sc::SingleStrategicScenario) = strat_periods(sc.ts)
+strat_periods(sc::SingleStrategicScenarioWrapper) = strat_periods(sc.ts)
 
 """
     strategic_scenarios(ts::TimeStructure)
@@ -85,6 +87,7 @@ struct StrategicScenario{S,T,N,OP<:AbstractTreeNode{S,T}} <: AbstractStrategicSc
     scen::Int64
     probability::Float64
     nodes::NTuple{N,<:OP}
+    op_per_strat::Float64
 end
 
 Base.show(io::IO, scen::StrategicScenario) = print(io, "scen$(scen.scen)")
@@ -98,6 +101,16 @@ function Base.iterate(scs::StrategicScenario, state = nothing)
     isnothing(next) && return nothing
     return next[1], next[2]
 end
+
+"""
+When the `TimeStructure` is a [`StrategicScenario`](@ref), `strat_periods` returns a
+[`StratTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
+
+These are equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
+"""
+strat_periods(ts::StrategicScenario) = StratTreeNodes(
+    TwoLevelTree(length(ts), first(ts), [n for n in ts.nodes], ts.op_per_strat),
+)
 
 """
     struct StratScens{S,T,OP<:AbstractTreeNode{S,T}} <: AbstractStratScens{T}
@@ -129,7 +142,7 @@ function StrategicScenario(
         node = _parent(node)
     end
 
-    return StrategicScenario(scen, prob, Tuple(nodes))
+    return StrategicScenario(scen, prob, Tuple(nodes), scs.ts.op_per_strat)
 end
 
 # Add basic functions of iterators
@@ -152,3 +165,15 @@ end
 function Base.last(scs::StratScens)
     return StrategicScenario(scs, length(scs))
 end
+
+"""
+When the `TimeStructure` is a [`StratScens`](@ref), `strat_periods` returns a
+[`StratTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
+
+These are equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
+
+!!! note
+    The corresponding `StratTreeNodes` type is equivalent to the created `StratTreeNodes`
+    when using `strat_periods` directly on the [`TwoLevelTree`](@ref).
+"""
+strat_periods(ts::StratScens) = StratTreeNodes(ts.ts)

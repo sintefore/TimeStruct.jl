@@ -1211,15 +1211,49 @@ end
 end
 
 @testitem "Strategic scenarios with operational scenarios" begin
-    regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+    oper_scens = OperationalScenarios(3, SimpleTimes(5, 1))
+    regtree = TwoLevelTree(5, [3, 2], oper_scens)
     op_type = OperationalScenarios{Int64,SimpleTimes{Int64}}
     stratnode_type = TimeStruct.StratNode{Int64,Int64,op_type}
     scens = strategic_scenarios(regtree)
 
+    # Test general functionality
     @test eltype(scens) == TimeStruct.StrategicScenario
     @test length(scens) == 6
     @test last(scens) == scens[6]
 
+    # Test that the strategic periods are correct
+    sps = strat_periods(regtree)
+    sps_scens = strat_periods(scens)
+    sps_scen_1 = strat_periods(first(scens))
+    @test sps == sps_scens
+    @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+
+    # Test that the representative periods are correct
+    rps = repr_periods(regtree)
+    rps_scens = repr_periods(scens)
+    rps_scen_1 = repr_periods(first(scens))
+    @test rps == rps_scens
+    @test all(rps1 === rps2 for (rps1, rps2) in zip(rps_scen_1, rps[1:9]))
+
+    # Test that the operational scenarios are correct
+    oscs = opscenarios(regtree)
+    oscs_scens = opscenarios(scens)
+    oscs_scen_1 = opscenarios(first(scens))
+    @test oscs == oscs_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_scen_1, oscs[1:3]))
+
+    # Test that the operational scenarios are correct when using representative periods
+    rep_pers = RepresentativePeriods(20, [0.25, 0.25, 0.25, 0.25], oper_scens)
+    regtree_rp = TwoLevelTree(5, [3, 2], rep_pers)
+    scens_rp = strategic_scenarios(regtree_rp)
+    oscs_rp = opscenarios(regtree_rp)
+    oscs_rp_scens = opscenarios(scens_rp)
+    oscs_rp_scen_1 = opscenarios(first(scens_rp))
+    @test oscs_rp == oscs_rp_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_rp_scen_1, oscs_rp[1:3]))
+
+    # Test some additional functionality
     for (k, sc) in enumerate(scens)
         @test length(sc) == length(collect(sc))
         @test repr(sc) == "scen$(k)"
@@ -1241,7 +1275,7 @@ end
     scens = strategic_scenarios(two_level)
     @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64, typeof(two_level)})
     @test length(scens) == 1
-    @test eltype(scens) == TimeStrTSuct.SingleStrategicScenario{Int64, typeof(two_level)}
+    @test eltype(scens) == TS.SingleStrategicScenario{Int64, typeof(two_level)}
     @test last(scens) == first(scens)
 
     scen = first(scens)
@@ -1251,8 +1285,10 @@ end
     @test last(scen) == last(two_level)
 
     # Test the iterators
-    sps = collect(sp for sc in strategic_scenarios(two_level) for sp in strat_periods(sc))
-    @test length(sps) == 5
+    @test strat_periods(two_level) === strat_periods(scens)
+    @test strat_periods(two_level) === strat_periods(scen)
+    @test length(strat_periods(scens)) == 5
+    @test length(strat_periods(scen)) == 5
 end
 
 @testitem "Profiles constructors" begin
