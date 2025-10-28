@@ -14,6 +14,7 @@ TimeStruct.TimeStructOuterIter
 
 ```@docs
 TimeStruct.AbstractTreeNode
+TimeStruct.AbstractStrategicScenario
 TimeStruct.StratNode
 TimeStruct.StrategicScenario
 ```
@@ -22,8 +23,9 @@ TimeStruct.StrategicScenario
 
 ```@docs
 TimeStruct.AbstractTreeStructure
+TimeStruct.AbstractStratScens
 TimeStruct.StratTreeNodes
-TimeStruct.StrategicScenarios
+TimeStruct.StratScens
 ```
 
 ## [Strategic period types ([`TwoLevel`](@ref))](@id int-types-strat_twolevel)
