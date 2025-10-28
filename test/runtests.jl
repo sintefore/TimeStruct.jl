@@ -1216,11 +1216,9 @@ end
     stratnode_type = TimeStruct.StratNode{Int64,Int64,op_type}
     scens = strategic_scenarios(regtree)
 
-    @test eltype(scens) == TimeStruct.StrategicScenario{Int64,Int64,stratnode_type}
+    @test eltype(scens) == TimeStruct.StrategicScenario
     @test length(scens) == 6
-
-    # Tests that should work but are broken due to inequality
-    @test last(scens) != scens[6]
+    @test last(scens) == scens[6]
 
     for (k, sc) in enumerate(scens)
         @test length(sc) == length(collect(sc))
