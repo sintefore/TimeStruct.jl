@@ -1234,10 +1234,23 @@ end
 end
 
 @testitem "TwoLevel as a tree" begin
+    const TS = TimeStruct
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
 
+    # Test that we get the correct types and that their utilities are workign
     scens = strategic_scenarios(two_level)
+    @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64, typeof(two_level)})
     @test length(scens) == 1
+    @test eltype(scens) == TimeStrTSuct.SingleStrategicScenario{Int64, typeof(two_level)}
+    @test last(scens) == first(scens)
+
+    scen = first(scens)
+    @test isa(scen, TS.SingleStrategicScenario{Int64, typeof(two_level)})
+    @test length(scen) == 10*5
+    @test eltype(scen) == TS.OperationalPeriod{TS.SimplePeriod{Int64}}
+    @test last(scen) == last(two_level)
+
+    # Test the iterators
     sps = collect(sp for sc in strategic_scenarios(two_level) for sp in strat_periods(sc))
     @test length(sps) == 5
 end

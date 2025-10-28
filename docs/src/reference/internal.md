@@ -17,6 +17,7 @@ TimeStruct.AbstractTreeNode
 TimeStruct.AbstractStrategicScenario
 TimeStruct.StratNode
 TimeStruct.StrategicScenario
+TimeStruct.SingleStrategicScenario
 ```
 
 ### [Iterator types](@id int-types-twoleveltree-iter)
@@ -26,6 +27,7 @@ TimeStruct.AbstractTreeStructure
 TimeStruct.AbstractStratScens
 TimeStruct.StratTreeNodes
 TimeStruct.StratScens
+TimeStruct.SingleStrategicScenarioWrapper
 ```
 
 ## [Strategic period types ([`TwoLevel`](@ref))](@id int-types-strat_twolevel)

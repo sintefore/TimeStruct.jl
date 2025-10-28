@@ -16,6 +16,65 @@ obtained through calling the function [`strategic_scenarios`](@ref).
 abstract type AbstractStratScens{T} <: TimeStructInnerIter{T} end
 
 """
+    struct SingleStrategicScenario{T,SC<:TimeStructure{T}} <: AbstractStrategicScenario{T}
+
+A type representing a single strategic scenario supporting iteration over its
+time periods. It is created when iterating through [`SingleStrategicScenarioWrapper`](@ref).
+"""
+struct SingleStrategicScenario{T,SC<:TimeStructure{T}} <: AbstractStrategicScenario{T}
+    ts::SC
+end
+
+# Add basic functions of iterators
+Base.length(sc::SingleStrategicScenario) = length(sc.ts)
+Base.eltype(::Type{SingleStrategicScenario{T,SC}}) where {T,SC} = eltype(SC)
+function Base.iterate(sc::SingleStrategicScenario, state = nothing)
+    next = isnothing(state) ? iterate(sc.ts) : iterate(sc.ts, state)
+    return next
+end
+Base.last(sc::SingleStrategicScenario) = last(sc.ts)
+
+"""
+When the `TimeStructure` is a [`SingleStrategicScenario`](@ref), `strat_periods` returns the
+value of its internal [`TimeStructure`](@ref).
+"""
+strat_periods(sc::SingleStrategicScenario) = strat_periods(sc.ts)
+
+"""
+    struct SingleStrategicScenarioWrapper{T,SC<:TimeStructure{T}} <: AbstractStratScens{T}
+
+Type for iterating through the individual strategic periods of a time structure
+without [`TwoLevelTree`](@ref). It is automatically created through the function
+[`strategic_scenarios`](@ref).
+"""
+struct SingleStrategicScenarioWrapper{T,SC<:TimeStructure{T}} <: AbstractStratScens{T}
+    ts::SC
+end
+
+# Add basic functions of iterators
+Base.length(scs::SingleStrategicScenarioWrapper) = 1
+function Base.iterate(scs::SingleStrategicScenarioWrapper, state = nothing)
+    !isnothing(state) && return nothing
+    return SingleStrategicScenario(scs.ts), 1
+end
+function Base.eltype(::Type{SingleStrategicScenarioWrapper{T,SC}}) where {T,SC}
+    return SingleStrategicScenario{T,SC}
+end
+Base.last(scs::SingleStrategicScenarioWrapper) = SingleStrategicScenario(scs.ts)
+
+"""
+    strategic_scenarios(ts::TimeStructure)
+
+This function returns a type for iterating through the individual strategic scenarios of a
+`TwoLevelTree`. The type of the iterator is dependent on the type of the
+input `TimeStructure`.
+
+When the `TimeStructure` is a `TimeStructure`, `strategic_scenarios` returns a
+[`SingleStrategicScenarioWrapper`](@ref). This corresponds to the default behavior.
+"""
+strategic_scenarios(ts::TimeStructure) = SingleStrategicScenarioWrapper(ts)
+
+"""
     struct StrategicScenario{S,T,OP<:AbstractTreeNode{S,T}} <: AbstractStrategicScenario{T}
 
 Description of an individual strategic scenario. It includes all strategic nodes
@@ -51,25 +110,10 @@ struct StratScens{S,T,OP<:AbstractTreeNode{S,T}} <: AbstractStratScens{T}
 end
 
 """
-    strategic_scenarios(ts::TwoLevel)
-    strategic_scenarios(ts::TwoLevelTree)
-
-This function returns a type for iterating through the individual strategic scenarios of a
-`TwoLevelTree`. The type of the iterator is dependent on the type of the
-input `TimeStructure`.
-
-When the `TimeStructure` is a [`TwoLevel`](@ref), `strategic_scenarios` returns a Vector with
-the `TwoLevel` as a single entry.
-"""
-strategic_scenarios(ts::TwoLevel) = [ts]
-
-"""
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), `strategic_scenarios` returns the
 iterator `StratScens`.
 """
 strategic_scenarios(ts::TwoLevelTree) = StratScens(ts)
-# Allow a TwoLevel structure to be used as a tree with one scenario
-# TODO: Should be replaced with a single wrapper as it is the case for the other scenarios
 
 # Provide a constructor to simplify the design
 function StrategicScenario(
