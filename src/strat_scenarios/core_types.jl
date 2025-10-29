@@ -75,22 +75,58 @@ function TwoLevelTree(
     return TwoLevelTree(node; op_per_strat)
 end
 
-function _multiple_adj(itr::TwoLevelTree, n)
+function _multiple_adj(itr::TwoLevelTree, n::Int)
     mult =
         itr.nodes[n].duration * itr.op_per_strat / _total_duration(itr.nodes[n].operational)
     return stripunit(mult)
 end
 strat_nodes(ts::TwoLevelTree) = ts.nodes
 
-function children(n::StratNode, ts::TwoLevelTree)
-    return [c for c in ts.nodes if _parent(c) == n]
-end
-nchildren(n::StratNode, ts::TwoLevelTree) = count(c -> _parent(c) == n, strat_nodes(ts))
+"""
+    n_strat_per(ts::TwoLevelTree)
 
-branches(ts::TwoLevelTree, sp::Int) = count(n -> _strat_per(n) == sp, strat_nodes(ts))
-leaves(ts::TwoLevelTree) = [n for n in strat_nodes(ts) if nchildren(n, ts) == 0]
-nleaves(ts::TwoLevelTree) = count(n -> nchildren(n, ts) == 0, strat_nodes(ts))
-getleaf(ts::TwoLevelTree, leaf::Int) = leaves(ts)[leaf]
+Returns the number of strategic periods of a [`TwoLevelTree`](@ref). If the number is
+different for the individual branches, it returns the maximum value.
+"""
+n_strat_per(ts::TwoLevelTree) = maximum(_strat_per(c) for c in strat_nodes(ts))
+
+"""
+    n_children(n::StratNode, ts::TwoLevelTree)
+
+Returns the number of children of a [`StratNode`](@ref).
+"""
+n_children(n::StratNode, ts::TwoLevelTree) = count(c -> _parent(c) == n, strat_nodes(ts))
+
+"""
+    n_leaves(ts::TwoLevelTree)
+
+Returns the number of children of a [`TwoLevelTree`](@ref).
+"""
+n_leaves(ts::TwoLevelTree) = count(n -> n_children(n, ts) == 0, strat_nodes(ts))
+
+"""
+    n_branches(ts::TwoLevelTree, sp::Int)
+
+Returns the number of branches in strategic period `sp` of a [`TwoLevelTree`](@ref).
+"""
+n_branches(ts::TwoLevelTree, sp::Int) = count(n -> _strat_per(n) == sp, strat_nodes(ts))
+
+children(n::StratNode, ts::TwoLevelTree) = [c for c in ts.nodes if _parent(c) == n]
+leaves(ts::TwoLevelTree) = [n for n in strat_nodes(ts) if n_children(n, ts) == 0]
+
+get_leaf(ts::TwoLevelTree, leaf::Int) = leaves(ts)[leaf]
+function get_strat_node(ts::TwoLevelTree, sp::Int, branch::Int)
+    node = filter(n -> _strat_per(n) == sp && _branch(n) == branch, strat_nodes(ts))
+    if isempty(node)
+        throw(
+            ErrorException(
+                "The `TwoLevelTree` does not have a node with strategic period $(sp) and branch $(branch)",
+            ),
+        )
+    else
+        return node[1]
+    end
+end
 
 function Base.length(itr::TwoLevelTree)
     return sum(length(n.operational) for n in itr.nodes)
@@ -210,13 +246,13 @@ strategic_scenarios(ts::TwoLevelTree) = StrategicScenarios(ts)
 # Allow a TwoLevel structure to be used as a tree with one scenario
 # TODO: Should be replaced with a single wrapper as it is the case for the other scenarios
 
-Base.length(scens::StrategicScenarios) = nleaves(scens.ts)
+Base.length(scens::StrategicScenarios) = n_leaves(scens.ts)
 function Base.iterate(scs::StrategicScenarios, state = 1)
-    if state > nleaves(scs.ts)
+    if state > n_leaves(scs.ts)
         return nothing
     end
 
-    node = getleaf(scs.ts, state)
+    node = get_leaf(scs.ts, state)
     prob = probability_branch(node)
     nodes = [node]
     while !isnothing(_parent(node))

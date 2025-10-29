@@ -369,11 +369,14 @@ end
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
 
-    sp = collect(strat_periods(ts))
+    sps = collect(strat_periods(ts))
 
     # Test that collect is working correctly
-    ops = collect(sp[1])
-    @test sum(ops[it] == op for (it, op) in enumerate(sp[1])) == 24
+    ops = collect(sps[1])
+    @test sum(ops[it] == op for (it, op) in enumerate(sps[1])) == 24
+
+    # Test that the branch probability is 1
+    @test all(probability_branch(sp) == 1.0 for sp in sps)
 end
 
 @testitem "TwoLevel with units" begin
@@ -1093,7 +1096,6 @@ end
         for oscs in oscs_inv[2:end]
             @test [probability_branch(osc) for osc in oscs] == p_branch[1]
         end
-
         return ops_inv[1]
     end
 end
@@ -1102,6 +1104,9 @@ end
     regtree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     n_sp = 10
     n_op = n_sp * 5
+
+    @test all(TimeStruct._multiple_adj(regtree, t) == 1 for t in 1:n_sp)
+
     ops = TwoLevelTreeTest.fun(regtree, n_sp, n_op)
 
     op = ops[31]
@@ -1109,30 +1114,57 @@ end
     @test TimeStruct._strat_per(op) == 3
     @test TimeStruct._branch(op) == 4
     @test TimeStruct._oper(op) == 1
+    @test TimeStruct._rper(op) == 1
     @test duration(op) == 1
     @test probability(op) == 1 / 6
     @test op isa eltype(typeof(regtree))
+    @test repr(op) == "sp3-br4-t1"
+    @test op < ops[32]
+    @test ops[4] < op
+    @test TimeStruct.StrategicTreeIndexable(typeof(op)) == TimeStruct.HasStratTreeIndex()
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(TimeStruct.probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
     node = nodes[2]
     @test length(node) == 5
     @test first(node) isa eltype(typeof(node))
+    @test repr(node) == "sp2-br1"
+    @test all(multiple_strat(node, t) ≈ 0.2 for t in node)
+    @test TimeStruct.StrategicTreeIndexable(typeof(node)) == TimeStruct.HasStratTreeIndex()
 
+    # Test helper functions
     leaves = TimeStruct.leaves(regtree)
-    @test length(leaves) == TimeStruct.nleaves(regtree)
+    @test length(leaves) == n_leaves(regtree)
+    @test leaves[3] == TimeStruct.get_leaf(regtree, 3)
+    @test n_branches(regtree, 2) == 3
+    @test n_branches(regtree, 3) == 6
 
-    scens = collect(TimeStruct.strategic_scenarios(regtree))
+    @test n_children(regtree.root, regtree) == 3
+    @test TimeStruct.children(regtree.root, regtree) == regtree.nodes[[2, 5, 8]]
+    @test TimeStruct.get_strat_node(regtree, 2, 1) == regtree.nodes[2]
+    @test TimeStruct.get_strat_node(regtree, 3, 2) == regtree.nodes[4]
+    @test TimeStruct.get_strat_node(regtree, 3, 3) == regtree.nodes[6]
+    @test TimeStruct.get_strat_node(regtree, 3, 6) == regtree.nodes[10]
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 3, 8)
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 4, 1)
+
+    @test n_strat_per(regtree) == 3
+
+    # Test strategic periods
+    sps = strat_periods(regtree)
+    @test eltype(sps) == typeof(node)
+    @test sps[2] == node
+
+    # Test strategic scenarios
+    scens = collect(strategic_scenarios(regtree))
+    @test length(strategic_scenarios(regtree)) == 6
     @test length(scens[2].nodes) == regtree.len
+    @test last(scens[1]) == regtree.nodes[3]
     @test scens[3].nodes[1] == regtree.nodes[1]
 
-    ssp = TimeStruct.StrategicStochasticProfile([
-        [10],
-        [11, 12, 13],
-        [20, 21, 22, 23, 30, 40],
-    ])
+    ssp = StrategicStochasticProfile([[10], [11, 12, 13], [20, 21, 22, 23, 30, 40]])
 
     @test ssp[nodes[3]] == 20
     @test ssp[nodes[8]] == 13
@@ -1140,7 +1172,7 @@ end
     price1 = OperationalProfile([1, 2, 2, 5, 6])
     price2 = FixedProfile(4)
 
-    dsp = TimeStruct.StrategicStochasticProfile([
+    dsp = StrategicStochasticProfile([
         [price1],
         [price1, price2, price2],
         [price1, price2, price2, price1, price2, price2],

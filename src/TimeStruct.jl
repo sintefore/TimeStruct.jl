@@ -55,6 +55,7 @@ export multiple_strat
 export mult_scen, mult_repr, mult_strat
 export start_time, end_time, remaining
 export start_oper_time, end_oper_time
+export n_strat_per, n_children, n_leaves, n_branches
 
 export Discounter
 export discount
