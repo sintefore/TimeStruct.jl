@@ -1279,19 +1279,19 @@ end
 
     # Test that we get the correct types and that their utilities are working
     scens = strategic_scenarios(two_level)
-    @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64, typeof(two_level)})
+    @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64,typeof(two_level)})
     @test length(scens) == 1
-    @test eltype(scens) == TS.SingleStrategicScenario{Int64, typeof(two_level)}
+    @test eltype(scens) == TS.SingleStrategicScenario{Int64,typeof(two_level)}
     @test last(scens) == first(scens)
 
     scen = first(scens)
-    @test isa(scen, TS.SingleStrategicScenario{Int64, typeof(two_level)})
-    @test length(scen) == 10*5
+    @test isa(scen, TS.SingleStrategicScenario{Int64,typeof(two_level)})
+    @test length(scen) == 10 * 5
     @test eltype(scen) == TS.OperationalPeriod{TS.SimplePeriod{Int64}}
     @test last(scen) == last(two_level)
 
     # Test that the iteration utilities are working
-    @test all(t_scen == t for (t_scen, t) ∈ zip(scen, two_level))
+    @test all(t_scen == t for (t_scen, t) in zip(scen, two_level))
 
     # Test the iterators
     @test strat_periods(two_level) === strat_periods(scens)
