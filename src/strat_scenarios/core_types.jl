@@ -75,7 +75,7 @@ function TwoLevelTree(
     return TwoLevelTree(node; op_per_strat)
 end
 
-function _multiple_adj(itr::TwoLevelTree, n)
+function _multiple_adj(itr::TwoLevelTree, n::Int)
     mult =
         itr.nodes[n].duration * itr.op_per_strat / _total_duration(itr.nodes[n].operational)
     return stripunit(mult)
@@ -85,8 +85,8 @@ strat_nodes(ts::TwoLevelTree) = ts.nodes
 n_strat_per(ts::TwoLevelTree) = maximum(_strat_per(c) for c in strat_nodes(ts))
 n_children(n::StratNode, ts::TwoLevelTree) = count(c -> _parent(c) == n, strat_nodes(ts))
 n_leaves(ts::TwoLevelTree) = count(n -> n_children(n, ts) == 0, strat_nodes(ts))
+n_branches(ts::TwoLevelTree, sp::Int) = count(n -> _strat_per(n) == sp, strat_nodes(ts))
 
-branches(ts::TwoLevelTree, sp::Int) = count(n -> _strat_per(n) == sp, strat_nodes(ts))
 children(n::StratNode, ts::TwoLevelTree) = [c for c in ts.nodes if _parent(c) == n]
 leaves(ts::TwoLevelTree) = [n for n in strat_nodes(ts) if n_children(n, ts) == 0]
 

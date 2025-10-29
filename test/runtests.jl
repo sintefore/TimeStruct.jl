@@ -1104,6 +1104,9 @@ end
     regtree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     n_sp = 10
     n_op = n_sp * 5
+
+    @test all(TimeStruct._multiple_adj(regtree, t) == 1 for t in 1:n_sp)
+
     ops = TwoLevelTreeTest.fun(regtree, n_sp, n_op)
 
     op = ops[31]
@@ -1118,6 +1121,7 @@ end
     @test repr(op) == "sp3-br4-t1"
     @test op < ops[32]
     @test ops[4] < op
+    @test TimeStruct.StrategicTreeIndexable(typeof(op)) == TimeStruct.HasStratTreeIndex()
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
@@ -1127,20 +1131,26 @@ end
     @test length(node) == 5
     @test first(node) isa eltype(typeof(node))
     @test repr(node) == "sp2-br1"
+    @test all(multiple_strat(node, t) ≈ 0.2 for t in node)
+    @test TimeStruct.StrategicTreeIndexable(typeof(node)) == TimeStruct.HasStratTreeIndex()
 
     # Test helper functions
     leaves = TimeStruct.leaves(regtree)
-    @test length(leaves) == TimeStruct.n_leaves(regtree)
+    @test length(leaves) == n_leaves(regtree)
     @test leaves[3] == TimeStruct.get_leaf(regtree, 3)
+    @test n_branches(regtree, 2) == 3
+    @test n_branches(regtree, 3) == 6
 
-    @test TimeStruct.n_children(regtree.root, regtree) == 3
+    @test n_children(regtree.root, regtree) == 3
     @test TimeStruct.children(regtree.root, regtree) == regtree.nodes[[2, 5, 8]]
     @test TimeStruct.get_strat_node(regtree, 2, 1) == regtree.nodes[2]
     @test TimeStruct.get_strat_node(regtree, 3, 2) == regtree.nodes[4]
     @test TimeStruct.get_strat_node(regtree, 3, 3) == regtree.nodes[6]
     @test TimeStruct.get_strat_node(regtree, 3, 6) == regtree.nodes[10]
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 3, 8)
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 4, 1)
 
-    @test TimeStruct.n_strat_per(regtree) == 3
+    @test n_strat_per(regtree) == 3
 
     # Test strategic periods
     sps = strat_periods(regtree)
