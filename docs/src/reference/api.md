@@ -31,6 +31,15 @@ probability_scen
 probability_branch
 ```
 
+The following properties are included for a [`TwoLevelTree`](@ref) time structure:
+
+```@docs
+n_strat_per
+n_children
+n_leaves
+n_branches
+```
+
 ## [Iterating time structures](@id api-iter)
 
 ### [For individual time structures](@id api-iter-ts)

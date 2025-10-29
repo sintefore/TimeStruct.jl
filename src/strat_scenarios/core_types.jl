@@ -82,9 +82,33 @@ function _multiple_adj(itr::TwoLevelTree, n::Int)
 end
 strat_nodes(ts::TwoLevelTree) = ts.nodes
 
+"""
+    n_strat_per(ts::TwoLevelTree)
+
+Returns the number of strategic periods of a [`TwoLevelTree`](@ref). If the number is
+different for the individual branches, it returns the maximum value.
+"""
 n_strat_per(ts::TwoLevelTree) = maximum(_strat_per(c) for c in strat_nodes(ts))
+
+"""
+    n_children(n::StratNode, ts::TwoLevelTree)
+
+Returns the number of children of a [`StratNode`](@ref).
+"""
 n_children(n::StratNode, ts::TwoLevelTree) = count(c -> _parent(c) == n, strat_nodes(ts))
+
+"""
+    n_leaves(ts::TwoLevelTree)
+
+Returns the number of children of a [`TwoLevelTree`](@ref).
+"""
 n_leaves(ts::TwoLevelTree) = count(n -> n_children(n, ts) == 0, strat_nodes(ts))
+
+"""
+    n_branches(ts::TwoLevelTree, sp::Int)
+
+Returns the number of branches in strategic period `sp` of a [`TwoLevelTree`](@ref).
+"""
 n_branches(ts::TwoLevelTree, sp::Int) = count(n -> _strat_per(n) == sp, strat_nodes(ts))
 
 children(n::StratNode, ts::TwoLevelTree) = [c for c in ts.nodes if _parent(c) == n]
