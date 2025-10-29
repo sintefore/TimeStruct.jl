@@ -1221,6 +1221,7 @@ end
     @test eltype(scens) == TimeStruct.StrategicScenario
     @test length(scens) == 6
     @test last(scens) == scens[6]
+    @test eachindex(scens) == Base.OneTo(6)
 
     # Test that the strategic periods are correct
     sps = strat_periods(regtree)
@@ -1270,8 +1271,13 @@ end
 @testitem "TwoLevel as a tree" begin
     const TS = TimeStruct
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+    sps = strat_periods(two_level)
 
-    # Test that we get the correct types and that their utilities are workign
+    # Test the Indexing
+    @test TS.StrategicTreeIndexable(typeof(first(sps))) == TS.NoStratTreeIndex()
+    @test TS.StrategicTreeIndexable(typeof(first(first(sps)))) == TS.HasStratTreeIndex()
+
+    # Test that we get the correct types and that their utilities are working
     scens = strategic_scenarios(two_level)
     @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64, typeof(two_level)})
     @test length(scens) == 1
@@ -1283,6 +1289,9 @@ end
     @test length(scen) == 10*5
     @test eltype(scen) == TS.OperationalPeriod{TS.SimplePeriod{Int64}}
     @test last(scen) == last(two_level)
+
+    # Test that the iteration utilities are working
+    @test all(t_scen == t for (t_scen, t) ∈ zip(scen, two_level))
 
     # Test the iterators
     @test strat_periods(two_level) === strat_periods(scens)
