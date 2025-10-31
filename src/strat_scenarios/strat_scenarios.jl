@@ -93,13 +93,20 @@ end
 Base.show(io::IO, scen::StrategicScenario) = print(io, "scen$(scen.scen)")
 
 # Add basic functions of iterators
-Base.length(scen::StrategicScenario) = length(scen.nodes)
-Base.last(scen::StrategicScenario) = last(scen.nodes)
-Base.eltype(_::Type{StrategicScenario{S,T,N,OP}}) where {S,T,N,OP} = OP
-function Base.iterate(scs::StrategicScenario, state = nothing)
-    next = isnothing(state) ? iterate(scs.nodes) : iterate(scs.nodes, state)
-    isnothing(next) && return nothing
-    return next[1], next[2]
+Base.length(scen::StrategicScenario) = sum(length(sn) for sn in scen.nodes)
+Base.last(scen::StrategicScenario) = last(last(scen.nodes))
+Base.eltype(_::Type{StrategicScenario{S,T,N,OP}}) where {S,T,N,OP} = eltype(OP)
+function Base.iterate(scs::StrategicScenario, state = (nothing, 1))
+    sp = state[2]
+    next = isnothing(state[1]) ? iterate(scs.nodes[sp]) : iterate(scs.nodes[sp], state[1])
+    if isnothing(next)
+        sp = sp + 1
+        if sp > length(scs.nodes)
+            return nothing
+        end
+        next = iterate(scs.nodes[sp])
+    end
+    return next[1], (next[2], sp)
 end
 
 """
