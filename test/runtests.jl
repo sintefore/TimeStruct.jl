@@ -1159,9 +1159,9 @@ end
 
     # Test strategic scenarios
     scens = collect(strategic_scenarios(regtree))
-    @test length(strategic_scenarios(regtree)) == 6
+    @test length(strategic_scenarios(regtree)) == n_leaves(regtree)
     @test length(scens[2].nodes) == regtree.len
-    @test last(scens[1]) == regtree.nodes[3]
+    @test last(scens[1]) == last(regtree.nodes[3])
     @test scens[3].nodes[1] == regtree.nodes[1]
 
     ssp = StrategicStochasticProfile([[10], [11, 12, 13], [20, 21, 22, 23, 30, 40]])
@@ -1210,31 +1210,102 @@ end
     TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_sc, n_rp)
 end
 
-@testitem "Strategic scenarios with operational scenarios" begin
-    regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+@testitem "Strategic scenarios with TwoLevelTree" begin
+    const TS = TimeStruct
+    oper_scens = OperationalScenarios(3, SimpleTimes(5, 1))
+    regtree = TwoLevelTree(5, [3, 2], oper_scens)
+    scens = strategic_scenarios(regtree)
 
-    @test length(TimeStruct.strategic_scenarios(regtree)) == 6
+    # Test general functionality
+    @test eltype(scens) == TS.StrategicScenario
+    @test length(scens) == 6
+    @test last(scens) == scens[6]
+    @test eachindex(scens) == Base.OneTo(6)
 
-    for sc in TimeStruct.strategic_scenarios(regtree)
+    # Test that the strategic periods are correct
+    sps = strat_periods(regtree)
+    sps_scens = strat_periods(scens)
+    sps_scen_1 = strat_periods(first(scens))
+    @test sps == sps_scens
+    @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+
+    # Test that the representative periods are correct
+    rps = repr_periods(regtree)
+    rps_scens = repr_periods(scens)
+    rps_scen_1 = repr_periods(first(scens))
+    @test rps == rps_scens
+    @test all(rps1 === rps2 for (rps1, rps2) in zip(rps_scen_1, rps[1:9]))
+
+    # Test that the operational scenarios are correct
+    oscs = opscenarios(regtree)
+    oscs_scens = opscenarios(scens)
+    oscs_scen_1 = opscenarios(first(scens))
+    @test oscs == oscs_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_scen_1, oscs[1:3]))
+
+    # Test that the operational scenarios are correct when using representative periods
+    rep_pers = RepresentativePeriods(20, [0.25, 0.25, 0.25, 0.25], oper_scens)
+    regtree_rp = TwoLevelTree(5, [3, 2], rep_pers)
+    scens_rp = strategic_scenarios(regtree_rp)
+    oscs_rp = opscenarios(regtree_rp)
+    oscs_rp_scens = opscenarios(scens_rp)
+    oscs_rp_scen_1 = opscenarios(first(scens_rp))
+    @test oscs_rp == oscs_rp_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_rp_scen_1, oscs_rp[1:3]))
+
+    # Test that the tree periods are correct
+    ops_scen_1 = first(scens)
+    @test length(ops_scen_1) == 45
+    @test last(ops_scen_1) == collect(regtree)[45]
+    @test all(tp1 === tp2 for (tp1, tp2) in zip(ops_scen_1, collect(regtree)[1:45]))
+    InnerPeriod = TS.ScenarioPeriod{TS.SimplePeriod{Int64}}
+    @test isa(first(ops_scen_1), TS.TreePeriod{InnerPeriod})
+
+    ops_rp_scen_1 = first(scens_rp)
+    @test length(ops_rp_scen_1) == 180
+    @test last(ops_rp_scen_1) == collect(regtree_rp)[180]
+    @test all(tp1 === tp2 for (tp1, tp2) in zip(ops_rp_scen_1, collect(regtree_rp)[1:180]))
+    @test isa(first(ops_rp_scen_1), TS.TreePeriod{TS.ReprPeriod{InnerPeriod}})
+
+    # Test some additional functionality
+    for (k, sc) in enumerate(scens)
         @test length(sc) == length(collect(sc))
-
-        for (prev_sp, sp) in withprev(sc)
-            if !isnothing(prev_sp)
-                @test TimeStruct._strat_per(prev_sp) + 1 == TimeStruct._strat_per(sp)
-            end
-        end
+        @test repr(sc) == "scen$(k)"
+        @test eltype(typeof(sc)) == eltype(typeof(regtree))
     end
 end
 
-@testitem "TwoLevel as a tree" begin
+@testitem "Strategic scenarios with TwoLevel" begin
+    const TS = TimeStruct
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+    sps = strat_periods(two_level)
 
-    scens = TimeStruct.strategic_scenarios(two_level)
+    # Test the Indexing
+    @test TS.StrategicTreeIndexable(typeof(first(sps))) == TS.NoStratTreeIndex()
+    @test TS.StrategicTreeIndexable(typeof(first(first(sps)))) == TS.HasStratTreeIndex()
+
+    # Test that we get the correct types and that their utilities are working
+    scens = strategic_scenarios(two_level)
+    @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64,typeof(two_level)})
     @test length(scens) == 1
-    sps = collect(
-        sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc)
-    )
-    @test length(sps) == 5
+    @test eltype(scens) == TS.SingleStrategicScenario{Int64,typeof(two_level)}
+    @test last(scens) == first(scens)
+
+    scen = first(scens)
+    @test isa(scen, TS.SingleStrategicScenario{Int64,typeof(two_level)})
+    @test length(scen) == 10 * 5
+    @test eltype(scen) == TS.OperationalPeriod{TS.SimplePeriod{Int64}}
+    @test last(scen) == last(two_level)
+    @test all(op1 === op2 for (op1, op2) in zip(scen, two_level))
+
+    # Test that the iteration utilities are working
+    @test all(t_scen == t for (t_scen, t) in zip(scen, two_level))
+
+    # Test the iterators
+    @test strat_periods(two_level) === strat_periods(scens)
+    @test strat_periods(two_level) === strat_periods(scen)
+    @test length(strat_periods(scens)) == 5
+    @test length(strat_periods(scen)) == 5
 end
 
 @testitem "Profiles constructors" begin

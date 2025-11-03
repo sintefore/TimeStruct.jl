@@ -93,11 +93,12 @@ end
 Base.eltype(_::StratNodeReprPers) = StratNodeReprPeriod
 
 """
-When the `TimeStructure` is a [`TwoLevelTree`](@ref), `repr_periods` returns an `Array` of
-all [`StratNodeReprPeriod`](@ref)s.
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a
+[`StrategicScenario`](@ref), `repr_periods` returns an `Array` of all
+[`StratNodeReprPeriod`](@ref)s.
 
 These are equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
-function repr_periods(ts::TwoLevelTree)
+function repr_periods(ts::Union{TwoLevelTree,StratScens,StrategicScenario})
     return collect(Iterators.flatten(repr_periods(sp) for sp in strat_periods(ts)))
 end

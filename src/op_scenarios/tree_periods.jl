@@ -239,23 +239,15 @@ function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:RepresentativePeriods}
 end
 
 """
-When the `TimeStructure` is a [`TwoLevelTree`](@ref), `opscenarios` returns an `Array` of
-all [`StratNodeOpScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
-dependening on whether the [`TwoLevelTree`](@ref) includes [`RepresentativePeriods`](@ref)
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a
+[`StrategicScenario`](@ref), `opscenarios` returns an `Array` of all
+[`StratNodeOpScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
+depending on whether the `TimeStructure` includes [`RepresentativePeriods`](@ref)
 or not.
 
 These are equivalent to a [`StratOpScenario`](@ref) and [`StratReprOpScenario`](@ref)
 of a [`TwoLevel`](@ref) time structure.
 """
-function opscenarios(ts::TwoLevelTree)
+function opscenarios(ts::Union{TwoLevelTree,StratScens,StrategicScenario})
     return collect(Iterators.flatten(opscenarios(sp) for sp in strat_periods(ts)))
-end
-function opscenarios(
-    ts::TwoLevelTree{T,StratNode{S,T,OP}},
-) where {S,T,OP<:RepresentativePeriods}
-    return collect(
-        Iterators.flatten(
-            opscenarios(rp) for sp in strat_periods(ts) for rp in repr_periods(sp)
-        ),
-    )
 end
