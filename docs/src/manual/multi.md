@@ -133,6 +133,6 @@ In the example above, if we only allow one investment in the planning period, th
 
 ```@repl ts
 for sc in strategic_scenarios(two_level_tree)
-    @constraint(m, sum(invest[sp] for sp in sc) <= 1)
+    @constraint(m, sum(invest[sp] for sp in strat_periods(sc)) <= 1)
 end
 ```
