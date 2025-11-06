@@ -78,7 +78,7 @@ function Base.eachindex(osc::SingleScenario)
     return eachindex(osc.ts)
 end
 Base.last(osc::SingleScenario) = last(osc.ts)
-function Base.last( # TODO: Considering removing the function as the the structure is opposite
+function Base.last( # TODO: Considering removing the function as the structure is opposite
     osc::SingleScenario{T,RepresentativePeriod{T,OP}},
 ) where {T,OP}
     period = last(osc.ts.operational)

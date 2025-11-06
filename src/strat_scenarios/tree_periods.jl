@@ -157,8 +157,8 @@ struct TreeNode{S,T,OP<:TimeStructure{T},COP}
             )
         elseif !isapprox(sum(probability), 1; atol = 1e-6)
             @warn(
-                "The sum of the probablity vector is given by $(sum(probability)). " *
-                "This can lead to unexpected behaviour."
+                "The sum of the probability vector is given by $(sum(probability)). " *
+                "This can lead to unexpected behavior."
             )
         end
         return new{S,T,OP,COP}(duration, ts, probability, children)
