@@ -162,8 +162,8 @@ end
     @test_throws ArgumentError OperationalScenarios(2, [day, week], [1.0])
     @test_throws ArgumentError OperationalScenarios(2, [day], [0.5, 0.5])
     msg =
-        "The sum of the probablity vector is given by $(2.0). " *
-        "This can lead to unexpected behaviour."
+        "The sum of the probability vector is given by $(2.0). " *
+        "This can lead to unexpected behavior."
     @test_logs (:warn, msg) OperationalScenarios([day, day], [0.5, 1.5])
 end
 
@@ -224,7 +224,7 @@ end
     @test_throws ArgumentError RepresentativePeriods(2, 8760, [0.5, 0.5], [day])
     msg =
         "The sum of the `period_share` vector is given by $(2.0). " *
-        "This can lead to unexpected behaviour."
+        "This can lead to unexpected behavior."
     @test_logs (:warn, msg) RepresentativePeriods(8760, [0.5, 1.5], [day, day])
 
     # Testing of the external constructors providing the same case
@@ -965,8 +965,8 @@ end
 
     @test_throws ArgumentError TreeNode(25, day, [0.3], [leaf_node, lin_node])
     msg =
-        "The sum of the probablity vector is given by 0.8. " *
-        "This can lead to unexpected behaviour."
+        "The sum of the probability vector is given by 0.8. " *
+        "This can lead to unexpected behavior."
     @test_logs (:warn, msg) TreeNode(25, day, [0.5, 0.3], lin_node)
 end
 
