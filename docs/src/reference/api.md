@@ -1,4 +1,4 @@
-# [Interface for using `TimeStruct](@id api)
+# [Interface for using `TimeStruct`](@id api)
 
 ## [Available time structures](@id api-ts)
 
@@ -8,7 +8,7 @@
 TimeStructure
 ```
 
-### [Conecrete types](@id api-ts-con)
+### [Concrete types](@id api-ts-con)
 
 ```@docs
 SimpleTimes
@@ -92,7 +92,7 @@ StrategicStochasticProfile
 Discounter
 ```
 
-### [Functions](@id api-disc-type)
+### [Functions](@id api-disc-func)
 
 ```@docs
 discount
