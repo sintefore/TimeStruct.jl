@@ -4,33 +4,33 @@ Contributing to `TimeStruct` can be achieved in several different ways.
 
 ## [File a bug report](@id con-bug_rep)
 
-One approach to contributing to `TimeStruct` is through filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behaviour is occurring.
+One approach to contributing to `TimeStruct` is by filing a bug report as an *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* when unexpected behavior is occurring.
 
-When filing a bug report, please follow the following guidelines:
+When filing a bug report, please follow these guidelines:
 
-1. be certain that the bug is a bug and originating in `TimeStruct`:
+1. Be certain that the bug is a bug and originates in `TimeStruct`:
     - If the problem is within the results of your optimization problem, please be certain that your optimization model is correctly set up.
-    - If the problem is only appearing for specific solvers, it is most likely not a bug in `TimeStruct`, but instead a problem of the solver wrapper for `MathOptInterface`.
+    - If the problem only appears for specific solvers, it is most likely not a bug in `TimeStruct`, but instead a problem with the solver wrapper for `MathOptInterface`.
       In this case, please contact the developers of the corresponding solver wrapper.
-2. label the issue as bug, and
-3. provide a minimum working example of a case in which the bug occurs.
-   This minimum working example _**should**_ not be based on a potential application of `TimeStruct`.
-   Instead, it is important to focus purely on how `TimeStruct` is behaving when the bug occurs.
+2. Label the issue as a bug, and
+3. Provide a minimum working example of a case in which the bug occurs.
+   This minimum working example _**should not**_ be based on a potential application of `TimeStruct`.
+   Instead, it is important to focus purely on how `TimeStruct` behaves when the bug occurs.
 
 ## [Feature requests](@id con-feat_req)
 
-Although `TimeStruct` was designed with the aim of flexibility with respect to incorporation of different time structures, it sometimes still requires additional features.
+Although `TimeStruct` was designed with the aim of flexibility with respect to incorporating different time structures, it sometimes still requires additional features.
 Feature requests can be achieved through two approaches:
 
-1. create an issue describing the aim of the feature request and
-2. incorporate the feature request through a fork of the repository and open a pull request.
+1. Create an issue describing the aim of the feature request, and
+2. Incorporate the feature request through a fork of the repository and open a pull request.
 
 ### [Create an Issue](@id con-feat_req-issue)
 
 Creating a new *[issue](https://github.com/sintefore/TimeStruct.jl/issues/new)* for a feature request is our standard approach for contributing to `TimeStruct`.
-Due to the modularity of `TimeStruct`'s individual time structures, it is not necessarily straight forward to understand how to best incorporate required features into the framework without breaking existing time structures.
+Due to the modularity of `TimeStruct`'s individual time structures, it is not necessarily straightforward to understand how to best incorporate required features into the framework without breaking existing time structures.
 
-When creating a new issue as feature request, please follow the the following guidelines.
+When creating a new issue as a feature request, please follow these guidelines:
 
 1. **Reason for the feature**: Please describe the reasoning for the feature request. What functionality do you require in `TimeStruct`?
 2. **Required outcome**: What should be the outcome when including the feature and what should be the minimum requirements of the outcome?
@@ -39,18 +39,18 @@ When creating a new issue as feature request, please follow the the following gu
 ### [Incorporating the feature requests through a fork](@id con-feat_req-fork)
 
 !!! note
-    The approach used for providing code is based on the excellent description of the [JuMP](https://jump.dev/JuMP.jl/stable/developers/contributing/#Contribute-code-to-JuMP) package.
+    The approach used for providing code is based on the excellent description from the [JuMP](https://jump.dev/JuMP.jl/stable/developers/contributing/#Contribute-code-to-JuMP) package.
     We essentially follow the same approach with minor changes.
 
 If you would like to work directly in `TimeStruct`, you can also incorporate your changes directly.
-In this case, it is beneficial to follow the outlined steps:
+In this case, it is beneficial to follow these outlined steps:
 
 #### [Step 1: Create an issue](@id con-feat_req-fork-step_1)
 
 Even if you plan to incorporate the code directly, we advise you to first follow the steps outlined in *[Create an Issue](@ref con-feat_req-issue)*.
 This way, it is possible for us to comment on the solution approach(es) and assess potential problems with other time structures.
 
-Through creating an issue first, it is possible for us to comment directly on the proposed changes and assess, whether we consider the proposed changes to follow the philosophy of the framework.
+By creating an issue first, it is possible for us to comment directly on the proposed changes and assess whether we consider the proposed changes to follow the philosophy of the framework.
 
 #### [Step 2: Create a fork of `TimeStruct`](@id con-feat_req-fork-step_2)
 
@@ -74,7 +74,7 @@ New tests should be based on a minimum working example in which the new concept 
 Aside from the individual tests, it is required to use [`JuliaFormatter`](https://domluna.github.io/JuliaFormatter.jl/stable/) on the code.
 
 It is not necessary to provide changes directly in the documentation.
-It can be easier to include these changes after the pull request is accepted in principal.
+It can be easier to include these changes after the pull request is accepted in principle.
 
 #### [Step 5: Create a pull request](@id con-feat_req-fork-step_5)
 

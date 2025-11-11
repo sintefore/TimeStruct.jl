@@ -11,7 +11,7 @@ convert the time units of strategic periods in the time structure to years (defa
 As an example, consider the following time structure:
 
 ```julia
-# Modelling of a day with hourly resolution for 50 years with a resolution of 5 years
+# Modeling of a day with hourly resolution for 50 years with a resolution of 5 years
 periods = TwoLevel(10, 5 * 8760, SimpleTimes(24, 1))
 
 # The parameter `timeunit_to_year` must in this case be 1 year / 8760 h
@@ -137,7 +137,7 @@ end
 
 
 Calculates the overall objective weight for a time period `t` using a fixed `discount_rate`.
-The weight consideres both discounting, the probability and potential multiplicity of `t`
+The weight considers both discounting, the probability, and potential multiplicity of `t`.
 The function can be either called using a [`Discounter`](@ref) type or by specifying the
 parameters (time structure `ts`, `discount_rate` and potentially `timeunit_to_year`) directly.
 
@@ -155,7 +155,7 @@ the time structure to years (default value = 1.0).
 
 !!! tip "Comparison with `discount`"
     Both [`discount`](@ref) and `objective_weight` can serve similar purposes. Compared to
-    [`discount`](@ref), `objective_weight` includes as well the probablity and multiplicity
+    [`discount`](@ref), `objective_weight` includes as well the probability and multiplicity
     of a given time period. If `t` is an [`AbstractStrategicPeriod`](@ref), both are
     equivalent.
 """

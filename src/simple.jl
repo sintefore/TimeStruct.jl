@@ -6,9 +6,9 @@
     SimpleTimes(dur::Vector{T}) where {T<:Duration}
 
 A simple time structure consisting of consecutive time periods of varying duration.
-`SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
+`SimpleTimes` is always the lowest level in a `TimeStruct` time structure, if used.
 
-An alternative for `SimpleTimes` is [`CalendarTimes`](@ref)
+An alternative to `SimpleTimes` is [`CalendarTimes`](@ref)
 
 ## Example
 ```julia

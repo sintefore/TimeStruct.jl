@@ -13,11 +13,11 @@ and an associated probability. These scenarios are in general represented as
 
 !!! note
     - The `TimeStructure`s of all operational scenarios must use the same type for the
-      duration, *.i.e.*, either Integer or Float.
+      duration, *i.e.*, either Integer or Float.
     - If the `probability` is not specified, it assigns the same probability to each scenario.
     - It is possible that `sum(probability)` is larger or smaller than 1. This can lead to
       problems in your application. Hence, it is advised to scale it. Currently, a warning
-      will be given if the period shares do not sum to one as an automatic scaling will
+      will be given if the period shares do not sum to one, as an automatic scaling will
       correspond to a breaking change.
 
 ## Example
@@ -55,8 +55,8 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
             )
         elseif !isapprox(sum(probability), 1; atol = 1e-6)
             @warn(
-                "The sum of the probablity vector is given by $(sum(probability)). " *
-                "This can lead to unexpected behaviour."
+                "The sum of the probability vector is given by $(sum(probability)). " *
+                "This can lead to unexpected behavior."
             )
         end
         return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability))

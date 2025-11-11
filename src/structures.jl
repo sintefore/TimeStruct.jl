@@ -72,7 +72,7 @@ duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 
 Returns true if the time period is the first in a sequence and has no previous time period
 """
-isfirst(t::TimePeriod) = error("isfirst() not implemented for$(typeof(t))")
+isfirst(t::TimePeriod) = error("isfirst() not implemented for $(typeof(t))")
 
 """
     multiple(t::TimePeriod)

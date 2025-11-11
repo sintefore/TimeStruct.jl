@@ -5,19 +5,19 @@
     TwoLevelTree(duration::S, branching::Vector, ts::OP; op_per_strat::Float64 = 1.0) where {S,T,OP<:TimeStructure{T}}
 
 Time structure allowing for a tree structure for the strategic level. For each strategic
-node in the tree a separate time structure is used for operational decisions. Iterating the
+node in the tree, a separate time structure is used for operational decisions. Iterating the
 structure will go through all operational periods.
 
-The default approach for creating a `TwoLevelTree` is by providing the root `[TreeNode`](@ref)
-with all its children nodes. In the case of a regular structure, that is all children nodes
+The default approach for creating a `TwoLevelTree` is by providing the root [`TreeNode`](@ref)
+with all its children nodes. In the case of a regular structure, that is, all children nodes
 have the same `duration`, time structure `ts`, probability, and children itself, you can use
 a simplified constructor with the `branching` vector. The vector `branching` specifies the
 number of branchings at each stage of the tree, excluding the first stage. The branches at
 each stage will all have equal probability, duration, and time structure.
 
-!!! warning "Additional iteratores"
-    `TwoLevelTree` utilize a separate [`withprev`](@ref) method which is equivalent to the
-    existing method for the other time structures. [`withnext`](@ref), [`chunk](@ref) and
+!!! warning "Additional iterators"
+    `TwoLevelTree` utilizes a separate [`withprev`](@ref) method which is equivalent to the
+    existing method for the other time structures. [`withnext`](@ref), [`chunk`](@ref), and
     [`chunk_duration`](@ref) are not implemented and will result in an error when used.
 
 ## Example
@@ -26,8 +26,8 @@ each stage will all have equal probability, duration, and time structure.
 # Declare the individual time structure
 day = SimpleTimes(24, 1)
 
-# Regular tree with 3 strategic periods of duration 5, 3 branches for the second strategic
-# period, and 6 branchs in the thirdand forth strategic period
+# Regular tree with 4 strategic periods of duration 5, 3 branches for the second strategic
+# period, and 6 branches in the third and fourth strategic periods
 regtree_1 = TwoLevelTree(5, [3, 2, 1], day)
 
 # Equivalent structure using `TreeNode` and the different constructors
@@ -279,7 +279,7 @@ Type for iterating through the individual strategic nodes of a [`TwoLevelTree`](
 It is automatically created through the function [`strat_periods`](@ref), and hence,
 [`strategic_periods`](@ref).
 
-Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behaviour,
+Iterating through `StratTreeNodes` using the `WithPrev` iterator changes the behavior,
 although the meaning remains unchanged.
 """
 struct StratTreeNodes{S,T,OP<:TimeStructure{T}} <: AbstractStratPers{T}

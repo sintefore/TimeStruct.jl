@@ -13,10 +13,10 @@
 A time structure with two levels of time periods.
 
 On the top level it has a sequence of strategic periods of varying duration.
-For each strategic period a separate time structure is used for
+For each strategic period, a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 It is possible to use different time units for the two levels by providing the number
-of operational time units per strategic time unit through the kewyord argument `op_per_strat`.
+of operational time units per strategic time unit through the keyword argument `op_per_strat`.
 
 Potential time structures are [`SimpleTimes`](@ref), [`CalendarTimes`](@ref),
 [`OperationalScenarios`](@ref), or [`RepresentativePeriods`](@ref), as well as combinations
@@ -24,7 +24,7 @@ of these.
 
 !!! note
     - The `TimeStructure`s of all strategic periods must use the same type for the
-      duration, *.i.e.*, either Integer or Float.
+      duration, *i.e.*, either Integer or Float.
 
 !!! danger "Usage of op_per_strat"
     The optional keyword `op_per_strat` is important for the overall calculations.

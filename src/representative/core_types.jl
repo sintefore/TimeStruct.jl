@@ -20,12 +20,12 @@ is attributed to it.
 
 !!! note
     - The `TimeStructure`s of all representative periods must use the same type for the
-      duration, *.i.e.*, either Integer or Float.
+      duration, *i.e.*, either Integer or Float.
     - If the field `period_share` is not specified, it assigns the same probability to each
       representative period.
     - It is possible that `sum(period_share)` is larger or smaller than 1. This can lead to
       problems in your application. Hence, it is advised to scale it. Currently, a warning
-      will be given if the period shares do not sum to one as an automatic scaling will
+      will be given if the period shares do not sum to one, as an automatic scaling will
       correspond to a breaking change.
     - If you include [`OperationalScenarios`](@ref) in your time structure, it is important
       that the scenarios are within the representative periods, and not the other way.
@@ -68,7 +68,7 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructur
         elseif !isapprox(sum(period_share), 1; atol = 1e-6)
             @warn(
                 "The sum of the `period_share` vector is given by $(sum(period_share)). " *
-                "This can lead to unexpected behaviour."
+                "This can lead to unexpected behavior."
             )
         end
         return new{S,T,OP}(
