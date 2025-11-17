@@ -36,6 +36,7 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
     scenarios::Vector{OP}
     probability::Vector{Float64}
+    total_duration::T
     function OperationalScenarios(
         len::Integer,
         scenarios::Vector{OP},
@@ -59,7 +60,7 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
                 "This can lead to unexpected behavior."
             )
         end
-        return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability))
+        return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability), maximum(_total_duration(osc) for osc in scenarios))
     end
 end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
@@ -73,7 +74,7 @@ function OperationalScenarios(oper::Vector{<:TimeStructure{T}}) where {T}
 end
 
 function _total_duration(oscs::OperationalScenarios)
-    return maximum(_total_duration(osc) for osc in oscs.scenarios)
+    return oscs.total_duration
 end
 
 function _multiple_adj(oscs::OperationalScenarios, scen)
