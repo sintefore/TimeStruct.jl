@@ -21,6 +21,16 @@ struct CalendarTimes{T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}} <:
     start_date::T
     length::Int
     period::Dates.Period
+    total_duration::Float64
+    function CalendarTimes(
+        start_date::T,
+        length::Integer,
+        period::Dates.Period,
+    ) where {T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}}
+        end_date = start_date + length * period
+        total_duration = Dates.value(Dates.Hour(end_date - start_date))
+        new{T}(start_date, length, period, total_duration)
+    end
 end
 
 function CalendarTimes(
@@ -61,7 +71,7 @@ function CalendarTimes(
     return CalendarTimes(first, length, period)
 end
 
-_total_duration(ts::CalendarTimes) = sum(duration(t) for t in ts)
+_total_duration(ts::CalendarTimes) = ts.total_duration
 
 # Add basic functions of iterators
 Base.length(ts::CalendarTimes) = ts.length
