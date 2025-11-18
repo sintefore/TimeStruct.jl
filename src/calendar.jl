@@ -29,7 +29,7 @@ struct CalendarTimes{T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}} <:
     ) where {T<:Union{Dates.DateTime,TimeZones.ZonedDateTime}}
         end_date = start_date + length * period
         total_duration = Dates.value(Dates.Hour(end_date - start_date))
-        new{T}(start_date, length, period, total_duration)
+        return new{T}(start_date, length, period, total_duration)
     end
 end
 

@@ -60,7 +60,12 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
                 "This can lead to unexpected behavior."
             )
         end
-        return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability), maximum(_total_duration(osc) for osc in scenarios))
+        return new{T,OP}(
+            len,
+            scenarios,
+            convert(Vector{Float64}, probability),
+            maximum(_total_duration(osc) for osc in scenarios),
+        )
     end
 end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
