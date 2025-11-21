@@ -19,6 +19,7 @@ varying = SimpleTimes([2, 2, 2, 4, 10]) # 5 periods of varying length
 struct SimpleTimes{T} <: TimeStructure{T}
     len::Int
     duration::Vector{T}
+    total_duration::T
     function SimpleTimes(len::Integer, duration::Vector{T}) where {T<:Duration}
         if len > length(duration)
             throw(
@@ -27,7 +28,7 @@ struct SimpleTimes{T} <: TimeStructure{T}
                 ),
             )
         else
-            new{T}(len, duration)
+            new{T}(len, duration, sum(duration))
         end
     end
 end
@@ -36,7 +37,7 @@ function SimpleTimes(len::Integer, duration::Duration)
 end
 SimpleTimes(dur::Vector{T}) where {T<:Duration} = SimpleTimes(length(dur), dur)
 
-_total_duration(st::SimpleTimes) = sum(st.duration)
+_total_duration(st::SimpleTimes) = st.total_duration
 
 # Add basic functions of iterators
 Base.length(st::SimpleTimes) = st.len

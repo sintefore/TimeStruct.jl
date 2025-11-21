@@ -115,9 +115,11 @@ When the `TimeStructure` is a [`StrategicScenario`](@ref), `strat_periods` retur
 
 These are equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
-strat_periods(ts::StrategicScenario) = StratTreeNodes(
-    TwoLevelTree(length(ts), first(ts), [n for n in ts.nodes], ts.op_per_strat),
-)
+function strat_periods(ts::StrategicScenario)
+    return StratTreeNodes(
+        TwoLevelTree(length(ts), first(ts), [n for n in ts.nodes], ts.op_per_strat),
+    )
+end
 
 """
     struct StratScens{S,T,OP<:AbstractTreeNode{S,T}} <: AbstractStratScens{T}
