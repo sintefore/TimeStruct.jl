@@ -1228,6 +1228,8 @@ end
     sps_scen_1 = strat_periods(first(scens))
     @test sps == sps_scens
     @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+    @test last(sps_scen_1) == collect(sps)[3]
+    @test isa(sps_scen_1, TS.ScenTreeNodes)
 
     # Test that the representative periods are correct
     rps = repr_periods(regtree)
@@ -1464,8 +1466,12 @@ end
     end
 
     two_level_tree = TwoLevelTree(5, [3, 2], uniform_day)
-
     for (prev, n) in withprev(strat_periods(two_level_tree))
+        @test n.parent == prev
+    end
+
+    strat_scen_1 = first(strategic_scenarios(two_level_tree))
+    for (prev, n) in withprev(strat_periods(strat_scen_1))
         @test n.parent == prev
     end
 
