@@ -27,6 +27,7 @@ TimeStruct.AbstractTreeStructure
 TimeStruct.AbstractStratScens
 TimeStruct.StratTreeNodes
 TimeStruct.StratScens
+TimeStruct.ScenTreeNodes
 TimeStruct.SingleStrategicScenarioWrapper
 ```
 

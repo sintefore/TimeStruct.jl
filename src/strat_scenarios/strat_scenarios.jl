@@ -110,15 +110,39 @@ function Base.iterate(scs::StrategicScenario, state = (nothing, 1))
 end
 
 """
+    struct ScenTreeNodes{S,T,N,OP<:AbstractTreeNode{S,T}} <: AbstractStratPers{T}
+
+Type for iterating through the individual strategic nodes of a [`StrategicScenario`](@ref).
+It is automatically created through the function [`strat_periods`](@ref), and hence,
+[`strategic_periods`](@ref).
+"""
+struct ScenTreeNodes{S,T,N,OP<:AbstractTreeNode{S,T}} <: AbstractStratPers{T}
+    ts::StrategicScenario{S,T,N,OP}
+end
+
+# Adding methods to existing Julia functions
+Base.length(sps::ScenTreeNodes) = length(sps.ts.nodes)
+Base.eltype(_::Type{ScenTreeNodes{S,T,N,OP}}) where {S,T,N,OP} = OP
+function Base.iterate(sps::ScenTreeNodes, state = nothing)
+    next = isnothing(state) ? 1 : state + 1
+    next == length(sps) + 1 && return nothing
+    return sps.ts.nodes[next], next
+end
+function Base.getindex(sps::ScenTreeNodes, index::Int)
+    return sps.ts.nodes[index]
+end
+function Base.last(sps::ScenTreeNodes)
+    return last(sps.ts.nodes)
+end
+
+"""
 When the `TimeStructure` is a [`StrategicScenario`](@ref), `strat_periods` returns a
-[`StratTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
+[`ScenTreeNodes`](@ref) type, which, through iteration, provides [`StratNode`](@ref) types.
 
 These are equivalent to a [`StrategicPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
 function strat_periods(ts::StrategicScenario)
-    return StratTreeNodes(
-        TwoLevelTree(length(ts), first(ts), [n for n in ts.nodes], ts.op_per_strat),
-    )
+    return ScenTreeNodes(ts)
 end
 
 """
