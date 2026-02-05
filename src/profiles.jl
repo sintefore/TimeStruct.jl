@@ -408,3 +408,11 @@ end
 function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
+
+-(a::FixedProfile{T}) where {T} = FixedProfile(-a.val)
+-(a::OperationalProfile{T}) where {T} = OperationalProfile(-a.vals)
+-(a::StrategicProfile{T}) where {T} = StrategicProfile(-a.vals)
+-(a::ScenarioProfile{T}) where {T} = ScenarioProfile(-a.vals)
+-(a::RepresentativeProfile{T}) where {T} = RepresentativeProfile(-a.vals)
+
++(a::TimeProfile{T}) where {T} = a

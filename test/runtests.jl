@@ -1444,6 +1444,58 @@ end
     @test typeof(v) == Vector{OperationalProfile{Float64}}
 end
 
+@testitem "Profile and unary operators" begin
+    # FixedProfile
+    profile = +FixedProfile(10)
+    @test profile.val == 10
+
+    profile = -FixedProfile(10)
+    @test profile.val == -10
+
+    # OperationalProfile
+    profile = +OperationalProfile([1, 2, 3])
+    @test profile.vals == [1, 2, 3]
+
+    profile = -OperationalProfile([1, 2, 3])
+    @test profile.vals == [-1, -2, -3]
+
+    # StrategicProfile
+    simple = SimpleTimes(10, 1)
+    ts = TwoLevel(3, 5, simple)
+
+    profile = +StrategicProfile([1, 2, 3])
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+
+    profile = -StrategicProfile([1, 2, 3])
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [-1, -2, -3]
+
+    # ScenarioProfile
+    oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, repr)
+    profile = +ScenarioProfile([1, 2, 3])
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+
+    profile = -ScenarioProfile([1, 2, 3])
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [-1, -2, -1, -2, -1, -2, -1, -2, -1, -2, -1, -2]
+
+    # RepresentativeProfile
+    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, repr)
+
+    profile = +RepresentativeProfile([1, 2, 3])
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 1, 2, 1, 2]
+
+    profile = -RepresentativeProfile([1, 2, 3])
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [-1, -2, -1, -2, -1, -2]
+end
+
 @testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
