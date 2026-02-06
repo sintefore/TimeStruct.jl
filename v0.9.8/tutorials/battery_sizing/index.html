@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Battery sizing · TimeStruct</title><meta name="title" content="Battery sizing · TimeStruct"/><meta property="og:title" content="Battery sizing · TimeStruct"/><meta property="twitter:title" content="Battery sizing · TimeStruct"/><meta name="description" content="Documentation for TimeStruct."/><meta property="og:description" content="Documentation for TimeStruct."/><meta property="twitter:description" content="Documentation for TimeStruct."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TimeStruct</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../basic_usage/">Basic usage</a></li><li class="is-active"><a class="tocitem" href>Battery sizing</a><ul class="internal"><li><a class="tocitem" href="#Operational-model"><span>Operational model</span></a></li><li><a class="tocitem" href="#Strategic-model"><span>Strategic model</span></a></li></ul></li></ul></li><li><span class="tocitem">Showcases</span><ul><li><a class="tocitem" href="../../showcases/emx/">EnergyModelsX</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../manual/basic/">Operational time structures</a></li><li><a class="tocitem" href="../../manual/multi/">Multi-horizon</a></li><li><a class="tocitem" href="../../manual/profiles/">Time profiles</a></li><li><a class="tocitem" href="../../manual/iteration/">Iteration utilities</a></li><li><a class="tocitem" href="../../manual/discount/">Discounting</a></li></ul></li><li><a class="tocitem" href="../../contribute/">Contribute</a></li><li><a class="tocitem" href="../../reference/api/">API reference</a></li><li><a class="tocitem" href="../../reference/internal/">Internal reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Battery sizing</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Battery sizing</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/sintefore/TimeStruct.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/sintefore/TimeStruct.jl/blob/main/docs/src/tutorials/battery_sizing.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Battery-sizing"><a class="docs-heading-anchor" href="#Battery-sizing">Battery sizing</a><a id="Battery-sizing-1"></a><a class="docs-heading-anchor-permalink" href="#Battery-sizing" title="Permalink"></a></h1><p>This tutorial demonstrates how to formulate a battery sizing problem using the <code>TimeStruct</code> package in combination with <code>JuMP</code>. We start by defining the operational model of the battery, which includes the constraints and the objective function. Then, we extend the model to include the strategic decisions of the battery sizing.</p><p>For this tutorial, we use the <code>HiGHS</code> solver for optimization:</p><pre><code class="language-julia hljs">using TimeStruct
+using JuMP
+using HiGHS
+
+optimizer = optimizer_with_attributes(HiGHS.Optimizer, &quot;output_flag&quot; =&gt; false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">MathOptInterface.OptimizerWithAttributes(HiGHS.Optimizer, Pair{MathOptInterface.AbstractOptimizerAttribute, Any}[MathOptInterface.RawOptimizerAttribute(&quot;output_flag&quot;) =&gt; false])</code></pre><h2 id="Operational-model"><a class="docs-heading-anchor" href="#Operational-model">Operational model</a><a id="Operational-model-1"></a><a class="docs-heading-anchor-permalink" href="#Operational-model" title="Permalink"></a></h2><p>We start by defining the operational model of the battery. The battery has a fixed capacity and can charge and discharge energy to cover a given demand profile. Additionally, the demand can be covered by purchasing energy from the spot market with a given price profile.</p><pre><code class="language-julia hljs">function create_operational(
+    periods::TimeStructure,
+    capacity,
+    demand::TimeProfile,
+    price::TimeProfile,
+)
+    model = Model()
+
+    @variable(model, soc[periods] &gt;= 0)         # State of charge of the battery
+    @variable(model, charge[periods] &gt;= 0)      # Energy charged to the battery
+    @variable(model, discharge[periods] &gt;= 0)   # Energy discharged from the battery
+    @variable(model, spot[periods] &gt;= 0)        # Energy purchased from the spot market
+
+    for (prev, t) in withprev(periods)
+        @constraint(model, soc[t] &lt;= capacity)
+        soc_prev = isnothing(prev) ? soc[last(periods)] : soc[prev]
+        @constraint(model, soc[t] == soc_prev + charge[t] - discharge[t])
+        @constraint(model, spot[t] + discharge[t] - charge[t] == demand[t])
+    end
+
+    @objective(model, Min, sum(multiple(t) * price[t] * spot[t] for t in periods))
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_operational (generic function with 1 method)</code></pre><p>Note the use of the special iterator  <a href="../../reference/api/#TimeStruct.withprev"><code>withprev</code></a> to iterate over the periods with the previous period, returning <code>nothing</code> for the first period. In this example we have opted to use a cyclic constraint for the state of charge, i.e. the state of charge of the last period is used as the initial state of charge for the first period.</p><p>To test the model, we create a simple example with 24 hourly periods, a capacity of 20, a fixed demand of 5.0, and a time dependent price profile that varies sinusoidally over a day.</p><pre><code class="language-julia hljs">periods = SimpleTimes(24, 1)
+capacity = 20
+demand = FixedProfile(5.0)
+price = OperationalProfile([1 + 0.3 * sin(i) for (i, t) in enumerate(periods)])
+
+model = create_operational(periods, capacity, demand, price)
+set_optimizer(model, optimizer)
+optimize!(model)
+println(&quot;Objective value: &quot;, objective_value(model))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Objective value: 87.28911996699485</code></pre><h2 id="Strategic-model"><a class="docs-heading-anchor" href="#Strategic-model">Strategic model</a><a id="Strategic-model-1"></a><a class="docs-heading-anchor-permalink" href="#Strategic-model" title="Permalink"></a></h2><p>We now extend the operational model to include the strategic decisions of the battery sizing. For simplicity, we assume that the battery capacity can be chosen independently for each stragic period, e.g., by renting a battery of a given capacity for each strategic period.</p><p>To simplify the process of defining the strategic model, we define helper functions to create the operational variables, constraints, and objective function.</p><pre><code class="language-julia hljs">function create_operational_variables(model, periods)
+    @variable(model, soc[periods] &gt;= 0)
+    @variable(model, charge[periods] &gt;= 0)
+    @variable(model, discharge[periods] &gt;= 0)
+    @variable(model, spot[periods] &gt;= 0)
+end
+
+function create_operational_constraints(model, periods, capacity, demand)
+    soc, charge, discharge = model[:soc], model[:charge], model[:discharge]
+    spot = model[:spot]
+    for (prev, t) in withprev(periods)
+        @constraint(model, soc[t] &lt;= capacity)
+        soc_prev = isnothing(prev) ? soc[last(periods)] : soc[prev]
+        @constraint(model, soc[t] == soc_prev + charge[t] - discharge[t])
+        @constraint(model, spot[t] + discharge[t] - charge[t] == demand[t])
+    end
+end
+
+function create_operational_objective(model, periods, price)
+    spot = model[:spot]
+    el_cost = sum(multiple(t) * probability(t) * price[t] * spot[t] for t in periods)
+    return el_cost
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_operational_objective (generic function with 1 method)</code></pre><p>Note the use of the <a href="../../reference/api/#TimeStruct.multiple"><code>multiple</code></a> function to include the multiplier of each operational period for time structures where the operational periods do not cover the complete strategic periods and <a href="../../reference/api/#TimeStruct.probability"><code>probability</code></a> for periods that have an associated probability when using operational scenarios.</p><p>We can now define the strategic model by creating a battery sizing decision for each strategic period. To obtain the strategic periods, we use the <a href="../../reference/api/#TimeStruct.strat_periods"><code>strat_periods</code></a> iterator.</p><pre><code class="language-julia hljs">function create_strategic_model(
+    periods::TimeStructure,
+    price::TimeProfile,
+    demand::TimeProfile,
+    capex,
+)
+    model = Model()
+    @variable(model, cap[strat_periods(periods)] &gt;= 0)
+
+    create_operational_variables(model, periods)
+    for sp in strat_periods(periods)
+        create_operational_constraints(model, sp, cap[sp], demand)
+    end
+    op_cost = create_operational_objective(model, periods, price)
+    investment_cost = sum(cap[sp] * capex[sp] for sp in strat_periods(periods))
+    @objective(model, Min, investment_cost + op_cost)
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_strategic_model (generic function with 1 method)</code></pre><p>Note that each strategic period can be iterated as a separate time structure and be used to define the operational constraints.</p><p>To test the model, we create a simple example with 7 strategic periods of 24 hourly periods each</p><pre><code class="language-julia hljs">periods = TwoLevel(7, SimpleTimes(24, 1))
+demand = StrategicProfile([5.0 + 0.5 * i for i in 1:7])
+price = OperationalProfile([1 + 0.3 * sin(i) for i in 1:24])
+capex = StrategicProfile([2 - 0.1 * i for i in 1:7])
+
+model = create_strategic_model(periods, price, demand, capex)
+
+set_optimizer(model, optimizer)
+optimize!(model)
+println(&quot;Objective value: &quot;, objective_value(model))
+println(&quot;Battery sizing: &quot;, [value(model[:cap][sp]) for sp in strat_periods(periods)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Objective value: 1116.5837035766133
+Battery sizing: [11.0, 12.0, 13.0, 14.0, 15.0, 24.0, 25.5]</code></pre><h3 id="Representative-periods"><a class="docs-heading-anchor" href="#Representative-periods">Representative periods</a><a id="Representative-periods-1"></a><a class="docs-heading-anchor-permalink" href="#Representative-periods" title="Permalink"></a></h3><p>In large scale models, it is common to use representative periods to reduce the computational burden by aggregating the time series involved and use these to represent a larger share of the planning period. With <code>TimeStruct</code>, we can create constraints separately for each representative period by using the <a href="../../reference/api/#TimeStruct.repr_periods"><code>repr_periods</code></a> iterator.</p><pre><code class="language-julia hljs">function create_strat_repr_model(periods, price, demand, capex)
+    model = Model()
+    @variable(model, cap[strat_periods(periods)] &gt;= 0)
+
+    create_operational_variables(model, periods)
+    for sp in strat_periods(periods)
+        for rp in repr_periods(sp)
+            create_operational_constraints(model, rp, cap[sp], demand)
+        end
+    end
+
+    op_cost = create_operational_objective(model, periods, price)
+    investment_cost = sum(cap[sp] * capex[sp] for sp in strat_periods(periods))
+    @objective(model, Min, investment_cost + op_cost)
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_strat_repr_model (generic function with 1 method)</code></pre><p>Setting up the model with representative periods requires defining the representative periods and the representative price profile.</p><pre><code class="language-julia hljs">periods = TwoLevel(
+    5,
+    1,
+    RepresentativePeriods(8760, [0.3, 0.2, 0.4, 0.1], SimpleTimes(24, 1));
+    op_per_strat = 8760,
+)
+repr_price = RepresentativeProfile([0.9 * price, 1.1 * price, 0.8 * price, 1.2 * price])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">RepresentativeProfile{Float64, OperationalProfile{Float64}}(OperationalProfile{Float64}[OperationalProfile{Float64}([1.1271971658981321, 1.145510305242934, 0.9381024021761643, 0.6956633262668594, 0.6410904458409526, 0.82455781548629, 1.077386381654073, 1.1671267265883132, 1.0112719910152743, 0.7531143000598702  …  1.0755777168424216, 0.8222661045004324, 0.6404226771925197, 0.6972334433716475, 0.9404668466089973, 1.1464952176964593, 1.125897022404735, 0.897610146491591, 0.6715204908727039, 0.6554938422582116]), OperationalProfile{Float64}([1.377685424986606, 1.400068150852475, 1.1465696026597563, 0.8502551765483838, 0.7835549893611644, 1.0077928855943545, 1.3168055775772003, 1.4264882213857162, 1.2359991001297796, 0.9204730334065081  …  1.3145949872518488, 1.0049919055005285, 0.7827388276797463, 0.852174208565347, 1.1494594791887744, 1.401271932740117, 1.3760963607168986, 1.0970790679341669, 0.8207472666221937, 0.8011591405378142]), OperationalProfile{Float64}([1.001953036353895, 1.0182313824381637, 0.8338688019343682, 0.6183674011260973, 0.5698581740808468, 0.7329402804322579, 0.9576767836925093, 1.0374459791896118, 0.8989084364580215, 0.6694349333865514  …  0.9560690816377081, 0.7309032040003843, 0.5692646019489064, 0.6197630607747978, 0.8359705303191087, 1.0191068601746307, 1.0007973532486536, 0.7978756857703031, 0.596907102997959, 0.5826611931184104]), OperationalProfile{Float64}([1.5029295545308428, 1.5273470736572452, 1.2508032029015521, 0.9275511016891458, 0.8547872611212701, 1.0994104206483868, 1.436515175538764, 1.5561689687844174, 1.3483626546870322, 1.004152400079827  …  1.434103622456562, 1.0963548060005763, 0.8538969029233595, 0.9296445911621966, 1.2539557954786629, 1.5286602902619457, 1.50119602987298, 1.1968135286554547, 0.8953606544969385, 0.8739917896776154])])</code></pre><p>In this example, we use 5 strategic periods of length 1 year each. Each strategic period is represented by 4 representative periods of 24 hours each. Note the use of the parameter <code>op_per_strat</code> to define the number of operational periods per strategic period.</p><pre><code class="language-julia hljs">model = create_strat_repr_model(periods, repr_price, demand, capex)
+set_optimizer(model, optimizer)
+optimize!(model)
+println(&quot;Objective value: &quot;, objective_value(model))
+println(&quot;Battery sizing: &quot;, [value(model[:cap][sp]) for sp in strat_periods(periods)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Objective value: 186599.7279064091
+Battery sizing: [126.5, 138.0, 149.5, 161.0, 172.5]</code></pre><h3 id="Operational-scenarios"><a class="docs-heading-anchor" href="#Operational-scenarios">Operational scenarios</a><a id="Operational-scenarios-1"></a><a class="docs-heading-anchor-permalink" href="#Operational-scenarios" title="Permalink"></a></h3><p>Finally, we can extend the model to include operational scenarios to account for operational uncertainty in the battery sizing problem. Typically, the spot prices are uncertain and can be modeled as a set of scenarios with a specified probability for each scenario.</p><pre><code class="language-julia hljs">function create_strat_repr_scen_model(periods, price, demand, capex)
+    model = Model()
+    @variable(model, cap[strat_periods(periods)] &gt;= 0)
+
+    create_operational_variables(model, periods)
+    for sp in strat_periods(periods)
+        for rp in repr_periods(sp)
+            for sc in opscenarios(rp)
+                create_operational_constraints(model, sc, cap[sp], demand)
+            end
+        end
+    end
+    op_cost = create_operational_objective(model, periods, price)
+    investment_cost = sum(cap[sp] * capex[sp] for sp in strat_periods(periods))
+    @objective(model, Min, investment_cost + op_cost)
+    return model
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">create_strat_repr_scen_model (generic function with 1 method)</code></pre><p>The only difference in the model is the use of the <a href="../../reference/api/#TimeStruct.opscenarios"><code>opscenarios</code></a> iterator to iterate over the operational scenarios.</p><p>The time structure is similar to the previous example, but we now include 10 operational scenarios for each representative period.</p><pre><code class="language-julia hljs">periods = TwoLevel(
+    5,
+    1,
+    RepresentativePeriods(
+        8760,
+        [0.3, 0.2, 0.4, 0.1],
+        OperationalScenarios(10, SimpleTimes(24, 1)),
+    );
+    op_per_strat = 8760,
+)
+
+price = RepresentativeProfile([
+    0.9 * ScenarioProfile([price + 0.1 * rand() for sc in 1:10]),
+    1.1 * ScenarioProfile([price + 0.2 * rand() for sc in 1:10]),
+    0.8 * ScenarioProfile([price + 0.05 * rand() for sc in 1:10]),
+    1.2 * ScenarioProfile([price + 0.08 * rand() for sc in 1:10]),
+])
+
+model = create_strat_repr_scen_model(periods, price, demand, capex)
+set_optimizer(model, optimizer)
+optimize!(model)
+println(&quot;Objective value: &quot;, objective_value(model))
+println(&quot;Battery sizing: &quot;, [value(model[:cap][sp]) for sp in strat_periods(periods)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Objective value: 199313.09862697223
+Battery sizing: [126.5, 138.0, 149.5, 161.0, 172.5]</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../basic_usage/">« Basic usage</a><a class="docs-footer-nextpage" href="../../showcases/emx/">EnergyModelsX »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 6 February 2026 09:06">Friday 6 February 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
