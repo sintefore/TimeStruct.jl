@@ -665,12 +665,12 @@ end
     test_invariants(TwoLevel(5, 10, SimpleTimes(10, 1)))
     test_invariants(TwoLevel(5, 30, opscen))
 
-    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1.0)
+    rpers = RepresentativePeriods(2, 20, [0.2, 0.8], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    two_level = TwoLevel(100, [rpers, rpers, rpers]; op_per_strat = 1.0)
     test_invariants(two_level)
 
-    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
-    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1.0)
+    rpers = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    two_level = TwoLevel(100, [rpers, rpers]; op_per_strat = 1.0)
     test_invariants(two_level)
 end
 
@@ -1280,15 +1280,15 @@ end
     day = SimpleTimes(24, 1)
     week = SimpleTimes(168, 1)
     scen = OperationalScenarios(2, [day, week], [7, 1]/8)
-    repr = RepresentativePeriods(4, 8760, scen)
+    rpers = RepresentativePeriods(4, 8760, scen)
 
     ts = TwoLevelTree(
         TreeNode(
             5,
-            repr,
+            rpers,
             [0.7, 0.05, 0.1, 0.15],
             [
-                TreeNode(5, repr, TreeNode(5, repr, TreeNode(5, week))),
+                TreeNode(5, rpers, TreeNode(5, rpers, TreeNode(5, week))),
                 TreeNode(2, week, TreeNode(8, week, TreeNode(5, week))),
                 TreeNode(
                     4,
@@ -1298,7 +1298,7 @@ end
                         TreeNode(6, week, 2, TreeNode(5, week)),
                     ],
                 ),
-                TreeNode(5, repr, 2, TreeNode(8, repr, TreeNode(5, week))),
+                TreeNode(5, rpers, 2, TreeNode(8, rpers, TreeNode(5, week))),
             ],
         ),
         ;
@@ -1375,8 +1375,8 @@ end
     vals = collect(profile[sp] for sp in strat_periods(ts))
     @test vals == [1, 2, 3]
 
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[sp] for sp in strat_periods(ts))
     @test vals == [1, 2, 3]
@@ -1394,8 +1394,8 @@ end
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [1, 1, 1]
 
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [1, 2, 1, 2, 1, 2]
@@ -1421,8 +1421,8 @@ end
     @test vals == [1, 1, 1]
 
     oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
@@ -1512,8 +1512,8 @@ end
 
     # ScenarioProfile
     oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, rpers)
     profile = +ScenarioProfile([1, 2, 3])
     vals = collect(profile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
@@ -1523,8 +1523,8 @@ end
     @test vals == [-1, -2, -1, -2, -1, -2, -1, -2, -1, -2, -1, -2]
 
     # RepresentativeProfile
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
 
     profile = +RepresentativeProfile([1, 2, 3])
     vals = collect(profile[rp] for rp in repr_periods(ts))
