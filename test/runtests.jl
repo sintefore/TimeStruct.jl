@@ -1275,6 +1275,45 @@ end
         @test repr(sc) == "scen$(k)"
         @test eltype(typeof(sc)) == eltype(typeof(regtree))
     end
+
+    # Test that non regular structures are working
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
+    scen = OperationalScenarios(2, [day, week], [7, 1]/8)
+    repr = RepresentativePeriods(4, 8760, scen)
+
+    ts = TwoLevelTree(
+        TreeNode(
+            5,
+            repr,
+            [0.7, 0.05, 0.1, 0.15],
+            [
+                TreeNode(5, repr, TreeNode(5, repr, TreeNode(5, week))),
+                TreeNode(2, week, TreeNode(8, week, TreeNode(5, week))),
+                TreeNode(
+                    4,
+                    scen,
+                    [
+                        TreeNode(6, week, TreeNode(5, week)),
+                        TreeNode(6, week, 2, TreeNode(5, week)),
+                    ],
+                ),
+                TreeNode(5, repr, 2, TreeNode(8, repr, TreeNode(5, week))),
+            ],
+        ),
+        ;
+        op_per_strat = 8760.0,
+    )
+
+    # Test that the strategic periods are correct
+    sps = strat_periods(ts)
+    scens = strategic_scenarios(ts)
+    sps_scens = strat_periods(scens)
+    sps_scen_1 = strat_periods(first(scens))
+    @test sps == sps_scens
+    @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+    @test last(sps_scen_1) == collect(sps)[4]
+    @test isa(sps_scen_1, TS.ScenTreeNodes)
 end
 
 @testitem "Strategic scenarios with TwoLevel" begin

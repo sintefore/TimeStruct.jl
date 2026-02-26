@@ -86,10 +86,9 @@ decomposition algorithm.
 struct StrategicScenario{S,T,N,OP<:AbstractTreeNode{S,T}} <: AbstractStrategicScenario{T}
     scen::Int64
     probability::Float64
-    nodes::NTuple{N,<:OP}
+    nodes::NTuple{N,OP}
     op_per_strat::Float64
 end
-
 Base.show(io::IO, scen::StrategicScenario) = print(io, "scen$(scen.scen)")
 
 # Add basic functions of iterators
@@ -162,20 +161,16 @@ iterator `StratScens`.
 strategic_scenarios(ts::TwoLevelTree) = StratScens(ts)
 
 # Provide a constructor to simplify the design
-function StrategicScenario(
-    scs::StratScens{S,T,OP},
-    scen::Int,
-) where {S,T,OP<:TimeStructure{T}}
+function StrategicScenario(scs::StratScens{S,T,OP}, scen::Int) where {S,T,OP}
     node = get_leaf(scs.ts, scen)
     prob = probability_branch(node)
-    n_strat_per = _strat_per(node)
-    nodes = Vector{OP}(undef, n_strat_per)
-    for sp in n_strat_per:-1:1
+    N = _strat_per(node)
+    nodes = Vector{OP}(undef, N)
+    for sp in N:-1:1
         nodes[sp] = node
         node = _parent(node)
     end
-
-    return StrategicScenario(scen, prob, Tuple(nodes), scs.ts.op_per_strat)
+    return StrategicScenario{S,T,N,OP}(scen, prob, Tuple(nodes), scs.ts.op_per_strat)
 end
 
 # Add basic functions of iterators
