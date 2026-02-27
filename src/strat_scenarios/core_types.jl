@@ -100,7 +100,7 @@ n_children(n::StratNode, ts::TwoLevelTree) = count(c -> _parent(c) == n, strat_n
 """
     n_leaves(ts::TwoLevelTree)
 
-Returns the number of children of a [`TwoLevelTree`](@ref).
+Returns the number of leaves of a [`TwoLevelTree`](@ref).
 """
 n_leaves(ts::TwoLevelTree) = count(n -> n_children(n, ts) == 0, strat_nodes(ts))
 
