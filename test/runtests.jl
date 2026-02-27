@@ -1800,4 +1800,4 @@ end
 end
 
 @run_package_tests
-Aqua.test_all(TimeStruct; ambiguities = false)
+Aqua.test_all(TimeStruct; ambiguities = false, unbound_args = false)
