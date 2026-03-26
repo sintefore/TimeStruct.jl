@@ -1535,6 +1535,98 @@ end
     @test vals == [-1, -2, -1, -2, -1, -2]
 end
 
+@testitem "Profile addition and subtraction" begin
+    day = SimpleTimes(5, 1)
+    ts_strat = TwoLevel(3, 10, SimpleTimes(5, 1))
+    ts_scen = TwoLevel(2, 10, OperationalScenarios(3, SimpleTimes(5, 1)))
+    ts_repr = TwoLevel(
+        2,
+        5,
+        RepresentativePeriods(2, 5, [0.5, 0.5], [SimpleTimes(5, 1), SimpleTimes(5, 1)]),
+    )
+
+    fp = FixedProfile(3)
+    fp2 = FixedProfile(10)
+    op = OperationalProfile([1, 2, 3, 4, 5])
+    op2 = OperationalProfile([6, 7, 8, 9, 10])
+    sp = StrategicProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    sp2 = StrategicProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    scp = ScenarioProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    scp2 = ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    rp = RepresentativeProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+    ])
+    rp2 = RepresentativeProfile([FixedProfile(1), FixedProfile(2)])
+
+    # FixedProfile + FixedProfile
+    @test all((fp+fp2)[t] == fp[t] + fp2[t] for t in day)
+    @test all((fp+fp2)[t] == (fp2+fp)[t] for t in day)
+
+    # OperationalProfile + OperationalProfile
+    @test all((op+op2)[t] == op[t] + op2[t] for t in day)
+    @test all((op+op2)[t] == (op2+op)[t] for t in day)
+
+    # FixedProfile + OperationalProfile
+    @test all((fp+op)[t] == fp[t] + op[t] for t in day)
+    @test all((fp+op)[t] == (op+fp)[t] for t in day)
+
+    # StrategicProfile + StrategicProfile
+    @test all((sp+sp2)[t] == sp[t] + sp2[t] for t in ts_strat)
+    @test all((sp+sp2)[t] == (sp2+sp)[t] for t in ts_strat)
+
+    # StrategicProfile + OperationalProfile
+    @test all((sp+op)[t] == sp[t] + op[t] for t in ts_strat)
+    @test all((sp+op)[t] == (op+sp)[t] for t in ts_strat)
+
+    # FixedProfile + StrategicProfile
+    @test all((fp+sp)[t] == fp[t] + sp[t] for t in ts_strat)
+    @test all((fp+sp)[t] == (sp+fp)[t] for t in ts_strat)
+
+    # ScenarioProfile + ScenarioProfile
+    @test all((scp+scp2)[t] == scp[t] + scp2[t] for t in ts_scen)
+    @test all((scp+scp2)[t] == (scp2+scp)[t] for t in ts_scen)
+
+    # ScenarioProfile + OperationalProfile
+    @test all((scp+op)[t] == scp[t] + op[t] for t in ts_scen)
+    @test all((scp+op)[t] == (op+scp)[t] for t in ts_scen)
+
+    # FixedProfile + ScenarioProfile
+    @test all((fp+scp)[t] == fp[t] + scp[t] for t in ts_scen)
+    @test all((fp+scp)[t] == (scp+fp)[t] for t in ts_scen)
+
+    # RepresentativeProfile + RepresentativeProfile
+    @test all((rp+rp2)[t] == rp[t] + rp2[t] for t in ts_repr)
+    @test all((rp+rp2)[t] == (rp2+rp)[t] for t in ts_repr)
+
+    # RepresentativeProfile + OperationalProfile
+    @test all((rp+op)[t] == rp[t] + op[t] for t in ts_repr)
+    @test all((rp+op)[t] == (op+rp)[t] for t in ts_repr)
+
+    # FixedProfile + RepresentativeProfile
+    @test all((fp+rp)[t] == fp[t] + rp[t] for t in ts_repr)
+    @test all((fp+rp)[t] == (rp+fp)[t] for t in ts_repr)
+
+    # Subtraction: a - b = a + (-b), spot-check across profile type pairs
+    @test all((fp-fp2)[t] == fp[t] - fp2[t] for t in day)
+    @test all((op-fp)[t] == op[t] - fp[t] for t in day)
+    @test all((fp-op)[t] == fp[t] - op[t] for t in day)
+    @test all((sp-op)[t] == sp[t] - op[t] for t in ts_strat)
+    @test all((fp-sp)[t] == fp[t] - sp[t] for t in ts_strat)
+    @test all((scp-op)[t] == scp[t] - op[t] for t in ts_scen)
+    @test all((fp-scp)[t] == fp[t] - scp[t] for t in ts_scen)
+    @test all((rp-op)[t] == rp[t] - op[t] for t in ts_repr)
+    @test all((fp-rp)[t] == fp[t] - rp[t] for t in ts_repr)
+end
+
 @testitem "Iteration utilities" begin
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)

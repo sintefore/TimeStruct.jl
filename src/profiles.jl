@@ -416,3 +416,51 @@ end
 -(a::RepresentativeProfile{T}) where {T} = RepresentativeProfile(-a.vals)
 
 +(a::TimeProfile{T}) where {T} = a
+
+function +(a::FixedProfile{T}, b::FixedProfile{S}) where {T,S}
+    return FixedProfile(a.val + b.val)
+end
+function +(a::OperationalProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.vals .+ b.vals)
+end
+function +(a::StrategicProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile(a.vals .+ b.vals)
+end
+function +(a::ScenarioProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile(a.vals .+ b.vals)
+end
+function +(a::RepresentativeProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile(a.vals .+ b.vals)
+end
+
+function +(a::StrategicProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return StrategicProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::StrategicProfile{S}) where {T,S} = b + a
+function +(a::ScenarioProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return ScenarioProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
+function +(a::RepresentativeProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return RepresentativeProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
+
+function +(a::FixedProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.val .+ b.vals)
+end
++(a::OperationalProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile([a + p for p in b.vals])
+end
++(a::StrategicProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile([a + p for p in b.vals])
+end
++(a::ScenarioProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile([a + p for p in b.vals])
+end
++(a::RepresentativeProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+
+-(a::TimeProfile{T}, b::TimeProfile{S}) where {T,S} = a + (-b)
