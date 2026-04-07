@@ -1533,6 +1533,16 @@ end
     profile = -RepresentativeProfile([1, 2, 3])
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [-1, -2, -1, -2, -1, -2]
+
+    # StrategicStochasticProfile
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    ssp_unary = StrategicStochasticProfile([[1], [2, 3, 4], [5, 6, 7, 8, 9, 10]])
+
+    profile = +ssp_unary
+    @test all(profile[n] == ssp_unary[n] for n in strat_nodes(tree))
+
+    profile = -ssp_unary
+    @test all(profile[n] == -ssp_unary[n] for n in strat_nodes(tree))
 end
 
 @testitem "Profile addition and subtraction" begin
@@ -1625,6 +1635,68 @@ end
     @test all((fp-scp)[t] == fp[t] - scp[t] for t in ts_scen)
     @test all((rp-op)[t] == rp[t] - op[t] for t in ts_repr)
     @test all((fp-rp)[t] == fp[t] - rp[t] for t in ts_repr)
+
+    # StrategicStochasticProfile setup
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    ssp = StrategicStochasticProfile([
+        [OperationalProfile([1, 2, 3, 4, 5])],
+        [
+            OperationalProfile([2, 3, 4, 5, 6]),
+            OperationalProfile([3, 4, 5, 6, 7]),
+            OperationalProfile([4, 5, 6, 7, 8]),
+        ],
+        [
+            OperationalProfile([5, 6, 7, 8, 9]),
+            OperationalProfile([6, 7, 8, 9, 10]),
+            OperationalProfile([7, 8, 9, 10, 11]),
+            OperationalProfile([8, 9, 10, 11, 12]),
+            OperationalProfile([9, 10, 11, 12, 13]),
+            OperationalProfile([10, 11, 12, 13, 14]),
+        ],
+    ])
+    ssp2 = StrategicStochasticProfile([
+        [FixedProfile(1)],
+        [FixedProfile(2), FixedProfile(3), FixedProfile(4)],
+        [
+            FixedProfile(5),
+            FixedProfile(6),
+            FixedProfile(7),
+            FixedProfile(8),
+            FixedProfile(9),
+            FixedProfile(10),
+        ],
+    ])
+
+    # StrategicStochasticProfile + Number
+    @test all((ssp+10)[t] == ssp[t] + 10 for t in tree)
+    @test all((10+ssp)[t] == ssp[t] + 10 for t in tree)
+
+    # StrategicStochasticProfile - Number
+    @test all((ssp-1)[t] == ssp[t] - 1 for t in tree)
+
+    # StrategicStochasticProfile * Number
+    @test all((ssp*2)[t] == ssp[t] * 2 for t in tree)
+    @test all((2*ssp)[t] == ssp[t] * 2 for t in tree)
+
+    # StrategicStochasticProfile / Number
+    @test all((ssp/2)[t] == ssp[t] / 2 for t in tree)
+
+    # StrategicStochasticProfile + StrategicStochasticProfile
+    @test all((ssp+ssp2)[t] == ssp[t] + ssp2[t] for t in tree)
+    @test all((ssp+ssp2)[t] == (ssp2+ssp)[t] for t in tree)
+
+    # StrategicStochasticProfile + OperationalProfile
+    @test all((ssp+op)[t] == ssp[t] + op[t] for t in tree)
+    @test all((ssp+op)[t] == (op+ssp)[t] for t in tree)
+
+    # FixedProfile + StrategicStochasticProfile
+    @test all((fp+ssp)[t] == fp[t] + ssp[t] for t in tree)
+    @test all((fp+ssp)[t] == (ssp+fp)[t] for t in tree)
+
+    # StrategicStochasticProfile subtraction (via unary -)
+    @test all((ssp-ssp2)[t] == ssp[t] - ssp2[t] for t in tree)
+    @test all((ssp-op)[t] == ssp[t] - op[t] for t in tree)
+    @test all((fp-ssp)[t] == fp[t] - ssp[t] for t in tree)
 end
 
 @testitem "Iteration utilities" begin
