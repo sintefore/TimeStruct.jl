@@ -1533,6 +1533,170 @@ end
     profile = -RepresentativeProfile([1, 2, 3])
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [-1, -2, -1, -2, -1, -2]
+
+    # StrategicStochasticProfile
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    ssp_unary = StrategicStochasticProfile([[1], [2, 3, 4], [5, 6, 7, 8, 9, 10]])
+
+    profile = +ssp_unary
+    @test all(profile[n] == ssp_unary[n] for n in strat_nodes(tree))
+
+    profile = -ssp_unary
+    @test all(profile[n] == -ssp_unary[n] for n in strat_nodes(tree))
+end
+
+@testitem "Profile addition and subtraction" begin
+    day = SimpleTimes(5, 1)
+    ts_strat = TwoLevel(3, 10, SimpleTimes(5, 1))
+    ts_scen = TwoLevel(2, 10, OperationalScenarios(3, SimpleTimes(5, 1)))
+    ts_repr = TwoLevel(
+        2,
+        5,
+        RepresentativePeriods(2, 5, [0.5, 0.5], [SimpleTimes(5, 1), SimpleTimes(5, 1)]),
+    )
+
+    fp = FixedProfile(3)
+    fp2 = FixedProfile(10)
+    op = OperationalProfile([1, 2, 3, 4, 5])
+    op2 = OperationalProfile([6, 7, 8, 9, 10])
+    sp = StrategicProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    sp2 = StrategicProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    scp = ScenarioProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    scp2 = ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    rp = RepresentativeProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+    ])
+    rp2 = RepresentativeProfile([FixedProfile(1), FixedProfile(2)])
+
+    # FixedProfile + FixedProfile
+    @test all((fp+fp2)[t] == fp[t] + fp2[t] for t in day)
+    @test all((fp+fp2)[t] == (fp2+fp)[t] for t in day)
+
+    # OperationalProfile + OperationalProfile
+    @test all((op+op2)[t] == op[t] + op2[t] for t in day)
+    @test all((op+op2)[t] == (op2+op)[t] for t in day)
+
+    # FixedProfile + OperationalProfile
+    @test all((fp+op)[t] == fp[t] + op[t] for t in day)
+    @test all((fp+op)[t] == (op+fp)[t] for t in day)
+
+    # StrategicProfile + StrategicProfile
+    @test all((sp+sp2)[t] == sp[t] + sp2[t] for t in ts_strat)
+    @test all((sp+sp2)[t] == (sp2+sp)[t] for t in ts_strat)
+
+    # StrategicProfile + OperationalProfile
+    @test all((sp+op)[t] == sp[t] + op[t] for t in ts_strat)
+    @test all((sp+op)[t] == (op+sp)[t] for t in ts_strat)
+
+    # FixedProfile + StrategicProfile
+    @test all((fp+sp)[t] == fp[t] + sp[t] for t in ts_strat)
+    @test all((fp+sp)[t] == (sp+fp)[t] for t in ts_strat)
+
+    # ScenarioProfile + ScenarioProfile
+    @test all((scp+scp2)[t] == scp[t] + scp2[t] for t in ts_scen)
+    @test all((scp+scp2)[t] == (scp2+scp)[t] for t in ts_scen)
+
+    # ScenarioProfile + OperationalProfile
+    @test all((scp+op)[t] == scp[t] + op[t] for t in ts_scen)
+    @test all((scp+op)[t] == (op+scp)[t] for t in ts_scen)
+
+    # FixedProfile + ScenarioProfile
+    @test all((fp+scp)[t] == fp[t] + scp[t] for t in ts_scen)
+    @test all((fp+scp)[t] == (scp+fp)[t] for t in ts_scen)
+
+    # RepresentativeProfile + RepresentativeProfile
+    @test all((rp+rp2)[t] == rp[t] + rp2[t] for t in ts_repr)
+    @test all((rp+rp2)[t] == (rp2+rp)[t] for t in ts_repr)
+
+    # RepresentativeProfile + OperationalProfile
+    @test all((rp+op)[t] == rp[t] + op[t] for t in ts_repr)
+    @test all((rp+op)[t] == (op+rp)[t] for t in ts_repr)
+
+    # FixedProfile + RepresentativeProfile
+    @test all((fp+rp)[t] == fp[t] + rp[t] for t in ts_repr)
+    @test all((fp+rp)[t] == (rp+fp)[t] for t in ts_repr)
+
+    # Subtraction: a - b = a + (-b), spot-check across profile type pairs
+    @test all((fp-fp2)[t] == fp[t] - fp2[t] for t in day)
+    @test all((op-fp)[t] == op[t] - fp[t] for t in day)
+    @test all((fp-op)[t] == fp[t] - op[t] for t in day)
+    @test all((sp-op)[t] == sp[t] - op[t] for t in ts_strat)
+    @test all((fp-sp)[t] == fp[t] - sp[t] for t in ts_strat)
+    @test all((scp-op)[t] == scp[t] - op[t] for t in ts_scen)
+    @test all((fp-scp)[t] == fp[t] - scp[t] for t in ts_scen)
+    @test all((rp-op)[t] == rp[t] - op[t] for t in ts_repr)
+    @test all((fp-rp)[t] == fp[t] - rp[t] for t in ts_repr)
+
+    # StrategicStochasticProfile setup
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    ssp = StrategicStochasticProfile([
+        [OperationalProfile([1, 2, 3, 4, 5])],
+        [
+            OperationalProfile([2, 3, 4, 5, 6]),
+            OperationalProfile([3, 4, 5, 6, 7]),
+            OperationalProfile([4, 5, 6, 7, 8]),
+        ],
+        [
+            OperationalProfile([5, 6, 7, 8, 9]),
+            OperationalProfile([6, 7, 8, 9, 10]),
+            OperationalProfile([7, 8, 9, 10, 11]),
+            OperationalProfile([8, 9, 10, 11, 12]),
+            OperationalProfile([9, 10, 11, 12, 13]),
+            OperationalProfile([10, 11, 12, 13, 14]),
+        ],
+    ])
+    ssp2 = StrategicStochasticProfile([
+        [FixedProfile(1)],
+        [FixedProfile(2), FixedProfile(3), FixedProfile(4)],
+        [
+            FixedProfile(5),
+            FixedProfile(6),
+            FixedProfile(7),
+            FixedProfile(8),
+            FixedProfile(9),
+            FixedProfile(10),
+        ],
+    ])
+
+    # StrategicStochasticProfile + Number
+    @test all((ssp+10)[t] == ssp[t] + 10 for t in tree)
+    @test all((10+ssp)[t] == ssp[t] + 10 for t in tree)
+
+    # StrategicStochasticProfile - Number
+    @test all((ssp-1)[t] == ssp[t] - 1 for t in tree)
+
+    # StrategicStochasticProfile * Number
+    @test all((ssp*2)[t] == ssp[t] * 2 for t in tree)
+    @test all((2*ssp)[t] == ssp[t] * 2 for t in tree)
+
+    # StrategicStochasticProfile / Number
+    @test all((ssp/2)[t] == ssp[t] / 2 for t in tree)
+
+    # StrategicStochasticProfile + StrategicStochasticProfile
+    @test all((ssp+ssp2)[t] == ssp[t] + ssp2[t] for t in tree)
+    @test all((ssp+ssp2)[t] == (ssp2+ssp)[t] for t in tree)
+
+    # StrategicStochasticProfile + OperationalProfile
+    @test all((ssp+op)[t] == ssp[t] + op[t] for t in tree)
+    @test all((ssp+op)[t] == (op+ssp)[t] for t in tree)
+
+    # FixedProfile + StrategicStochasticProfile
+    @test all((fp+ssp)[t] == fp[t] + ssp[t] for t in tree)
+    @test all((fp+ssp)[t] == (ssp+fp)[t] for t in tree)
+
+    # StrategicStochasticProfile subtraction (via unary -)
+    @test all((ssp-ssp2)[t] == ssp[t] - ssp2[t] for t in tree)
+    @test all((ssp-op)[t] == ssp[t] - op[t] for t in tree)
+    @test all((fp-ssp)[t] == fp[t] - ssp[t] for t in tree)
 end
 
 @testitem "Iteration utilities" begin

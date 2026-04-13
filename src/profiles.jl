@@ -365,6 +365,9 @@ end
 function +(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .+ b)
 end
+function +(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .+ b for v in a.vals])
+end
 +(a::Number, b::TimeProfile{T}) where {T} = b + a
 -(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val - b)
 function -(a::OperationalProfile{T}, b::Number) where {T}
@@ -379,6 +382,9 @@ end
 function -(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .- b)
 end
+function -(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .- b for v in a.vals])
+end
 
 *(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val .* b)
 function *(a::OperationalProfile{T}, b::Number) where {T}
@@ -392,6 +398,9 @@ function *(a::ScenarioProfile{T}, b::Number) where {T}
 end
 function *(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .* b)
+end
+function *(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .* b for v in a.vals])
 end
 
 *(a::Number, b::TimeProfile{T}) where {T} = b * a
@@ -408,11 +417,75 @@ end
 function /(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals ./ b)
 end
+function /(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v ./ b for v in a.vals])
+end
 
 -(a::FixedProfile{T}) where {T} = FixedProfile(-a.val)
 -(a::OperationalProfile{T}) where {T} = OperationalProfile(-a.vals)
 -(a::StrategicProfile{T}) where {T} = StrategicProfile(-a.vals)
 -(a::ScenarioProfile{T}) where {T} = ScenarioProfile(-a.vals)
 -(a::RepresentativeProfile{T}) where {T} = RepresentativeProfile(-a.vals)
+-(a::StrategicStochasticProfile{T}) where {T} =
+    StrategicStochasticProfile([.-v for v in a.vals])
 
 +(a::TimeProfile{T}) where {T} = a
+
+function +(a::FixedProfile{T}, b::FixedProfile{S}) where {T,S}
+    return FixedProfile(a.val + b.val)
+end
+function +(a::OperationalProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.vals .+ b.vals)
+end
+function +(a::StrategicProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile(a.vals .+ b.vals)
+end
+function +(a::ScenarioProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile(a.vals .+ b.vals)
+end
+function +(a::RepresentativeProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile(a.vals .+ b.vals)
+end
+function +(a::StrategicStochasticProfile{T}, b::StrategicStochasticProfile{S}) where {T,S}
+    return StrategicStochasticProfile([va .+ vb for (va, vb) in zip(a.vals, b.vals)])
+end
+
+function +(a::StrategicProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return StrategicProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::StrategicProfile{S}) where {T,S} = b + a
+function +(a::ScenarioProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return ScenarioProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
+function +(a::RepresentativeProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return RepresentativeProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
+
+function +(a::FixedProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.val .+ b.vals)
+end
++(a::OperationalProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile([a + p for p in b.vals])
+end
++(a::StrategicProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile([a + p for p in b.vals])
+end
++(a::ScenarioProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile([a + p for p in b.vals])
+end
++(a::RepresentativeProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::StrategicStochasticProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[p + b for p in v] for v in a.vals])
+end
++(a::OperationalProfile{T}, b::StrategicStochasticProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::StrategicStochasticProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[a + p for p in v] for v in b.vals])
+end
++(a::StrategicStochasticProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+
+-(a::TimeProfile{T}, b::TimeProfile{S}) where {T,S} = a + (-b)
