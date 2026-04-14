@@ -23,9 +23,9 @@ include("op_scenarios/rep_periods.jl")
 include("op_scenarios/strat_periods.jl")
 include("op_scenarios/tree_periods.jl")
 
-include("utils.jl")
 include("discount.jl")
 include("profiles.jl")
+include("utils.jl")
 
 export TimeStructure
 export SimpleTimes
@@ -61,5 +61,7 @@ export n_strat_per, n_children, n_leaves, n_branches
 export Discounter
 export discount
 export objective_weight
+
+export profilechart, profilechart!
 
 end # module
