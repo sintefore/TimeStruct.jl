@@ -40,6 +40,7 @@ export TreeNode
 export TimeProfile
 export FixedProfile
 export OperationalProfile
+export PartitionProfile
 export ScenarioProfile
 export StrategicProfile
 export StrategicStochasticProfile

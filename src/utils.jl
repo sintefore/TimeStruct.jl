@@ -188,6 +188,14 @@ Base.length(pd::PartitionDuration) = length(pd.chunk)
 Base.first(pd::PartitionDuration) = first(pd.chunk)
 Base.last(pd::PartitionDuration) = last(pd.chunk)
 
+abstract type PartitionIndexable end
+
+struct HasPartIndex <: PartitionIndexable end
+struct NoPartIndex <: PartitionIndexable end
+
+PartitionIndexable(::Type) = NoPartIndex()
+PartitionIndexable(::Type{<:PartitionDuration}) = HasPartIndex()
+
 struct PartitionDurationIterator{I<:TimeStructure}
     itr::I
     duration::TimeStruct.Duration
@@ -239,6 +247,10 @@ PartitionDuration(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, c
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:StrategicPeriod} = StratPart
 
 Base.show(io::IO, pd::StratPart) = print(io, "sp$(pd.sp)-part$(pd.part)")
+StrategicIndexable(::Type{<:StratPart}) = HasStratIndex()
+
+_strat_per(pd::StratPart) = pd.sp
+_part(pd::StratPart) = pd.part
 
 function partition_duration(ts::TwoLevel, dur)
     return collect(

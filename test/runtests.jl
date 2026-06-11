@@ -1433,6 +1433,22 @@ end
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
 end
 
+@testitem "Profiles and partitions" begin
+    ts = TwoLevel(3, 5, SimpleTimes(6, 2))
+
+    pp = PartitionProfile([3, 1, 2])
+    vals = collect(pp[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 3, 1, 2, 3, 1, 2]
+
+    sp1 = StrategicProfile([3, 1, 2])
+    vals = collect(sp1[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 1, 1, 1, 2, 2, 2]
+
+    sp2 = StrategicProfile([pp, pp+10, pp+20])
+    vals = collect(sp2[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 13, 11, 12, 23, 21, 22]
+end
+
 @testitem "Profile conversion" begin
     fp = FixedProfile(12)
     @test TimeStruct._internal_convert(Int64, fp) == FixedProfile(12)
@@ -1498,6 +1514,13 @@ end
     profile = -OperationalProfile([1, 2, 3])
     @test profile.vals == [-1, -2, -3]
 
+    # PartitionProfile
+    profile = +PartitionProfile([1, 2, 3])
+    @test profile.vals == [1, 2, 3]
+
+    profile = -PartitionProfile([1, 2, 3])
+    @test profile.vals == [-1, -2, -3]
+
     # StrategicProfile
     simple = SimpleTimes(10, 1)
     ts = TwoLevel(3, 5, simple)
@@ -1548,6 +1571,7 @@ end
 @testitem "Profile addition and subtraction" begin
     day = SimpleTimes(5, 1)
     ts_strat = TwoLevel(3, 10, SimpleTimes(5, 1))
+    ts_part = partition_duration(ts_strat, 2)
     ts_scen = TwoLevel(2, 10, OperationalScenarios(3, SimpleTimes(5, 1)))
     ts_repr = TwoLevel(
         2,
@@ -1559,6 +1583,8 @@ end
     fp2 = FixedProfile(10)
     op = OperationalProfile([1, 2, 3, 4, 5])
     op2 = OperationalProfile([6, 7, 8, 9, 10])
+    pp = PartitionProfile([1, 2, 3])
+    pp2 = PartitionProfile([6, 7, 8])
     sp = StrategicProfile([
         OperationalProfile([1, 2, 3, 4, 5]),
         OperationalProfile([6, 7, 8, 9, 10]),
@@ -1589,6 +1615,14 @@ end
     @test all((fp+op)[t] == fp[t] + op[t] for t in day)
     @test all((fp+op)[t] == (op+fp)[t] for t in day)
 
+    # PartitionProfile + PartitionProfile
+    @test all((pp+pp2)[t] == pp[t] + pp2[t] for t in ts_part)
+    @test all((pp+pp2)[t] == (pp2+pp)[t] for t in ts_part)
+
+    # FixedProfile + PartitionProfile
+    @test all((fp+pp)[t] == fp[t] + pp[t] for t in ts_part)
+    @test all((fp+pp)[t] == (pp+fp)[t] for t in ts_part)
+
     # StrategicProfile + StrategicProfile
     @test all((sp+sp2)[t] == sp[t] + sp2[t] for t in ts_strat)
     @test all((sp+sp2)[t] == (sp2+sp)[t] for t in ts_strat)
@@ -1596,6 +1630,10 @@ end
     # StrategicProfile + OperationalProfile
     @test all((sp+op)[t] == sp[t] + op[t] for t in ts_strat)
     @test all((sp+op)[t] == (op+sp)[t] for t in ts_strat)
+
+    # StrategicProfile + PartitionProfile
+    @test all((sp2+pp)[t] == sp2[t] + pp[t] for t in ts_part)
+    @test all((sp2+pp)[t] == (pp+sp2)[t] for t in ts_part)
 
     # FixedProfile + StrategicProfile
     @test all((fp+sp)[t] == fp[t] + sp[t] for t in ts_strat)
