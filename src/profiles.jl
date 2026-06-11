@@ -249,7 +249,7 @@ end
 function Base.getindex(
     sp::ScenarioProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
@@ -526,6 +526,10 @@ function +(a::ScenarioProfile{T}, b::OperationalProfile{S}) where {T,S}
     return ScenarioProfile([p + b for p in a.vals])
 end
 +(a::OperationalProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
+function +(a::ScenarioProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return ScenarioProfile([p + b for p in a.vals])
+end
++(a::PartitionProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
 function +(a::RepresentativeProfile{T}, b::OperationalProfile{S}) where {T,S}
     return RepresentativeProfile([p + b for p in a.vals])
 end

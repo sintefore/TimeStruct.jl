@@ -271,6 +271,25 @@ _strat_per(pd::StratReprPart) = pd.sp
 _rper(pd::StratReprPart) = pd.rp
 _part(pd::StratReprPart) = pd.part
 
+struct StratOpScenPart{N,T} <: PartitionDuration{T}
+    sp::Int
+    scen::Int
+    part::Int
+    chunk::NTuple{N,T}
+end
+function PartitionDuration(itr::StratOpScenario, part, chunk)
+    return StratOpScenPart(itr.sp, itr.scen, part, chunk)
+end
+eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratOpScenario} = StratOpScenPart
+
+Base.show(io::IO, pd::StratOpScenPart) = print(io, "sp$(pd.sp)-sc$(pd.scen)-part$(pd.part)")
+StrategicIndexable(::Type{<:StratOpScenPart}) = HasStratIndex()
+ScenarioIndexable(::Type{<:StratOpScenPart}) = HasScenarioIndex()
+
+_strat_per(pd::StratOpScenPart) = pd.sp
+_opscen(pd::StratOpScenPart) = pd.scen
+_part(pd::StratOpScenPart) = pd.part
+
 function partition_duration(ts::TwoLevel, dur)
     return collect(
         Iterators.flatten(partition_duration(sp, dur) for sp in strategic_periods(ts)),
@@ -282,6 +301,14 @@ function partition_duration(
 ) where {S,T,OP<:RepresentativePeriods}
     return collect(
         Iterators.flatten(partition_duration(rp, dur) for rp in repr_periods(ts)),
+    )
+end
+function partition_duration(
+    ts::StrategicPeriod{S,T,OP},
+    dur,
+) where {S,T,OP<:OperationalScenarios}
+    return collect(
+        Iterators.flatten(partition_duration(osc, dur) for osc in opscenarios(ts)),
     )
 end
 

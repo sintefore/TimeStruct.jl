@@ -1448,6 +1448,42 @@ end
     vals = collect(sp2[pd] for pd in partition_duration(ts, 4))
     @test vals == [3, 1, 2, 13, 11, 12, 23, 21, 22]
 
+    # Tests for time structure with operational scenarios
+    oscs = OperationalScenarios(2, SimpleTimes(6, 2))
+    ts = TwoLevel(2, 1, oscs)
+
+    vals = collect(pp[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2]
+
+    scp1 = ScenarioProfile([3, 1])
+    vals = collect(scp1[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 1, 1, 1, 3, 3, 3, 1, 1, 1]
+
+    scp2 = ScenarioProfile([pp, pp+10])
+    vals = collect(scp2[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 13, 11, 12, 3, 1, 2, 13, 11, 12]
+
+    sp1 = StrategicProfile([3, 1])
+    vals = collect(sp1[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1]
+
+    sp2 = StrategicProfile([3, 1])
+    vals = collect(sp2[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1]
+
+    sp3 = StrategicProfile([pp, pp+100])
+    vals = collect(sp3[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 3, 1, 2, 103, 101, 102, 103, 101, 102]
+
+    sp4 = StrategicProfile([scp1, scp1+100])
+    vals = collect(sp4[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 1, 1, 1, 103, 103, 103, 101, 101, 101]
+
+    sp5 = StrategicProfile([scp2, scp2+100])
+    vals = collect(sp5[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 13, 11, 12, 103, 101, 102, 113, 111, 112]
+
+    # Tests for time structure with representative periods
     rps = RepresentativePeriods(2, 1, SimpleTimes(6, 2))
     ts = TwoLevel(2, 1, rps)
 
@@ -1613,6 +1649,7 @@ end
         RepresentativePeriods(2, 5, [0.5, 0.5], [SimpleTimes(5, 1), SimpleTimes(5, 1)]),
     )
     ts_repr_part = partition_duration(ts_repr, 2)
+    ts_scen_part = partition_duration(ts_scen, 2)
 
     fp = FixedProfile(3)
     fp2 = FixedProfile(10)
@@ -1681,6 +1718,10 @@ end
     # ScenarioProfile + OperationalProfile
     @test all((scp+op)[t] == scp[t] + op[t] for t in ts_scen)
     @test all((scp+op)[t] == (op+scp)[t] for t in ts_scen)
+
+    # ScenarioProfile + OperationalProfile
+    @test all((scp2+pp)[t] == scp2[t] + pp[t] for t in ts_scen_part)
+    @test all((scp2+pp)[t] == (pp+scp2)[t] for t in ts_scen_part)
 
     # FixedProfile + ScenarioProfile
     @test all((fp+scp)[t] == fp[t] + scp[t] for t in ts_scen)
@@ -1865,6 +1906,39 @@ end
     pds_tl = partition_duration(ts, 6)
     @test length(pds_tl) == 6
     @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+
+    # Test of the iterator utilities when running on a strategic periods with operational
+    # scenarios
+    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
+    oscs = OperationalScenarios(2, ts_ops)
+    ts = TwoLevel(2, 1, oscs)
+    ops = collect(ts)
+
+    sp = first(strategic_periods(ts))
+    osc = first(opscenarios(sp))
+    psc_osc = [pd for pd in partition_duration(osc, 6)]
+    idx = [1:3, 4:4, 5:10]
+
+    @test typeof(psc_osc[1]) <: TimeStruct.StratOpScenPart{3,<:TimeStruct.OperationalPeriod}
+    @test all(collect(psc_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+    @test first(psc_osc[1]) == first(ops)
+    @test last(psc_osc[1]) == ops[3]
+    @test length(psc_osc[1]) == 3
+    @test repr(psc_osc[3]) == "sp1-sc1-part3"
+
+    @test length(psc_osc) == 3
+    @test typeof(partition_duration(osc, 6)) <:
+          TimeStruct.PartitionDurationIterator{<:TimeStruct.StratOpScenario}
+    @test eltype(partition_duration(osc, 6)) == TimeStruct.StratOpScenPart
+    @test all(sum(duration(t) for t in pd) >= 6 for pd in psc_osc)
+
+    # Test of the iterator invariants
+    pds_tl = partition_duration(ts, 6)
+    pds_sp = [pd for pd in partition_duration(sp, 6)]
+    @test length(pds_tl) == 12
+    @test length(pds_sp) == 6
+    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+    @test all(psc_osc[k] == pds_tl[k] for k in 1:3)
 
     # Test of the iterator utilities when running on a strategic periods with representative
     # periods
