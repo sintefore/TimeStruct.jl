@@ -51,6 +51,8 @@ end
 ScenarioIndexable(::Type{<:StratOpScenPart}) = HasScenarioIndex()
 _opscen(pd::StratOpScenPart) = pd.scen
 
+# Add partition type with constructor for indexing when strategic periods, representative
+# periods and operational scenarios are present
 struct StratReprOpScenPart{N,T} <: AbstractStratPart{T}
     sp::Int
     rp::Int
