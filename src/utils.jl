@@ -252,10 +252,31 @@ StrategicIndexable(::Type{<:StratPart}) = HasStratIndex()
 _strat_per(pd::StratPart) = pd.sp
 _part(pd::StratPart) = pd.part
 
+struct StratReprPart{N,T} <: PartitionDuration{T}
+    sp::Int
+    rp::Int
+    part::Int
+    chunk::NTuple{N,T}
+end
+PartitionDuration(itr::StratReprPeriod, part, chunk) =
+    StratReprPart(itr.sp, itr.rp, part, chunk)
+eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprPeriod} = StratReprPart
+
+Base.show(io::IO, pd::StratReprPart) = print(io, "sp$(pd.sp)-rp$(pd.rp)-part$(pd.part)")
+StrategicIndexable(::Type{<:StratReprPart}) = HasStratIndex()
+RepresentativeIndexable(::Type{<:StratReprPart}) = HasReprIndex()
+
+_strat_per(pd::StratReprPart) = pd.sp
+_rper(pd::StratReprPart) = pd.rp
+_part(pd::StratReprPart) = pd.part
+
 function partition_duration(ts::TwoLevel, dur)
     return collect(
         Iterators.flatten(partition_duration(sp, dur) for sp in strategic_periods(ts)),
     )
+end
+function partition_duration(ts::StrategicPeriod{S,T,OP}, dur) where {S, T, OP<:RepresentativePeriods}
+    return collect(Iterators.flatten(partition_duration(rp, dur) for rp in repr_periods(ts)))
 end
 
 """

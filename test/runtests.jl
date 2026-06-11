@@ -1447,6 +1447,40 @@ end
     sp2 = StrategicProfile([pp, pp+10, pp+20])
     vals = collect(sp2[pd] for pd in partition_duration(ts, 4))
     @test vals == [3, 1, 2, 13, 11, 12, 23, 21, 22]
+
+    rps = RepresentativePeriods(2, 1, SimpleTimes(6, 2))
+    ts = TwoLevel(2, 1, rps)
+
+    vals = collect(pp[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2]
+
+    rp1 = RepresentativeProfile([3, 1])
+    vals = collect(rp1[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 1, 1, 1, 3, 3, 3, 1, 1, 1]
+
+    rp2 = RepresentativeProfile([pp, pp+10])
+    vals = collect(rp2[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 13, 11, 12, 3, 1, 2, 13, 11, 12]
+
+    sp1 = StrategicProfile([3, 1])
+    vals = collect(sp1[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1]
+
+    sp2 = StrategicProfile([3, 1])
+    vals = collect(sp2[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1]
+
+    sp3 = StrategicProfile([pp, pp+100])
+    vals = collect(sp3[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 3, 1, 2, 103, 101, 102, 103, 101, 102]
+
+    sp4 = StrategicProfile([rp1, rp1+100])
+    vals = collect(sp4[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 3, 3, 1, 1, 1, 103, 103, 103, 101, 101, 101]
+
+    sp5 = StrategicProfile([rp2, rp2+100])
+    vals = collect(sp5[pd] for pd in partition_duration(ts, 4))
+    @test vals == [3, 1, 2, 13, 11, 12, 103, 101, 102, 113, 111, 112]
 end
 
 @testitem "Profile conversion" begin
@@ -1578,6 +1612,7 @@ end
         5,
         RepresentativePeriods(2, 5, [0.5, 0.5], [SimpleTimes(5, 1), SimpleTimes(5, 1)]),
     )
+    ts_repr_part = partition_duration(ts_repr, 2)
 
     fp = FixedProfile(3)
     fp2 = FixedProfile(10)
@@ -1658,6 +1693,10 @@ end
     # RepresentativeProfile + OperationalProfile
     @test all((rp+op)[t] == rp[t] + op[t] for t in ts_repr)
     @test all((rp+op)[t] == (op+rp)[t] for t in ts_repr)
+
+    # RepresentativeProfile + PartitionProfile
+    @test all((rp2+pp)[t] == rp2[t] + pp[t] for t in ts_repr_part)
+    @test all((rp2+pp)[t] == (pp+rp2)[t] for t in ts_repr_part)
 
     # FixedProfile + RepresentativeProfile
     @test all((fp+rp)[t] == fp[t] + rp[t] for t in ts_repr)
@@ -1800,7 +1839,7 @@ end
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
     end
 
-    # Test of the iterator utilities when running on a strategic period
+    # Test of the iterator utilities when running on a strategic periods
     ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
     ts = TwoLevel(2, 1, ts_ops)
     ops = collect(ts)
@@ -1826,6 +1865,39 @@ end
     pds_tl = partition_duration(ts, 6)
     @test length(pds_tl) == 6
     @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+
+    # Test of the iterator utilities when running on a strategic periods with representative
+    # periods
+    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
+    rps = RepresentativePeriods(2, 1, ts_ops)
+    ts = TwoLevel(2, 1, rps)
+    ops = collect(ts)
+
+    sp = first(strategic_periods(ts))
+    rp = first(repr_periods(sp))
+    pds_rp = [pd for pd in partition_duration(rp, 6)]
+    idx = [1:3, 4:4, 5:10]
+
+    @test typeof(pds_rp[1]) <: TimeStruct.StratReprPart{3,<:TimeStruct.OperationalPeriod}
+    @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+    @test first(pds_rp[1]) == first(ops)
+    @test last(pds_rp[1]) == ops[3]
+    @test length(pds_rp[1]) == 3
+    @test repr(pds_rp[3]) == "sp1-rp1-part3"
+
+    @test length(pds_rp) == 3
+    @test typeof(partition_duration(rp, 6)) <:
+          TimeStruct.PartitionDurationIterator{<:TimeStruct.StratReprPeriod}
+    @test eltype(partition_duration(rp, 6)) == TimeStruct.StratReprPart
+    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+
+    # Test of the iterator invariants
+    pds_tl = partition_duration(ts, 6)
+    pds_sp = [pd for pd in partition_duration(sp, 6)]
+    @test length(pds_tl) == 12
+    @test length(pds_sp) == 6
+    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+    @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
 end
 
 @testitem "Indexing of operational structures" begin

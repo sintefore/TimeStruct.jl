@@ -308,7 +308,7 @@ end
 function Base.getindex(
     rp::RepresentativeProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
@@ -530,6 +530,10 @@ function +(a::RepresentativeProfile{T}, b::OperationalProfile{S}) where {T,S}
     return RepresentativeProfile([p + b for p in a.vals])
 end
 +(a::OperationalProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
+function +(a::RepresentativeProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return RepresentativeProfile([p + b for p in a.vals])
+end
++(a::PartitionProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
 
 function +(a::FixedProfile{T}, b::OperationalProfile{S}) where {T,S}
     return OperationalProfile(a.val .+ b.vals)
