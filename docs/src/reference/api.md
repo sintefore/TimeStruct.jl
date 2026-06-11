@@ -59,6 +59,7 @@ withprev
 withnext
 chunk
 chunk_duration
+partition_duration
 ```
 
 ## [Properties of time periods](@id api-prop_per)

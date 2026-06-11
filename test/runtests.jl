@@ -1761,6 +1761,33 @@ end
     for s in sdur
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
     end
+
+    # Test of the iterator utilities when running on a strategic period
+    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
+    ts = TwoLevel(2, 1, ts_ops)
+    ops = collect(ts)
+
+    sp = first(strategic_periods(ts))
+    pds_sp = [pd for pd in partition_duration(sp, 6)]
+    idx = [1:3, 4:4, 5:10]
+
+    @test typeof(pds_sp[1]) <: TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
+    @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+    @test first(pds_sp[1]) == first(ops)
+    @test last(pds_sp[1]) == ops[3]
+    @test length(pds_sp[1]) == 3
+    @test repr(pds_sp[3]) == "sp1-part3"
+
+    @test length(pds_sp) == 3
+    @test typeof(partition_duration(sp, 6)) <:
+          TimeStruct.PartitionDurationIterator{<:TimeStruct.StrategicPeriod}
+    @test eltype(partition_duration(sp, 6)) == TimeStruct.StratPart
+    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_sp)
+
+    # Test of the iterator invariants
+    pds_tl = partition_duration(ts, 6)
+    @test length(pds_tl) == 6
+    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
 end
 
 @testitem "Indexing of operational structures" begin

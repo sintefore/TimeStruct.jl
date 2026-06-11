@@ -173,6 +173,80 @@ function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
 end
 
 """
+    abstract type PartitionDuration{T<:TimePeriod}
+
+Supertype for individual partitions based on durations for operational time periods. Subtypes
+must be created for all potential time structures to be able to identify the respective
+[`TimeStructureperiod`](@ref).
+"""
+
+abstract type PartitionDuration{T<:TimePeriod} end
+
+Base.iterate(pd::PartitionDuration) = iterate(pd.chunk)
+Base.iterate(pd::PartitionDuration, state) = iterate(pd.chunk, state)
+Base.length(pd::PartitionDuration) = length(pd.chunk)
+Base.first(pd::PartitionDuration) = first(pd.chunk)
+Base.last(pd::PartitionDuration) = last(pd.chunk)
+
+struct PartitionDurationIterator{I<:TimeStructure}
+    itr::I
+    duration::TimeStruct.Duration
+end
+
+"""
+    partition_duration(itr, dur)
+
+Iterator wrapper that yields partitions of time periods where each partition is an iterator
+over the following time periods until at least `dur` time is covered or the end is reached.
+
+
+!!! note "Application"
+    The partitions only cover time periods within an operational scenario, representative
+    period, or strategic period depending on the chosen time structure.
+
+    The reason for this approach is the lack of meaning a partition of a
+    [`TimeStructurePeriod`](@ref)
+"""
+partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
+
+IteratorSize(::Type{<:PartitionDurationIterator}) = Base.SizeUnknown()
+IteratorEltype(::Type{PartitionDurationIterator{I}}) where {I} = Base.HasEltype()
+
+function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
+    isa(state[1], Iterators.IterationCutShort) && return nothing
+    y = iterate(w.itr, state[1])
+    isnothing(y) && return nothing
+    part = state[2]
+    chunk = eltype(w.itr)[]
+    acc = zero(w.duration)
+    while !isnothing(y)
+        push!(chunk, y[1])
+        acc += duration(y[1])
+        acc >= w.duration && break
+        y = iterate(w.itr, y[2])
+    end
+    pd = PartitionDuration(w.itr, part, Tuple(chunk))
+    isnothing(y) && return pd, (Iterators.IterationCutShort(), part+1)
+    return pd, (y[2], part+1)
+end
+
+struct StratPart{N,T} <: PartitionDuration{T}
+    sp::Int
+    part::Int
+    chunk::NTuple{N,T}
+end
+PartitionDuration(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, chunk)
+eltype(::Type{PartitionDurationIterator{I}}) where {I<:StrategicPeriod} = StratPart
+
+Base.show(io::IO, pd::StratPart) = print(io, "sp$(pd.sp)-part$(pd.part)")
+
+function partition_duration(ts::TwoLevel, dur)
+    return collect(
+        Iterators.flatten(partition_duration(sp, dur) for sp in strategic_periods(ts)),
+    )
+end
+
+"""
     end_oper_time(t, ts)
 
 Get the operational end time of the time period `t` in the time structure `ts`.
