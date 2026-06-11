@@ -79,6 +79,7 @@ end_oper_time
 ```@docs
 FixedProfile
 OperationalProfile
+PartitionProfile
 RepresentativeProfile
 ScenarioProfile
 StrategicProfile

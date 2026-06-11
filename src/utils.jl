@@ -258,8 +258,9 @@ struct StratReprPart{N,T} <: PartitionDuration{T}
     part::Int
     chunk::NTuple{N,T}
 end
-PartitionDuration(itr::StratReprPeriod, part, chunk) =
-    StratReprPart(itr.sp, itr.rp, part, chunk)
+function PartitionDuration(itr::StratReprPeriod, part, chunk)
+    return StratReprPart(itr.sp, itr.rp, part, chunk)
+end
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprPeriod} = StratReprPart
 
 Base.show(io::IO, pd::StratReprPart) = print(io, "sp$(pd.sp)-rp$(pd.rp)-part$(pd.part)")
@@ -275,8 +276,13 @@ function partition_duration(ts::TwoLevel, dur)
         Iterators.flatten(partition_duration(sp, dur) for sp in strategic_periods(ts)),
     )
 end
-function partition_duration(ts::StrategicPeriod{S,T,OP}, dur) where {S, T, OP<:RepresentativePeriods}
-    return collect(Iterators.flatten(partition_duration(rp, dur) for rp in repr_periods(ts)))
+function partition_duration(
+    ts::StrategicPeriod{S,T,OP},
+    dur,
+) where {S,T,OP<:RepresentativePeriods}
+    return collect(
+        Iterators.flatten(partition_duration(rp, dur) for rp in repr_periods(ts)),
+    )
 end
 
 """
