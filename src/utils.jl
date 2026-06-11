@@ -188,6 +188,8 @@ Base.length(pd::PartitionDuration) = length(pd.chunk)
 Base.first(pd::PartitionDuration) = first(pd.chunk)
 Base.last(pd::PartitionDuration) = last(pd.chunk)
 
+_part(pd::PartitionDuration) = pd.part
+
 abstract type PartitionIndexable end
 
 struct HasPartIndex <: PartitionIndexable end
@@ -236,80 +238,6 @@ function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
     pd = PartitionDuration(w.itr, part, Tuple(chunk))
     isnothing(y) && return pd, (Iterators.IterationCutShort(), part+1)
     return pd, (y[2], part+1)
-end
-
-struct StratPart{N,T} <: PartitionDuration{T}
-    sp::Int
-    part::Int
-    chunk::NTuple{N,T}
-end
-PartitionDuration(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, chunk)
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StrategicPeriod} = StratPart
-
-Base.show(io::IO, pd::StratPart) = print(io, "sp$(pd.sp)-part$(pd.part)")
-StrategicIndexable(::Type{<:StratPart}) = HasStratIndex()
-
-_strat_per(pd::StratPart) = pd.sp
-_part(pd::StratPart) = pd.part
-
-struct StratReprPart{N,T} <: PartitionDuration{T}
-    sp::Int
-    rp::Int
-    part::Int
-    chunk::NTuple{N,T}
-end
-function PartitionDuration(itr::StratReprPeriod, part, chunk)
-    return StratReprPart(itr.sp, itr.rp, part, chunk)
-end
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprPeriod} = StratReprPart
-
-Base.show(io::IO, pd::StratReprPart) = print(io, "sp$(pd.sp)-rp$(pd.rp)-part$(pd.part)")
-StrategicIndexable(::Type{<:StratReprPart}) = HasStratIndex()
-RepresentativeIndexable(::Type{<:StratReprPart}) = HasReprIndex()
-
-_strat_per(pd::StratReprPart) = pd.sp
-_rper(pd::StratReprPart) = pd.rp
-_part(pd::StratReprPart) = pd.part
-
-struct StratOpScenPart{N,T} <: PartitionDuration{T}
-    sp::Int
-    scen::Int
-    part::Int
-    chunk::NTuple{N,T}
-end
-function PartitionDuration(itr::StratOpScenario, part, chunk)
-    return StratOpScenPart(itr.sp, itr.scen, part, chunk)
-end
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratOpScenario} = StratOpScenPart
-
-Base.show(io::IO, pd::StratOpScenPart) = print(io, "sp$(pd.sp)-sc$(pd.scen)-part$(pd.part)")
-StrategicIndexable(::Type{<:StratOpScenPart}) = HasStratIndex()
-ScenarioIndexable(::Type{<:StratOpScenPart}) = HasScenarioIndex()
-
-_strat_per(pd::StratOpScenPart) = pd.sp
-_opscen(pd::StratOpScenPart) = pd.scen
-_part(pd::StratOpScenPart) = pd.part
-
-function partition_duration(ts::TwoLevel, dur)
-    return collect(
-        Iterators.flatten(partition_duration(sp, dur) for sp in strategic_periods(ts)),
-    )
-end
-function partition_duration(
-    ts::StrategicPeriod{S,T,OP},
-    dur,
-) where {S,T,OP<:RepresentativePeriods}
-    return collect(
-        Iterators.flatten(partition_duration(rp, dur) for rp in repr_periods(ts)),
-    )
-end
-function partition_duration(
-    ts::StrategicPeriod{S,T,OP},
-    dur,
-) where {S,T,OP<:OperationalScenarios}
-    return collect(
-        Iterators.flatten(partition_duration(osc, dur) for osc in opscenarios(ts)),
-    )
 end
 
 """

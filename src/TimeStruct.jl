@@ -27,6 +27,10 @@ include("utils.jl")
 include("discount.jl")
 include("profiles.jl")
 
+include("partitions/strat_periods.jl")
+include("partitions/rep_periods.jl")
+include("partitions/opscenarios.jl")
+
 export TimeStructure
 export SimpleTimes
 export CalendarTimes
