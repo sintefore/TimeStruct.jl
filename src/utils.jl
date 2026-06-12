@@ -206,9 +206,19 @@ struct NoPartIndex <: PartitionIndexable end
 PartitionIndexable(::Type) = NoPartIndex()
 PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()
 
-struct PartitionDurationIterator{I<:TimeStructure}
+struct PartitionDurationIterator{I<:TimeStructure,T<:Duration,D<:Union{T,Vector{T}}}
     itr::I
-    duration::TimeStruct.Duration
+    duration::D
+end
+
+function _duration_part(w::PartitionDurationIterator{I,T,D}, part::Int) where {I,T,D<:T}
+    return w.duration
+end
+function _duration_part(
+    w::PartitionDurationIterator{I,T,D},
+    part::Int,
+) where {I,T,D<:Vector{T}}
+    return w.duration[part]
 end
 
 """
@@ -228,19 +238,21 @@ over the following time periods until at least `dur` time is covered or the end 
 partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
 
 IteratorSize(::Type{<:PartitionDurationIterator}) = Base.SizeUnknown()
-IteratorEltype(::Type{PartitionDurationIterator{I}}) where {I} = Base.HasEltype()
 
-function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
+function Base.iterate(
+    w::PartitionDurationIterator{I,T,D},
+    state = (nothing, 1),
+) where {I,T,D}
     isa(state[1], Iterators.IterationCutShort) && return nothing
     y = iterate(w.itr, state[1])
     isnothing(y) && return nothing
     part = state[2]
     chunk = eltype(w.itr)[]
-    acc = zero(w.duration)
+    acc = zero(T)
     while !isnothing(y)
         push!(chunk, y[1])
         acc += duration(y[1])
-        acc >= w.duration && break
+        acc >= _duration_part(w, part) && break
         y = iterate(w.itr, y[2])
     end
     pd = PeriodPartition(w.itr, part, Tuple(chunk))
