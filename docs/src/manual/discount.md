@@ -31,7 +31,7 @@ To help set up the objective function in a typical optimization problem, there i
 !!! note "`objective_weight` for `TwoLevelTree`
     You must be careful when you utilize the function [`objective_weight`](@ref) for a [`TimeStruct.StratNode`](@ref).
     The function includes the multiplication with the branch probability.
-    This implies that you must divide the function by [`probability_branch]`(@ref) if you have a variable that is indexed over strategic periods and already includes the branch probability.
+    This implies that you must divide the function by [`probability_branch`](@ref) if you have a variable that is indexed over strategic periods and already includes the branch probability.
 
     You do not have to do this if your variable is not calculated from variables indexed over operational periods.
     This is frequently the case for, *e.g.*,  investment variables with one example being [`EnergyModelsInvestments`](https://energymodelsx.github.io/EnergyModelsInvestments.jl/stable/manual/optimization-variables/).

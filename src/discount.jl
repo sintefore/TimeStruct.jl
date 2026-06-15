@@ -144,7 +144,7 @@ parameters (time structure `ts`, `discount_rate` and potentially `timeunit_to_ye
     The objective weight includes the probability, both given through [`OperationalScenarios`](@ref)
     or through [`TwoLevelTree`](@ref). This implies that if you use it on, *e.g.*, variables
     indexed over strategic periods and calculate these variables through using the [`probability`](@ref)
-    function on operation period, you have to take care not to have the calculation twice.
+    function on operational periods, you have to take care not to have the calculation twice.
 
 There are two types of discounting available:
 
