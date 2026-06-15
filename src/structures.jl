@@ -85,14 +85,15 @@ multiple(t::TimePeriod) = 1.0
 """
     probability(t::TimePeriod)
 
-Returns the probability associated with the time period.
+Returns the probability associated with the time period. This include both the probability
+through [`OperationalScenarios`](@ref) and through [`TwoLevelTree`](@ref) structures.
 """
 probability(t::TimePeriod) = 1.0
 
 """
     probability_branch(t::Union{TimePeriod, TimeStructurePeriod})
 
-Returns the branch probability associated with the time period or time structure period
+Returns the branch probability associated with the time period or time structure period.
 """
 probability_branch(t::Union{TimePeriod,TimeStructurePeriod}) = 1.0
 

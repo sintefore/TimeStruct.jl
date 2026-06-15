@@ -135,11 +135,16 @@ end
     objective_weight(t::Union{TimePeriod,TimeStructurePeriod}, ts::TimeStructure, discount_rate; type = "start", timeunit_to_year = 1.0)
     objective_weight(t::Union{TimePeriod,TimeStructurePeriod}, disc::Discounter; type = "start")
 
-
 Calculates the overall objective weight for a time period `t` using a fixed `discount_rate`.
 The weight considers both discounting, the probability, and potential multiplicity of `t`.
 The function can be either called using a [`Discounter`](@ref) type or by specifying the
 parameters (time structure `ts`, `discount_rate` and potentially `timeunit_to_year`) directly.
+
+!!! note "Probabilities"
+    The objective weight includes the probability, both given through [`OperationalScenarios`](@ref)
+    or through [`TwoLevelTree`](@ref). This implies that if you use it on, *e.g.*, variables
+    indexed over strategic periods and calculate these variables through using the [`probability`](@ref)
+    function on operation period, you have to take care not to have the calculation twice.
 
 There are two types of discounting available:
 
@@ -195,5 +200,5 @@ function _objective_value(
     type,
     timeunit_to_year,
 )
-    return discount(t, ts, discount_rate; type, timeunit_to_year)
+    return probability_branch(t) * discount(t, ts, discount_rate; type, timeunit_to_year)
 end
