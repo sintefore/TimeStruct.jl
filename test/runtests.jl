@@ -1810,8 +1810,13 @@ end
         sp in strat_periods(periods)
     ) ≈ 4.825 atol = 1e-3
     @test sum(
-        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "start") for
-        sp in strat_periods(periods_tlt)
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) for sp in strat_periods(periods_tlt)
     ) ≈ 4.825 atol = 1e-3
 
     @test sum(
@@ -1819,18 +1824,28 @@ end
         (length(uniform_day) * probability(t) * multiple(t)) for t in periods
     ) ≈ 4.825 atol = 1e-3
     @test sum(
-        objective_weight(t, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
-        (length(uniform_day) * probability(t) * multiple(t) / probability_branch(t)) for t in periods_tlt
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(uniform_day) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
     ) ≈ 4.825 atol = 1e-3
-
 
     @test sum(
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
         for sp in strat_periods(periods)
     ) ≈ 4.468 atol = 1e-3
     @test sum(
-        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
-        for sp in strat_periods(periods_tlt)
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "avg_year",
+        ) for sp in strat_periods(periods_tlt)
     ) ≈ 4.468 atol = 1e-3
 
     @test sum(
@@ -1838,8 +1853,8 @@ end
         sp in strat_periods(periods)
     ) ≈ 4.382 atol = 1e-3
     @test sum(
-        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "avg") for
-        sp in strat_periods(periods_tlt)
+        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "avg")
+        for sp in strat_periods(periods_tlt)
     ) ≈ 4.382 atol = 1e-3
 
     oscs = OperationalScenarios(2, uniform_day)
@@ -1851,8 +1866,14 @@ end
         (length(oscs) * probability(t) * multiple(t)) for t in periods
     ) ≈ 4.825 atol = 1e-3
     @test sum(
-        objective_weight(t, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
-        (length(oscs) * probability(t) * multiple(t) / probability_branch(t)) for t in periods_tlt
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(oscs) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
     ) ≈ 4.825 atol = 1e-3
 
     rps = RepresentativePeriods(2, 1, uniform_day)
@@ -1864,8 +1885,14 @@ end
         (length(rps) * probability(t) * multiple(t)) for t in periods
     ) ≈ 4.825 atol = 1e-3
     @test sum(
-        objective_weight(t, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
-        (length(rps) * probability(t) * multiple(t) / probability_branch(t)) for t in periods_tlt
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(rps) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
     ) ≈ 4.825 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
