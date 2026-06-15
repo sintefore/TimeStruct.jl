@@ -426,8 +426,9 @@ end
 -(a::StrategicProfile{T}) where {T} = StrategicProfile(-a.vals)
 -(a::ScenarioProfile{T}) where {T} = ScenarioProfile(-a.vals)
 -(a::RepresentativeProfile{T}) where {T} = RepresentativeProfile(-a.vals)
--(a::StrategicStochasticProfile{T}) where {T} =
-    StrategicStochasticProfile([.-v for v in a.vals])
+function -(a::StrategicStochasticProfile{T}) where {T}
+    return StrategicStochasticProfile([.-v for v in a.vals])
+end
 
 +(a::TimeProfile{T}) where {T} = a
 

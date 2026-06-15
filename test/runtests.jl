@@ -1784,7 +1784,9 @@ end
     using Unitful
 
     uniform_years = TwoLevel(10, 1, SimpleTimes(1, 1))  # 10 years with duration of 1 year
+    uniform_years_tlt = TwoLevelTree(1, ones(Int, 9)*2, SimpleTimes(1, 1))
     disc = Discounter(0.04, 1, uniform_years)
+    disc_tlt = Discounter(0.04, 1, uniform_years_tlt)
 
     δ = 1 / 1.04
     for (i, t) in enumerate(uniform_years)
@@ -1797,45 +1799,100 @@ end
     ) ≈ 7.8017 atol = 1e-3
 
     @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol = 1e-3
+    @test sum(objective_weight(t, disc_tlt) for t in uniform_years_tlt) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1)
     periods = TwoLevel(10, 5 * 8760, uniform_day)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, uniform_day)
 
     @test sum(
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") for
         sp in strat_periods(periods)
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) for sp in strat_periods(periods_tlt)
     ) ≈ 4.825 atol = 1e-3
 
     @test sum(
         objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
         (length(uniform_day) * probability(t) * multiple(t)) for t in periods
     ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(uniform_day) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
+    ) ≈ 4.825 atol = 1e-3
 
     @test sum(
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
         for sp in strat_periods(periods)
+    ) ≈ 4.468 atol = 1e-3
+    @test sum(
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "avg_year",
+        ) for sp in strat_periods(periods_tlt)
     ) ≈ 4.468 atol = 1e-3
 
     @test sum(
         objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg") for
         sp in strat_periods(periods)
     ) ≈ 4.382 atol = 1e-3
+    @test sum(
+        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "avg")
+        for sp in strat_periods(periods_tlt)
+    ) ≈ 4.382 atol = 1e-3
 
     oscs = OperationalScenarios(2, uniform_day)
     periods = TwoLevel(10, 5 * 8760, oscs)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, oscs)
 
     @test sum(
         objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
         (length(oscs) * probability(t) * multiple(t)) for t in periods
     ) ≈ 4.825 atol = 1e-3
-    oscs
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(oscs) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
+    ) ≈ 4.825 atol = 1e-3
 
     rps = RepresentativePeriods(2, 1, uniform_day)
     periods = TwoLevel(10, 5 * 8760, rps)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, rps)
 
     @test sum(
         objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
         (length(rps) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(rps) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
     ) ≈ 4.825 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
