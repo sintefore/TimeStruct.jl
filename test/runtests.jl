@@ -1906,263 +1906,373 @@ end
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
     end
 
-    # Test of the duration partitions when using operational scenarios
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    ts = OperationalScenarios(2, ts_ops)
-    ops = collect(ts)
+    @testset "Partitions" begin
+        ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
 
-    osc = first(opscenarios(ts))
-    pds_osc = [pd for pd in partition_duration(osc, 6)]
-    idx = [1:3, 4:4, 5:10]
+        # Test of the duration partitions when using operational scenarios
+        @testset "Partitions - OperationalScenarios" begin
+            ts = OperationalScenarios(2, ts_ops)
+            ops = collect(ts)
 
-    @test typeof(pds_osc[1]) <: TimeStruct.OpScenPart{3,<:TimeStruct.ScenarioPeriod}
-    @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_osc[1]) == first(ops)
-    @test last(pds_osc[1]) == ops[3]
-    @test length(pds_osc[1]) == 3
-    @test repr(pds_osc[3]) == "sc1-part3"
+            osc = first(opscenarios(ts))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    @test length(pds_osc) == 3
-    @test typeof(partition_duration(osc, 6)) <:
-          TimeStruct.PartitionDurationIterator{<:TimeStruct.OperationalScenario}
-    @test eltype(partition_duration(osc, 6)) == TimeStruct.OpScenPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+            @test typeof(pds_osc[1]) <: TimeStruct.OpScenPart{3,<:TimeStruct.ScenarioPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sc1-part3"
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    @test length(pds_tl) == 6
-    @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
 
-    # Test of the duration partitions when using representative periods
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    ts = RepresentativePeriods(2, 1, ts_ops)
-    ops = collect(ts)
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.OpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
 
-    rp = first(repr_periods(ts))
-    pds_rp = [pd for pd in partition_duration(rp, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_rp[1]) <: TimeStruct.ReprPart{3,<:TimeStruct.ReprPeriod}
-    @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_rp[1]) == first(ops)
-    @test last(pds_rp[1]) == ops[3]
-    @test length(pds_rp[1]) == 3
-    @test repr(pds_rp[3]) == "rp1-part3"
+        # Test of the duration partitions when using representative periods
+        @testset "Partitions - RepresentativePeriods" begin
+            ts = RepresentativePeriods(2, 1, ts_ops)
+            ops = collect(ts)
 
-    @test length(pds_rp) == 3
-    @test typeof(partition_duration(rp, 6)) <:
-          TimeStruct.PartitionDurationIterator{<:TimeStruct.RepresentativePeriod}
-    @test eltype(partition_duration(rp, 6)) == TimeStruct.ReprPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+            rp = first(repr_periods(ts))
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    @test length(pds_tl) == 6
-    @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_rp[1]) <: TimeStruct.ReprPart{3,<:TimeStruct.ReprPeriod}
+            @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_rp[1]) == first(ops)
+            @test last(pds_rp[1]) == ops[3]
+            @test length(pds_rp[1]) == 3
+            @test repr(pds_rp[3]) == "rp1-part3"
 
-    # Test of the duration partitions when using representative periods
-    # with operational scenarios
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    oscs = OperationalScenarios(2, ts_ops)
-    ts = RepresentativePeriods(2, 1, oscs)
-    ops = collect(ts)
+            @test length(pds_rp) == 3
+            @test isa(
+                partition_duration(rp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(rp, 6)) == TimeStruct.ReprPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
 
-    rp = first(repr_periods(ts))
-    osc = first(opscenarios(rp))
-    pds_osc = [pd for pd in partition_duration(osc, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_osc[1]) <: TimeStruct.ReprOpScenPart{3,<:TimeStruct.ReprPeriod}
-    @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_osc[1]) == first(ops)
-    @test last(pds_osc[1]) == ops[3]
-    @test length(pds_osc[1]) == 3
-    @test repr(pds_osc[3]) == "rp1-sc1-part3"
+        # Test of the duration partitions when using representative periods
+        # with operational scenarios
+        @testset "Partitions - RepresentativePeriods{OperationalScenarios}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            ts = RepresentativePeriods(2, 1, oscs)
+            ops = collect(ts)
 
-    @test length(pds_osc) == 3
-    @test typeof(partition_duration(osc, 6)) <:
-          TimeStruct.PartitionDurationIterator{<:TimeStruct.ReprOpScenario}
-    @test eltype(partition_duration(osc, 6)) == TimeStruct.ReprOpScenPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+            rp = first(repr_periods(ts))
+            osc = first(opscenarios(rp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    pds_rp = [pd for pd in partition_duration(rp, 6)]
-    @test length(pds_tl) == 12
-    @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
-    @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_osc[1]) <: TimeStruct.ReprOpScenPart{3,<:TimeStruct.ReprPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "rp1-sc1-part3"
 
-    # Test of the duration partitions when using strategic periods
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    ts = TwoLevel(2, 1, ts_ops)
-    ops = collect(ts)
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.ReprOpScenario{
+                        Int64,
+                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.ReprOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
 
-    sp = first(strategic_periods(ts))
-    pds_sp = [pd for pd in partition_duration(sp, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            @test length(pds_tl) == 12
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_sp[1]) <: TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
-    @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_sp[1]) == first(ops)
-    @test last(pds_sp[1]) == ops[3]
-    @test length(pds_sp[1]) == 3
-    @test repr(pds_sp[3]) == "sp1-part3"
+        # Test of the duration partitions when using strategic periods
+        @testset "Partitions - TwoLevel" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            ops = collect(ts)
 
-    @test length(pds_sp) == 3
-    @test typeof(partition_duration(sp, 6)) <:
-          TimeStruct.PartitionDurationIterator{<:TimeStruct.StrategicPeriod}
-    @test eltype(partition_duration(sp, 6)) == TimeStruct.StratPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_sp)
+            sp = first(strategic_periods(ts))
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    @test length(pds_tl) == 6
-    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_sp[1]) <:
+                  TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_sp[1]) == first(ops)
+            @test last(pds_sp[1]) == ops[3]
+            @test length(pds_sp[1]) == 3
+            @test repr(pds_sp[3]) == "sp1-part3"
 
-    # Test of the duration partitions when using strategic periods with
-    # operational scenarios
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    oscs = OperationalScenarios(2, ts_ops)
-    ts = TwoLevel(2, 1, oscs)
-    ops = collect(ts)
+            @test length(pds_sp) == 3
+            @test isa(
+                partition_duration(sp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(sp, 6)) == TimeStruct.StratPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_sp)
 
-    sp = first(strategic_periods(ts))
-    osc = first(opscenarios(sp))
-    pds_osc = [pd for pd in partition_duration(osc, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_osc[1]) <: TimeStruct.StratOpScenPart{3,<:TimeStruct.OperationalPeriod}
-    @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_osc[1]) == first(ops)
-    @test last(pds_osc[1]) == ops[3]
-    @test length(pds_osc[1]) == 3
-    @test repr(pds_osc[3]) == "sp1-sc1-part3"
+        # Test of the duration partitions when using strategic periods with
+        # operational scenarios
+        @testset "Partitions - TwoLevel{OperationalScenarios}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            ts = TwoLevel(2, 1, oscs)
+            ops = collect(ts)
 
-    @test length(pds_osc) == 3
-    @test typeof(partition_duration(osc, 6)) <: TimeStruct.PartitionDurationIterator{
-        <:TimeStruct.StratOpScenario,
-        <:TimeStruct.Duration,
-        <:TimeStruct.Duration,
-    }
-    @test eltype(partition_duration(osc, 6)) == TimeStruct.StratOpScenPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+            sp = first(strategic_periods(ts))
+            osc = first(opscenarios(sp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    pds_sp = [pd for pd in partition_duration(sp, 6)]
-    @test length(pds_tl) == 12
-    @test length(pds_sp) == 6
-    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
-    @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratOpScenPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp1-sc1-part3"
 
-    # Test of the duration partitions when using strategic periods with
-    # representative periods
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    rps = RepresentativePeriods(2, 1, ts_ops)
-    ts = TwoLevel(2, 1, rps)
-    ops = collect(ts)
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratOpScenario{
+                        Int64,
+                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
 
-    sp = first(strategic_periods(ts))
-    rp = first(repr_periods(sp))
-    pds_rp = [pd for pd in partition_duration(rp, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 12
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_rp[1]) <: TimeStruct.StratReprPart{3,<:TimeStruct.OperationalPeriod}
-    @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_rp[1]) == first(ops)
-    @test last(pds_rp[1]) == ops[3]
-    @test length(pds_rp[1]) == 3
-    @test repr(pds_rp[3]) == "sp1-rp1-part3"
+        # Test of the duration partitions when using strategic periods with
+        # representative periods
+        @testset "Partitions - TwoLevel{RepresentativePeriods}" begin
+            rps = RepresentativePeriods(2, 1, ts_ops)
+            ts = TwoLevel(2, 1, rps)
+            ops = collect(ts)
 
-    @test length(pds_rp) == 3
-    @test typeof(partition_duration(rp, 6)) <: TimeStruct.PartitionDurationIterator{
-        <:TimeStruct.StratReprPeriod,
-        <:TimeStruct.Duration,
-        <:TimeStruct.Duration,
-    }
-    @test eltype(partition_duration(rp, 6)) == TimeStruct.StratReprPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+            sp = first(strategic_periods(ts))
+            rp = first(repr_periods(sp))
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    pds_sp = [pd for pd in partition_duration(sp, 6)]
-    @test length(pds_tl) == 12
-    @test length(pds_sp) == 6
-    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
-    @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_rp[1]) <:
+                  TimeStruct.StratReprPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_rp[1]) == first(ops)
+            @test last(pds_rp[1]) == ops[3]
+            @test length(pds_rp[1]) == 3
+            @test repr(pds_rp[3]) == "sp1-rp1-part3"
 
-    # Test of the duration partitions when using strategic periods with
-    # operational scenarios and representative periods
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    oscs = OperationalScenarios(2, ts_ops)
-    rps = RepresentativePeriods(2, 1, oscs)
-    ts = TwoLevel(2, 1, rps)
-    ops = collect(ts)
+            @test length(pds_rp) == 3
+            @test isa(
+                partition_duration(rp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratReprPeriod{
+                        Int64,
+                        TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(rp, 6)) == TimeStruct.StratReprPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
 
-    sp = first(strategic_periods(ts))
-    rp = first(repr_periods(sp))
-    osc = first(opscenarios(rp))
-    pds_osc = [pd for pd in partition_duration(osc, 6)]
-    idx = [1:3, 4:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 12
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_osc[1]) <:
-          TimeStruct.StratReprOpScenPart{3,<:TimeStruct.OperationalPeriod}
-    @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_osc[1]) == first(ops)
-    @test last(pds_osc[1]) == ops[3]
-    @test length(pds_osc[1]) == 3
-    @test repr(pds_osc[3]) == "sp1-rp1-sc1-part3"
+        # Test of the duration partitions when using strategic periods with
+        # operational scenarios and representative periods
+        @testset "Partitions - TwoLevel{RepresentativePeriods{OperationalScenarios}}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            rps = RepresentativePeriods(2, 1, oscs)
+            ts = TwoLevel(2, 1, rps)
+            ops = collect(ts)
 
-    @test length(pds_osc) == 3
-    @test typeof(partition_duration(osc, 6)) <: TimeStruct.PartitionDurationIterator{
-        <:TimeStruct.StratReprOpScenario,
-        <:TimeStruct.Duration,
-        <:TimeStruct.Duration,
-    }
-    @test eltype(partition_duration(osc, 6)) == TimeStruct.StratReprOpScenPart
-    @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+            sp = first(strategic_periods(ts))
+            rp = first(repr_periods(sp))
+            osc = first(opscenarios(rp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, 6)
-    pds_sp = [pd for pd in partition_duration(sp, 6)]
-    pds_rp = [pd for pd in partition_duration(rp, 6)]
-    @test length(pds_tl) == 24
-    @test length(pds_sp) == 12
-    @test length(pds_rp) == 6
-    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
-    @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
-    @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratReprOpScenPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp1-rp1-sc1-part3"
 
-    # Test of the duration partitions when using strategic periods and a vector of durations
-    ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
-    ts = TwoLevel(2, 1, ts_ops)
-    ops = collect(ts)
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratReprOpScenario{
+                        Int64,
+                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratReprOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
 
-    sp = first(strategic_periods(ts))
-    dur = [3, 9, 6]
-    pds_sp = [pd for pd in partition_duration(sp, dur)]
-    idx = [1:2, 3:4, 5:10]
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            @test length(pds_tl) == 24
+            @test length(pds_sp) == 12
+            @test length(pds_rp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
 
-    @test typeof(pds_sp[1]) <: TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
-    @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
-    @test first(pds_sp[1]) == first(ops)
-    @test last(pds_sp[1]) == ops[2]
-    @test length(pds_sp[1]) == 2
-    @test repr(pds_sp[3]) == "sp1-part3"
+        # Test of the duration partitions when using strategic periods and a vector of durations
+        @testset "Partitions - TwoLevel w Vector" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            ops = collect(ts)
 
-    @test length(pds_sp) == 3
-    @test typeof(partition_duration(sp, dur)) <: TimeStruct.PartitionDurationIterator{
-        <:TimeStruct.StrategicPeriod,
-        <:TimeStruct.Duration,
-        <:Vector{<:TimeStruct.Duration},
-    }
-    @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart
-    @test all(sum(duration(t) for t in pd) >= dur[k] for (k, pd) in enumerate(pds_sp))
+            sp = first(strategic_periods(ts))
+            dur = [3, 9, 6]
+            pds_sp = [pd for pd in partition_duration(sp, dur)]
+            idx = [1:2, 3:4, 5:10]
 
-    # Test of the iterator invariants
-    pds_tl = partition_duration(ts, dur)
-    @test length(pds_tl) == 6
-    @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test typeof(pds_sp[1]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_sp[1]) == first(ops)
+            @test last(pds_sp[1]) == ops[2]
+            @test length(pds_sp[1]) == 2
+            @test repr(pds_sp[3]) == "sp1-part3"
+
+            @test length(pds_sp) == 3
+            @test isa(
+                partition_duration(sp, dur),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
+                    Int,
+                    PartitionProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart
+            @test all(
+                sum(duration(t) for t in pd) >= dur[k] for (k, pd) in enumerate(pds_sp)
+            )
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, dur)
+            @test length(pds_tl) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods and a time profile of
+        # durations
+        @testset "Partitions - TwoLevel w TimeProfile" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            sp = first(strategic_periods(ts))
+            ops = collect(ts)
+
+            dur = StrategicProfile([FixedProfile(6), PartitionProfile([3, 9, 3, 3])])
+            pds_ts = partition_duration(ts, dur)
+            idx = [1:3, 4:4, 5:10, 11:12, 13:14, 15:17, 18:20]
+
+            @test typeof(pds_ts[1]) <:
+                  TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[2]) <:
+                  TimeStruct.StratPart{1,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[4]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[5]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_ts[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_ts[1]) == first(ops)
+            @test last(pds_ts[1]) == ops[3]
+            @test length(pds_ts[1]) == 3
+            @test repr(pds_ts[3]) == "sp1-part3"
+
+            @test length(pds_ts) == 7
+            @test isa(
+                partition_duration(sp, dur),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
+                    Int64,
+                    StrategicProfile{Int64,TimeProfile{Int64}},
+                },
+            )
+            @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart
+            @test all(sum(duration(t) for t in pd) >= dur[pd] for pd in pds_ts)
+
+            # Test of the iterator invariants
+            pds_sp = [pd for pd in partition_duration(sp, dur)]
+            @test length(pds_sp) == 3
+            @test all(pds_sp[k] == pds_ts[k] for k in 1:3)
+        end
+    end
 end
 
 @testitem "Indexing of operational structures" begin

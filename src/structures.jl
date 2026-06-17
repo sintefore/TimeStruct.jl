@@ -114,3 +114,28 @@ _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 _multiple_adj(ts::TimeStructure, per) = 1.0
 
 stripunit(val) = val
+
+"""
+    abstract type PeriodPartition{T<:TimePeriod}
+
+Supertype for individual partitions for operational time periods. Subtypes must be created
+for all potential time structures to be able to identify the respective
+[`TimeStructurePeriod`](@ref).
+"""
+abstract type PeriodPartition{T<:TimePeriod} end
+
+Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
+Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
+Base.length(pd::PeriodPartition) = length(pd.chunk)
+Base.first(pd::PeriodPartition) = first(pd.chunk)
+Base.last(pd::PeriodPartition) = last(pd.chunk)
+
+_part(pd::PeriodPartition) = pd.part
+
+abstract type PartitionIndexable end
+
+struct HasPartIndex <: PartitionIndexable end
+struct NoPartIndex <: PartitionIndexable end
+
+PartitionIndexable(::Type) = NoPartIndex()
+PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()
