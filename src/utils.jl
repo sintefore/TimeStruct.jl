@@ -182,7 +182,13 @@ must be created for all potential time structures to be able to identify the res
 
 abstract type PartitionDuration{T<:TimePeriod} end
 
-PartitionDuration(itr, part, chunk) = throw(ArgumentError("partition_duration is not implemented for iterator type $(typeof(itr))"))
+function PartitionDuration(itr, part, chunk)
+    throw(
+        ArgumentError(
+            "partition_duration is not implemented for iterator type $(typeof(itr))",
+        ),
+    )
+end
 Base.iterate(pd::PartitionDuration) = iterate(pd.chunk)
 Base.iterate(pd::PartitionDuration, state) = iterate(pd.chunk, state)
 Base.length(pd::PartitionDuration) = length(pd.chunk)

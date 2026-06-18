@@ -1475,23 +1475,23 @@ end
     pd_fun(ts) = partition_duration(ts, 4)
 
     # Tests for an operational scenarios time structure
-    @test collect(pp[pd] for pd in partition_duration(oscs, 4)) == repeat(pp_vals, 2)
-    @test collect(scp1[pd] for pd in partition_duration(oscs, 4)) == scp1_vals
-    @test collect(scp2[pd] for pd in partition_duration(oscs, 4)) == scp2_vals
+    @test collect(pp[pd] for pd in pd_fun(oscs)) == repeat(pp_vals, 2)
+    @test collect(scp1[pd] for pd in pd_fun(oscs)) == scp1_vals
+    @test collect(scp2[pd] for pd in pd_fun(oscs)) == scp2_vals
 
     # Tests for an representative periods time structure
-    @test collect(pp[pd] for pd in partition_duration(rps1, 4)) == repeat(pp_vals, 2)
-    @test collect(rp1[pd] for pd in partition_duration(rps1, 4)) == rp1_vals(3)
-    @test collect(rp2[pd] for pd in partition_duration(rps1, 4)) == rp2_vals(1)
+    @test collect(pp[pd] for pd in pd_fun(rps1)) == repeat(pp_vals, 2)
+    @test collect(rp1[pd] for pd in pd_fun(rps1)) == rp1_vals(3)
+    @test collect(rp2[pd] for pd in pd_fun(rps1)) == rp2_vals(1)
 
     # Tests for an representative periods time structure with operational scenarios
-    @test collect(pp[pd] for pd in partition_duration(rps2, 4)) == repeat(pp_vals, 4)
-    @test collect(scp1[pd] for pd in partition_duration(rps2, 4)) == repeat(scp1_vals, 2)
-    @test collect(scp2[pd] for pd in partition_duration(rps2, 4)) == repeat(scp2_vals, 2)
-    @test collect(rp1[pd] for pd in partition_duration(rps2, 4)) == rp1_vals(6)
-    @test collect(rp2[pd] for pd in partition_duration(rps2, 4)) == rp2_vals(2)
-    @test collect(rp3[pd] for pd in partition_duration(rps2, 4)) == rp3_vals
-    @test collect(rp4[pd] for pd in partition_duration(rps2, 4)) == rp4_vals
+    @test collect(pp[pd] for pd in pd_fun(rps2)) == repeat(pp_vals, 4)
+    @test collect(scp1[pd] for pd in pd_fun(rps2)) == repeat(scp1_vals, 2)
+    @test collect(scp2[pd] for pd in pd_fun(rps2)) == repeat(scp2_vals, 2)
+    @test collect(rp1[pd] for pd in pd_fun(rps2)) == rp1_vals(6)
+    @test collect(rp2[pd] for pd in pd_fun(rps2)) == rp2_vals(2)
+    @test collect(rp3[pd] for pd in pd_fun(rps2)) == rp3_vals
+    @test collect(rp4[pd] for pd in pd_fun(rps2)) == rp4_vals
 
     # Tests for a TwoLevel time structure with operational scenarios
     ts = TwoLevel(2, 1, st)
