@@ -30,7 +30,7 @@ end
 function Base.getindex(
     fp::FixedProfile,
     _::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return fp.val
 end
 
@@ -130,7 +130,7 @@ function _value_lookup(::NoPartIndex, pp::PartitionProfile, period)
     return error("Type $(typeof(period)) can not be used as index for a partition profile")
 end
 
-function Base.getindex(pp::PartitionProfile, period::T) where {T<:PartitionDuration}
+function Base.getindex(pp::PartitionProfile, period::T) where {T<:PeriodPartition}
     return _value_lookup(PartitionIndexable(T), pp, period)
 end
 
@@ -188,7 +188,7 @@ end
 function Base.getindex(
     sp::StrategicProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
@@ -249,7 +249,7 @@ end
 function Base.getindex(
     sp::ScenarioProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
@@ -308,7 +308,7 @@ end
 function Base.getindex(
     rp::RepresentativeProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod,PartitionDuration}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 

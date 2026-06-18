@@ -1,5 +1,5 @@
 # Add generic partition duration type
-abstract type AbstractOpScenPart{T} <: PartitionDuration{T} end
+abstract type AbstractOpScenPart{T} <: PeriodPartition{T} end
 
 ScenarioIndexable(::Type{<:AbstractOpScenPart}) = HasScenarioIndex()
 _opscen(pd::AbstractOpScenPart) = pd.scen
@@ -10,7 +10,7 @@ struct OpScenPart{N,T} <: AbstractOpScenPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-PartitionDuration(itr::OperationalScenario, part, chunk) = OpScenPart(itr.scen, part, chunk)
+PeriodPartition(itr::OperationalScenario, part, chunk) = OpScenPart(itr.scen, part, chunk)
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:OperationalScenario} = OpScenPart
 
 Base.show(io::IO, pd::OpScenPart) = print(io, "sc$(pd.scen)-part$(pd.part)")

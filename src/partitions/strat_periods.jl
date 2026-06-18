@@ -1,5 +1,5 @@
 # Add generic partition duration type
-abstract type AbstractStratPart{T} <: PartitionDuration{T} end
+abstract type AbstractStratPart{T} <: PeriodPartition{T} end
 
 StrategicIndexable(::Type{<:AbstractStratPart}) = HasStratIndex()
 _strat_per(pd::AbstractStratPart) = pd.sp
@@ -10,7 +10,7 @@ struct StratPart{N,T} <: AbstractStratPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-PartitionDuration(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, chunk)
+PeriodPartition(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, chunk)
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:StrategicPeriod} = StratPart
 
 Base.show(io::IO, pd::StratPart) = print(io, "sp$(pd.sp)-part$(pd.part)")
@@ -23,7 +23,7 @@ struct StratReprPart{N,T} <: AbstractStratPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-function PartitionDuration(itr::StratReprPeriod, part, chunk)
+function PeriodPartition(itr::StratReprPeriod, part, chunk)
     return StratReprPart(itr.sp, itr.rp, part, chunk)
 end
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprPeriod} = StratReprPart
@@ -40,7 +40,7 @@ struct StratOpScenPart{N,T} <: AbstractStratPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-function PartitionDuration(itr::StratOpScenario, part, chunk)
+function PeriodPartition(itr::StratOpScenario, part, chunk)
     return StratOpScenPart(itr.sp, itr.scen, part, chunk)
 end
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratOpScenario} = StratOpScenPart
@@ -60,7 +60,7 @@ struct StratReprOpScenPart{N,T} <: AbstractStratPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-function PartitionDuration(itr::StratReprOpScenario, part, chunk)
+function PeriodPartition(itr::StratReprOpScenario, part, chunk)
     return StratReprOpScenPart(itr.sp, itr.rp, itr.scen, part, chunk)
 end
 function eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprOpScenario}

@@ -173,29 +173,30 @@ function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
 end
 
 """
-    abstract type PartitionDuration{T<:TimePeriod}
+    abstract type PeriodPartition{T<:TimePeriod}
 
 Supertype for individual partitions based on durations for operational time periods. Subtypes
 must be created for all potential time structures to be able to identify the respective
 [`TimeStructurePeriod`](@ref).
 """
 
-abstract type PartitionDuration{T<:TimePeriod} end
+abstract type PeriodPartition{T<:TimePeriod} end
 
-function PartitionDuration(itr, part, chunk)
+function PeriodPartition(itr, part, chunk)
     throw(
         ArgumentError(
-            "partition_duration is not implemented for iterator type $(typeof(itr))",
+            "The type` PeriodPartition` called through `period_duration` is not " *
+            "implemented for iterator type $(typeof(itr))",
         ),
     )
 end
-Base.iterate(pd::PartitionDuration) = iterate(pd.chunk)
-Base.iterate(pd::PartitionDuration, state) = iterate(pd.chunk, state)
-Base.length(pd::PartitionDuration) = length(pd.chunk)
-Base.first(pd::PartitionDuration) = first(pd.chunk)
-Base.last(pd::PartitionDuration) = last(pd.chunk)
+Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
+Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
+Base.length(pd::PeriodPartition) = length(pd.chunk)
+Base.first(pd::PeriodPartition) = first(pd.chunk)
+Base.last(pd::PeriodPartition) = last(pd.chunk)
 
-_part(pd::PartitionDuration) = pd.part
+_part(pd::PeriodPartition) = pd.part
 
 abstract type PartitionIndexable end
 
@@ -203,7 +204,7 @@ struct HasPartIndex <: PartitionIndexable end
 struct NoPartIndex <: PartitionIndexable end
 
 PartitionIndexable(::Type) = NoPartIndex()
-PartitionIndexable(::Type{<:PartitionDuration}) = HasPartIndex()
+PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()
 
 struct PartitionDurationIterator{I<:TimeStructure}
     itr::I
@@ -242,7 +243,7 @@ function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
         acc >= w.duration && break
         y = iterate(w.itr, y[2])
     end
-    pd = PartitionDuration(w.itr, part, Tuple(chunk))
+    pd = PeriodPartition(w.itr, part, Tuple(chunk))
     isnothing(y) && return pd, (Iterators.IterationCutShort(), part+1)
     return pd, (y[2], part+1)
 end

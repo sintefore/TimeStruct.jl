@@ -1,5 +1,5 @@
 # Add generic partition duration type
-abstract type AbstractReprPart{T} <: PartitionDuration{T} end
+abstract type AbstractReprPart{T} <: PeriodPartition{T} end
 
 RepresentativeIndexable(::Type{<:AbstractReprPart}) = HasReprIndex()
 _rper(pd::AbstractReprPart) = pd.rp
@@ -10,7 +10,7 @@ struct ReprPart{N,T} <: AbstractReprPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-PartitionDuration(itr::RepresentativePeriod, part, chunk) = ReprPart(itr.rp, part, chunk)
+PeriodPartition(itr::RepresentativePeriod, part, chunk) = ReprPart(itr.rp, part, chunk)
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:RepresentativePeriod} = ReprPart
 
 Base.show(io::IO, pd::ReprPart) = print(io, "rp$(pd.rp)-part$(pd.part)")
@@ -23,7 +23,7 @@ struct ReprOpScenPart{N,T} <: AbstractReprPart{T}
     part::Int
     chunk::NTuple{N,T}
 end
-function PartitionDuration(itr::ReprOpScenario, part, chunk)
+function PeriodPartition(itr::ReprOpScenario, part, chunk)
     return ReprOpScenPart(itr.rp, itr.scen, part, chunk)
 end
 eltype(::Type{PartitionDurationIterator{I}}) where {I<:ReprOpScenario} = ReprOpScenPart
