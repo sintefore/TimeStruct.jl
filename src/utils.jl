@@ -177,11 +177,12 @@ end
 
 Supertype for individual partitions based on durations for operational time periods. Subtypes
 must be created for all potential time structures to be able to identify the respective
-[`TimeStructureperiod`](@ref).
+[`TimeStructurePeriod`](@ref).
 """
 
 abstract type PartitionDuration{T<:TimePeriod} end
 
+PartitionDuration(itr, part, chunk) = throw(ArgumentError("partition_duration is not implemented for iterator type $(typeof(itr))"))
 Base.iterate(pd::PartitionDuration) = iterate(pd.chunk)
 Base.iterate(pd::PartitionDuration, state) = iterate(pd.chunk, state)
 Base.length(pd::PartitionDuration) = length(pd.chunk)
@@ -214,8 +215,8 @@ over the following time periods until at least `dur` time is covered or the end 
     The partitions only cover time periods within an operational scenario, representative
     period, or strategic period depending on the chosen time structure.
 
-    The reason for this approach is the lack of meaning a partition of a
-    [`TimeStructurePeriod`](@ref)
+    The reason for this approach is the lack of meaning of a partition of a
+    [`TimeStructurePeriod`](@ref).
 """
 partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
 

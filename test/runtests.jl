@@ -1467,7 +1467,7 @@ end
     sp7 = StrategicProfile([rp3, rp3+1000])
     sp8 = StrategicProfile([rp4, rp4+1000])
 
-    # Declaration of the core time time structures and utlities
+    # Declaration of the core time structures and utilities
     st = SimpleTimes(6, 2)
     oscs = OperationalScenarios(2, st)
     rps1 = RepresentativePeriods(2, 1, st)

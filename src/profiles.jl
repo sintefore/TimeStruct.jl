@@ -90,8 +90,8 @@ end
 """
     PartitionProfile(vals::Vector{T}) where {T}
 
-Time profile with a value that varies with the operational time period. This profile cannot
-be accessed using [`AbstractOperationalScenario`](@ref), [`AbstractRepresentativePeriod`](@ref),
+Time profile with a value that varies with the partition (as returned by `partition_duration`).
+This profile cannot be accessed using [`AbstractOperationalScenario`](@ref), [`AbstractRepresentativePeriod`](@ref),
 or [`AbstractStrategicPeriod`](@ref).
 
 If too few values are provided, the last provided value will be repeated.
@@ -108,7 +108,7 @@ struct PartitionProfile{T} <: TimeProfile{T}
             throw(
                 ArgumentError(
                     "It is not possible to use a `Vector{<:Array}` as input " *
-                    "to an `PartitionProfile`.",
+                    "to a `PartitionProfile`.",
                 ),
             )
         else
