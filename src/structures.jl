@@ -122,6 +122,7 @@ Supertype for individual partitions for operational time periods. Subtypes must 
 for all potential time structures to be able to identify the respective
 [`TimeStructurePeriod`](@ref).
 """
+
 abstract type PeriodPartition{T<:TimePeriod} end
 
 Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)

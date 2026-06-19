@@ -208,7 +208,7 @@ function Base.iterate(
     y = iterate(w.itr, state[1])
     isnothing(y) && return nothing
     part = state[2]
-    dur_part = w.duration[PartitionDuration(w.itr, part, (y[1],))]
+    dur_part = w.duration[PeriodPartition(w.itr, part, (y[1],))]
     chunk = eltype(w.itr)[]
     acc = zero(T)
     while !isnothing(y)
