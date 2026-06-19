@@ -183,7 +183,7 @@ must be created for all potential time structures to be able to identify the res
 abstract type PeriodPartition{T<:TimePeriod} end
 
 function PeriodPartition(itr, part, chunk)
-    throw(
+    return throw(
         ArgumentError(
             "The type` PeriodPartition` called through `period_duration` is not " *
             "implemented for iterator type $(typeof(itr))",
