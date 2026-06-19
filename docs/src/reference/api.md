@@ -59,6 +59,7 @@ withprev
 withnext
 chunk
 chunk_duration
+partition_duration
 ```
 
 ## [Properties of time periods](@id api-prop_per)
@@ -78,6 +79,7 @@ end_oper_time
 ```@docs
 FixedProfile
 OperationalProfile
+PartitionProfile
 RepresentativeProfile
 ScenarioProfile
 StrategicProfile

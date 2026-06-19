@@ -27,6 +27,10 @@ include("utils.jl")
 include("discount.jl")
 include("profiles.jl")
 
+include("partitions/strat_periods.jl")
+include("partitions/rep_periods.jl")
+include("partitions/opscenarios.jl")
+
 export TimeStructure
 export SimpleTimes
 export CalendarTimes
@@ -40,6 +44,7 @@ export TreeNode
 export TimeProfile
 export FixedProfile
 export OperationalProfile
+export PartitionProfile
 export ScenarioProfile
 export StrategicProfile
 export StrategicStochasticProfile
@@ -49,7 +54,7 @@ export opscenarios
 export repr_periods
 export strat_periods, strategic_periods
 export regular_tree, strat_nodes, strategic_scenarios
-export withprev, withnext, chunk, chunk_duration
+export withprev, withnext, chunk, chunk_duration, partition_duration
 export isfirst, duration, duration_strat, multiple
 export probability, probability_branch, probability_scen
 export multiple_strat

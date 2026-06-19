@@ -173,6 +173,82 @@ function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
 end
 
 """
+    abstract type PeriodPartition{T<:TimePeriod}
+
+Supertype for individual partitions based on durations for operational time periods. Subtypes
+must be created for all potential time structures to be able to identify the respective
+[`TimeStructurePeriod`](@ref).
+"""
+
+abstract type PeriodPartition{T<:TimePeriod} end
+
+function PeriodPartition(itr, part, chunk)
+    return throw(
+        ArgumentError(
+            "The type` PeriodPartition` called through `period_duration` is not " *
+            "implemented for iterator type $(typeof(itr))",
+        ),
+    )
+end
+Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
+Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
+Base.length(pd::PeriodPartition) = length(pd.chunk)
+Base.first(pd::PeriodPartition) = first(pd.chunk)
+Base.last(pd::PeriodPartition) = last(pd.chunk)
+
+_part(pd::PeriodPartition) = pd.part
+
+abstract type PartitionIndexable end
+
+struct HasPartIndex <: PartitionIndexable end
+struct NoPartIndex <: PartitionIndexable end
+
+PartitionIndexable(::Type) = NoPartIndex()
+PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()
+
+struct PartitionDurationIterator{I<:TimeStructure}
+    itr::I
+    duration::TimeStruct.Duration
+end
+
+"""
+    partition_duration(itr, dur)
+
+Iterator wrapper that yields partitions of time periods where each partition is an iterator
+over the following time periods until at least `dur` time is covered or the end is reached.
+
+
+!!! note "Application"
+    The partitions only cover time periods within an operational scenario, representative
+    period, or strategic period depending on the chosen time structure.
+
+    The reason for this approach is the lack of meaning of a partition of a
+    [`TimeStructurePeriod`](@ref).
+"""
+partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
+
+IteratorSize(::Type{<:PartitionDurationIterator}) = Base.SizeUnknown()
+IteratorEltype(::Type{PartitionDurationIterator{I}}) where {I} = Base.HasEltype()
+
+function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
+    isa(state[1], Iterators.IterationCutShort) && return nothing
+    y = iterate(w.itr, state[1])
+    isnothing(y) && return nothing
+    part = state[2]
+    chunk = eltype(w.itr)[]
+    acc = zero(w.duration)
+    while !isnothing(y)
+        push!(chunk, y[1])
+        acc += duration(y[1])
+        acc >= w.duration && break
+        y = iterate(w.itr, y[2])
+    end
+    pd = PeriodPartition(w.itr, part, Tuple(chunk))
+    isnothing(y) && return pd, (Iterators.IterationCutShort(), part+1)
+    return pd, (y[2], part+1)
+end
+
+"""
     end_oper_time(t, ts)
 
 Get the operational end time of the time period `t` in the time structure `ts`.
