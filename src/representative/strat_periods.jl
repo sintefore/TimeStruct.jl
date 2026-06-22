@@ -94,7 +94,8 @@ function Base.iterate(rpers::StratReprPers, state = (nothing, 1))
     return StratReprPeriod(rpers, state[2], next[1]), (next[2], state[2] + 1)
 end
 function Base.getindex(rpers::StratReprPers, index::Int)
-    return StratReprPeriod(rpers, index)
+    per = _oper_struct(rpers)[index]
+    return StratReprPeriod(rpers, index, per)
 end
 function Base.eachindex(rpers::StratReprPers)
     return eachindex(_oper_struct(rpers))
