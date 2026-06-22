@@ -125,7 +125,7 @@ for all potential time structures to be able to identify the respective
 
 abstract type PeriodPartition{T<:TimePeriod} end
 function PeriodPartition(itr, part, chunk)
-    throw(
+    return throw(
         ArgumentError(
             "`PeriodPartition` (used by `partition_duration`) is not implemented for " *
             "iterator type $(typeof(itr)).",
