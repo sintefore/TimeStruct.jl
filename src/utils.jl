@@ -171,44 +171,15 @@ function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
         "`chunk_duration` can not be used when iterating nodes of a strategic tree structure.",
     )
 end
-
-"""
-    abstract type PeriodPartition{T<:TimePeriod}
-
-Supertype for individual partitions based on durations for operational time periods. Subtypes
-must be created for all potential time structures to be able to identify the respective
-[`TimeStructurePeriod`](@ref).
-"""
-
-abstract type PeriodPartition{T<:TimePeriod} end
-
-function PeriodPartition(itr, part, chunk)
-    return throw(
-        ArgumentError(
-            "The type` PeriodPartition` called through `period_duration` is not " *
-            "implemented for iterator type $(typeof(itr))",
-        ),
-    )
-end
-Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
-Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
-Base.length(pd::PeriodPartition) = length(pd.chunk)
-Base.first(pd::PeriodPartition) = first(pd.chunk)
-Base.last(pd::PeriodPartition) = last(pd.chunk)
-
-_part(pd::PeriodPartition) = pd.part
-
-abstract type PartitionIndexable end
-
-struct HasPartIndex <: PartitionIndexable end
-struct NoPartIndex <: PartitionIndexable end
-
-PartitionIndexable(::Type) = NoPartIndex()
-PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()
-
-struct PartitionDurationIterator{I<:TimeStructure}
+struct PartitionDurationIterator{I<:TimeStructure,T<:Duration,D<:TimeProfile{T}}
     itr::I
-    duration::TimeStruct.Duration
+    duration::D
+end
+function PartitionDurationIterator(itr::TimeStructure, dur::Duration)
+    return PartitionDurationIterator(itr, FixedProfile(dur))
+end
+function PartitionDurationIterator(itr::TimeStructure, dur::Vector{<:Duration})
+    return PartitionDurationIterator(itr, PartitionProfile(dur))
 end
 
 """
@@ -228,19 +199,22 @@ over the following time periods until at least `dur` time is covered or the end 
 partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
 
 IteratorSize(::Type{<:PartitionDurationIterator}) = Base.SizeUnknown()
-IteratorEltype(::Type{PartitionDurationIterator{I}}) where {I} = Base.HasEltype()
 
-function Base.iterate(w::PartitionDurationIterator, state = (nothing, 1))
+function Base.iterate(
+    w::PartitionDurationIterator{I,T,D},
+    state = (nothing, 1),
+) where {I,T,D}
     isa(state[1], Iterators.IterationCutShort) && return nothing
     y = iterate(w.itr, state[1])
     isnothing(y) && return nothing
     part = state[2]
+    dur_part = w.duration[PeriodPartition(w.itr, part, (y[1],))]
     chunk = eltype(w.itr)[]
-    acc = zero(w.duration)
+    acc = zero(T)
     while !isnothing(y)
         push!(chunk, y[1])
         acc += duration(y[1])
-        acc >= w.duration && break
+        acc >= dur_part && break
         y = iterate(w.itr, y[2])
     end
     pd = PeriodPartition(w.itr, part, Tuple(chunk))

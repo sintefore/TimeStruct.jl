@@ -11,7 +11,11 @@ struct ReprPart{N,T} <: AbstractReprPart{T}
     chunk::NTuple{N,T}
 end
 PeriodPartition(itr::RepresentativePeriod, part, chunk) = ReprPart(itr.rp, part, chunk)
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:RepresentativePeriod} = ReprPart
+function eltype(
+    ::Type{PartitionDurationIterator{I,T,D}},
+) where {I<:RepresentativePeriod,T,D}
+    return ReprPart
+end
 
 Base.show(io::IO, pd::ReprPart) = print(io, "rp$(pd.rp)-part$(pd.part)")
 
@@ -26,7 +30,9 @@ end
 function PeriodPartition(itr::ReprOpScenario, part, chunk)
     return ReprOpScenPart(itr.rp, itr.scen, part, chunk)
 end
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:ReprOpScenario} = ReprOpScenPart
+function eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:ReprOpScenario,T,D}
+    return ReprOpScenPart
+end
 
 Base.show(io::IO, pd::ReprOpScenPart) = print(io, "rp$(pd.rp)-sc$(pd.scen)-part$(pd.part)")
 ScenarioIndexable(::Type{<:ReprOpScenPart}) = HasScenarioIndex()

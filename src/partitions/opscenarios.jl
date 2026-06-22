@@ -11,7 +11,9 @@ struct OpScenPart{N,T} <: AbstractOpScenPart{T}
     chunk::NTuple{N,T}
 end
 PeriodPartition(itr::OperationalScenario, part, chunk) = OpScenPart(itr.scen, part, chunk)
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:OperationalScenario} = OpScenPart
+function eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:OperationalScenario,T,D}
+    return OpScenPart
+end
 
 Base.show(io::IO, pd::OpScenPart) = print(io, "sc$(pd.scen)-part$(pd.part)")
 

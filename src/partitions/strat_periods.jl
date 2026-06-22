@@ -11,7 +11,7 @@ struct StratPart{N,T} <: AbstractStratPart{T}
     chunk::NTuple{N,T}
 end
 PeriodPartition(itr::StrategicPeriod, part, chunk) = StratPart(itr.sp, part, chunk)
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StrategicPeriod} = StratPart
+eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:StrategicPeriod,T,D} = StratPart
 
 Base.show(io::IO, pd::StratPart) = print(io, "sp$(pd.sp)-part$(pd.part)")
 
@@ -26,7 +26,9 @@ end
 function PeriodPartition(itr::StratReprPeriod, part, chunk)
     return StratReprPart(itr.sp, itr.rp, part, chunk)
 end
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprPeriod} = StratReprPart
+function eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:StratReprPeriod,T,D}
+    return StratReprPart
+end
 
 Base.show(io::IO, pd::StratReprPart) = print(io, "sp$(pd.sp)-rp$(pd.rp)-part$(pd.part)")
 RepresentativeIndexable(::Type{<:StratReprPart}) = HasReprIndex()
@@ -43,7 +45,9 @@ end
 function PeriodPartition(itr::StratOpScenario, part, chunk)
     return StratOpScenPart(itr.sp, itr.scen, part, chunk)
 end
-eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratOpScenario} = StratOpScenPart
+function eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:StratOpScenario,T,D}
+    return StratOpScenPart
+end
 
 function Base.show(io::IO, pd::StratOpScenPart)
     return print(io, "sp$(pd.sp)-sc$(pd.scen)-part$(pd.part)")
@@ -63,7 +67,7 @@ end
 function PeriodPartition(itr::StratReprOpScenario, part, chunk)
     return StratReprOpScenPart(itr.sp, itr.rp, itr.scen, part, chunk)
 end
-function eltype(::Type{PartitionDurationIterator{I}}) where {I<:StratReprOpScenario}
+function eltype(::Type{PartitionDurationIterator{I,T,D}}) where {I<:StratReprOpScenario,T,D}
     return StratReprOpScenPart
 end
 
