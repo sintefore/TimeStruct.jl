@@ -1929,7 +1929,7 @@ end
             @test isa(
                 partition_duration(osc, 6),
                 TimeStruct.PartitionDurationIterator{
-                    TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                    TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
                     Int,
                     FixedProfile{Int},
                 },
@@ -1964,7 +1964,7 @@ end
             @test isa(
                 partition_duration(rp, 6),
                 TimeStruct.PartitionDurationIterator{
-                    TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}},
+                    TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}},
                     Int,
                     FixedProfile{Int},
                 },
@@ -2002,8 +2002,8 @@ end
                 partition_duration(osc, 6),
                 TimeStruct.PartitionDurationIterator{
                     TimeStruct.ReprOpScenario{
-                        Int64,
-                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
                     },
                     Int,
                     FixedProfile{Int},
@@ -2041,7 +2041,7 @@ end
             @test isa(
                 partition_duration(sp, 6),
                 TimeStruct.PartitionDurationIterator{
-                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
                     Int,
                     FixedProfile{Int},
                 },
@@ -2080,8 +2080,8 @@ end
                 partition_duration(osc, 6),
                 TimeStruct.PartitionDurationIterator{
                     TimeStruct.StratOpScenario{
-                        Int64,
-                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
                     },
                     Int,
                     FixedProfile{Int},
@@ -2124,8 +2124,8 @@ end
                 partition_duration(rp, 6),
                 TimeStruct.PartitionDurationIterator{
                     TimeStruct.StratReprPeriod{
-                        Int64,
-                        TimeStruct.RepresentativePeriod{Int64,SimpleTimes{Int64}},
+                        Int,
+                        TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}},
                     },
                     Int,
                     FixedProfile{Int},
@@ -2170,8 +2170,8 @@ end
                 partition_duration(osc, 6),
                 TimeStruct.PartitionDurationIterator{
                     TimeStruct.StratReprOpScenario{
-                        Int64,
-                        TimeStruct.OperationalScenario{Int64,SimpleTimes{Int64}},
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
                     },
                     Int,
                     FixedProfile{Int},
@@ -2214,7 +2214,7 @@ end
             @test isa(
                 partition_duration(sp, dur),
                 TimeStruct.PartitionDurationIterator{
-                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
                     Int,
                     PartitionProfile{Int},
                 },
@@ -2259,9 +2259,9 @@ end
             @test isa(
                 partition_duration(sp, dur),
                 TimeStruct.PartitionDurationIterator{
-                    TimeStruct.StrategicPeriod{Int64,Int64,SimpleTimes{Int64}},
-                    Int64,
-                    StrategicProfile{Int64,TimeProfile{Int64}},
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
+                    Int,
+                    StrategicProfile{Int,TimeProfile{Int}},
                 },
             )
             @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart

@@ -124,6 +124,14 @@ for all potential time structures to be able to identify the respective
 """
 
 abstract type PeriodPartition{T<:TimePeriod} end
+function PeriodPartition(itr, part, chunk)
+    throw(
+        ArgumentError(
+            "`PeriodPartition` (used by `partition_duration`) is not implemented for " *
+            "iterator type $(typeof(itr)).",
+        ),
+    )
+end
 
 Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
 Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
