@@ -28,6 +28,7 @@ include("profiles.jl")
 include("utils.jl")
 
 include("partitions/strat_periods.jl")
+include("partitions/tree_periods.jl")
 include("partitions/rep_periods.jl")
 include("partitions/opscenarios.jl")
 
