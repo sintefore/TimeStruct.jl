@@ -375,7 +375,7 @@ end
 function Base.getindex(
     ssp::StrategicStochasticProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(StrategicTreeIndexable(T), ssp, period)
 end
 
@@ -384,7 +384,7 @@ Base.getindex(TP::TimeProfile, inds...) = [TP[i] for i in inds]
 function Base.getindex(
     TP::TimeProfile,
     inds::Vector{T},
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return [TP[i] for i in inds]
 end
 function Base.getindex(
@@ -563,6 +563,10 @@ function +(a::StrategicStochasticProfile{T}, b::OperationalProfile{S}) where {T,
     return StrategicStochasticProfile([[p + b for p in v] for v in a.vals])
 end
 +(a::OperationalProfile{T}, b::StrategicStochasticProfile{S}) where {T,S} = b + a
+function +(a::StrategicStochasticProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[p + b for p in v] for v in a.vals])
+end
++(a::PartitionProfile{T}, b::StrategicStochasticProfile{S}) where {T,S} = b + a
 function +(a::FixedProfile{T}, b::StrategicStochasticProfile{S}) where {T,S}
     return StrategicStochasticProfile([[a + p for p in v] for v in b.vals])
 end
