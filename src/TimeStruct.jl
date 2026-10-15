@@ -32,6 +32,8 @@ include("partitions/tree_periods.jl")
 include("partitions/rep_periods.jl")
 include("partitions/opscenarios.jl")
 
+include("hashing.jl")
+
 export TimeStructure
 export SimpleTimes
 export CalendarTimes
