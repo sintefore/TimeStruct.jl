@@ -793,7 +793,6 @@ end
 end
 
 @testitem "Duration invariants" begin
-
     #=
     day = SimpleTimes(24,1)
     @test sum(duration(sp) for sp in strat_periods(day)) == TimeStruct._total_duration(day)
@@ -805,7 +804,6 @@ end
     @test sum(duration(sp) for sp in strat_periods(periods)) == TimeStruct._total_duration(periods)
     @test sum(duration(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)) == TimeStruct._total_duration(periods)
     =#
-
 end
 
 @testitem "Profiles" begin
