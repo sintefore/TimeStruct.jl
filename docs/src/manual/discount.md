@@ -28,7 +28,7 @@ This approach results in a slightly higher discount factor.
 
 To help set up the objective function in a typical optimization problem, there is a utility function [`objective_weight`](@ref) that returns the weight to give a time period in the objective, considering both discount factor, probability, and possible multiplicity.
 
-!!! note "`objective_weight` for `TwoLevelTree`
+!!! note "`objective_weight` for `TwoLevelTree`"
     You must be careful when you utilize the function [`objective_weight`](@ref) for a [`TimeStruct.StratNode`](@ref).
     The function includes the multiplication with the branch probability.
     This implies that you must divide the function by [`probability_branch`](@ref) if you have a variable that is indexed over strategic periods and already includes the branch probability.

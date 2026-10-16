@@ -66,6 +66,8 @@ export start_time, end_time, remaining
 export start_oper_time, end_oper_time
 export n_strat_per, n_children, n_leaves, n_branches
 
+export has_opscenarios, has_repr_periods
+
 export Discounter
 export discount
 export objective_weight
