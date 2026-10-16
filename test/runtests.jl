@@ -793,7 +793,6 @@ end
 end
 
 @testitem "Duration invariants" begin
-
     #=
     day = SimpleTimes(24,1)
     @test sum(duration(sp) for sp in strat_periods(day)) == TimeStruct._total_duration(day)
@@ -805,7 +804,6 @@ end
     @test sum(duration(sp) for sp in strat_periods(periods)) == TimeStruct._total_duration(periods)
     @test sum(duration(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)) == TimeStruct._total_duration(periods)
     =#
-
 end
 
 @testitem "Profiles" begin
@@ -2720,6 +2718,62 @@ end
     @test hasproperty(df4, :strategic_period)
     @test hasproperty(df4, :duration)
     @test hasproperty(df4, :start_time)
+end
+
+@testitem "Hashing of periods" begin
+    using Dates
+
+    day = SimpleTimes(24, 1)
+    cal = CalendarTimes(DateTime(2024, 1, 1), 12, Hour(1))
+    osc = OperationalScenarios(3, day)
+    rp_osc = RepresentativePeriods(2, 8760, [0.5, 0.5], [osc, osc])
+    two_level = TwoLevel(3, 8760, rp_osc)
+    tree = regular_tree(2, [3, 2], RepresentativePeriods(2, 8760, [0.5, 0.5], [day, day]))
+    sps = strat_periods(two_level)
+
+    # The periods of each kind, collected twice (as new objects) to compare with
+    function periods()
+        return [
+            collect(day),
+            collect(cal),
+            collect(osc),
+            collect(two_level),
+            collect(tree),
+            collect(opscenarios(osc)),
+            collect(sps),
+            [rp for sp in sps for rp in repr_periods(sp)],
+            [sc for sp in sps for rp in repr_periods(sp) for sc in opscenarios(rp)],
+            collect(strat_nodes(tree)),
+            collect(strategic_scenarios(tree)),
+            [pd for sp in sps for pd in partition_duration(sp, 4)],
+            [pd for n in strat_nodes(tree) for pd in partition_duration(n, 4)],
+        ]
+    end
+    for (xs, ys) in zip(periods(), periods())
+        # Equal periods have equal hashes
+        @test all(isequal(x, y) && hash(x) == hash(y) for (x, y) in zip(xs, ys))
+        # Distinct periods have distinct hashes (no collisions within a structure)
+        @test length(unique(hash.(xs))) == length(xs)
+        # Dictionaries keyed by periods (and tuples with periods)
+        d = Dict(("n", x) => k for (k, x) in enumerate(xs))
+        @test all(d[("n", y)] == k for (k, y) in enumerate(ys))
+    end
+
+    # The time structure a period holds is not hashed: strategic periods that only
+    # differ in their operational periods hash alike (and are not equal)
+    sp = first(sps)
+    sp_other = TimeStruct.StrategicPeriod(sp.sp, sp.duration, sp.mult_sp, SimpleTimes(5, 1))
+    @test hash(sp_other) == hash(sp)
+    @test !isequal(sp_other, sp)
+
+    # Periods defined outside TimeStruct are hashed by their fields as well
+    struct _NamedPeriod <: TimeStruct.TimePeriod
+        name::String
+        op::Int
+    end
+    named = [_NamedPeriod(n, k) for n in ("a", "b") for k in 1:3]
+    @test length(unique(hash.(named))) == length(named)
+    @test hash(_NamedPeriod("a", 1)) == hash(_NamedPeriod("a", 1))
 end
 
 @run_package_tests
