@@ -6,6 +6,7 @@
 TimeStruct.TimeStructurePeriod
 TimeStruct.TimeStructInnerIter
 TimeStruct.TimeStructOuterIter
+TimeStruct.PeriodPartition
 ```
 
 ## [Strategic period types ([`TwoLevelTree`](@ref))](@id int-types-twoleveltree)

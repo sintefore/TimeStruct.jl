@@ -63,6 +63,9 @@ Similar to representative periods, each period has a [`multiple`](@ref) that is 
 sum(duration(t) * probability(t) * multiple(t) for t in scenarios)
 ```
 
+!!! tip "Identification function"
+    You can always check if a given `TimeStructure` includes operational scenarios through the function [`has_opscenarios`](@ref).
+
 ## [Representative periods](@id man-oper-repr)
 
 In some cases, a fine-scale representation of the operations of the infrastructure for the whole time horizon is not feasible. A possible strategy is then to select one or more representative periods and use them to evaluate operational cost and feasibility. The time structure [`RepresentativePeriods`](@ref) consists of an ordered sequence of representative periods that represents a longer period of time. Each representative period covers a specified share of the whole time period.
@@ -98,3 +101,6 @@ For each time period, the [`multiple`](@ref) function returns how many times the
 ```@repl rp
 sum(duration(t) * multiple(t) for t in periods)
 ```
+
+!!! tip "Identification function"
+    You can always check if a given `TimeStructure` includes representative periods through the function [`has_repr_periods`](@ref).
