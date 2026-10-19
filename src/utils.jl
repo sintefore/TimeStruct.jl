@@ -305,3 +305,52 @@ function Base.iterate(ts::TreeStructure, state = nothing)
 
     return TreePeriod(ts, next[1]), next[2]
 end
+
+"""
+    has_opscenarios(ts::TimeStructure)
+    has_opscenarios(ts::TimeStructurePeriod)
+
+Returns `true` if any operational structure within the `TimeStructure` includes
+`OperationalScenarios`. Specific methods for `TimeStructurePeriod`s are also included
+
+An [`AbstractOperationalScenario`](@ref) corresponds to an individual scenario, and hence,
+cannot contain `OperationalScenarios`.
+"""
+has_opscenarios(ts::TwoLevelTree) = any(has_opscenarios, ts.nodes)
+has_opscenarios(ts::TwoLevel) = any(has_opscenarios, ts.operational)
+has_opscenarios(ts::RepresentativePeriods) = any(has_opscenarios, ts.rep_periods)
+has_opscenarios(::OperationalScenarios) = true
+has_opscenarios(::SimpleTimes) = false
+has_opscenarios(::CalendarTimes) = false
+
+has_opscenarios(ts::StrategicScenario) = any(has_opscenarios, ts.nodes)
+has_opscenarios(ts::SingleStrategicScenario) = has_opscenarios(ts.ts)
+has_opscenarios(ts::AbstractStrategicPeriod) = has_opscenarios(ts.operational)
+has_opscenarios(ts::SingleStrategicPeriod) = has_opscenarios(ts.ts)
+has_opscenarios(ts::AbstractRepresentativePeriod) = has_opscenarios(ts.operational)
+has_opscenarios(ts::SingleReprPeriod) = has_opscenarios(ts.ts)
+has_opscenarios(::AbstractOperationalScenario) = false
+
+"""
+    has_repr_periods(ts::TimeStructure)
+    has_repr_periods(ts::TimeStructurePeriod)
+
+Returns `true` if any operational structure within the `TimeStructure` includes
+`RepresentativePeriods`. Specific methods for `TimeStructurePeriod`s are also included
+
+An [`AbstractRepresentativePeriod`](@ref) corresponds to an individual representative period,
+and hence, cannot contain `RepresentativePeriods`.
+"""
+has_repr_periods(ts::TwoLevelTree) = any(has_repr_periods, ts.nodes)
+has_repr_periods(ts::TwoLevel) = any(has_repr_periods, ts.operational)
+has_repr_periods(::RepresentativePeriods) = true
+has_repr_periods(::OperationalScenarios) = false
+has_repr_periods(::SimpleTimes) = false
+has_repr_periods(::CalendarTimes) = false
+
+has_repr_periods(ts::StrategicScenario) = any(has_repr_periods, ts.nodes)
+has_repr_periods(ts::SingleStrategicScenario) = has_repr_periods(ts.ts)
+has_repr_periods(ts::AbstractStrategicPeriod) = has_repr_periods(ts.operational)
+has_repr_periods(ts::SingleStrategicPeriod) = has_repr_periods(ts.ts)
+has_repr_periods(ts::AbstractRepresentativePeriod) = false
+has_repr_periods(::AbstractOperationalScenario) = false

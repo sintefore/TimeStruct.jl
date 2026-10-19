@@ -100,3 +100,10 @@ Discounter
 discount
 objective_weight
 ```
+
+## [Identification methods](@id api-ident)
+
+```@docs
+has_opscenarios
+has_repr_periods
+```

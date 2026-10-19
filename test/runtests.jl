@@ -2776,5 +2776,68 @@ end
     @test hash(_NamedPeriod("a", 1)) == hash(_NamedPeriod("a", 1))
 end
 
+@testitem "Identification of operational structures" begin
+    using Dates
+
+    day = SimpleTimes(24, 1)
+    cal = CalendarTimes(DateTime(2024, 1, 1), 24, Hour(1))
+    osc = OperationalScenarios(2, day)
+    rps = RepresentativePeriods(2, 8760, [0.5, 0.5], [day, day])
+    rps_osc = RepresentativePeriods(2, 8760, [0.5, 0.5], [day, osc])
+
+    # Operational structures
+    for (ts, has_osc, has_rp) in [
+        (day, false, false),
+        (cal, false, false),
+        (osc, true, false),
+        (rps, false, true),
+        (rps_osc, true, true),
+    ]
+        @test has_opscenarios(ts) == has_osc
+        @test has_repr_periods(ts) == has_rp
+    end
+
+    # Strategic structures, in which only the last strategic period/node includes the
+    # operational scenarios and representative periods
+    two_level = TwoLevel([day, rps_osc])
+    tree = TwoLevelTree(TreeNode(1, day, [TreeNode(1, day), TreeNode(1, rps_osc)]))
+    for (ts, sps) in [(two_level, strat_periods(two_level)), (tree, strat_nodes(tree))]
+        @test has_opscenarios(ts) && has_repr_periods(ts)
+        sp_1, sp_2 = first(sps), last(sps)
+        @test !has_opscenarios(sp_1) && !has_repr_periods(sp_1)
+        @test has_opscenarios(sp_2) && has_repr_periods(sp_2)
+
+        # Representative periods and operational scenarios of a strategic period
+        rp_1, rp_2 = repr_periods(sp_2)
+        @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
+        @test !has_repr_periods(rp_2)
+        sc = first(opscenarios(rp_2))
+        @test !has_opscenarios(sc) && !has_repr_periods(sc)
+    end
+    for ts in [TwoLevel(2, 1, day), TwoLevelTree(1, [2], day)]
+        @test !has_opscenarios(ts) && !has_repr_periods(ts)
+    end
+
+    # Strategic scenarios, in which only the second scenario of the tree includes the
+    # operational scenarios and representative periods
+    scen_1, scen_2 = strategic_scenarios(tree)
+    @test !has_opscenarios(scen_1) && !has_repr_periods(scen_1)
+    @test has_opscenarios(scen_2) && has_repr_periods(scen_2)
+    scen = first(strategic_scenarios(two_level))
+    @test has_opscenarios(scen) && has_repr_periods(scen)
+    scen = first(strategic_scenarios(day))
+    @test !has_opscenarios(scen) && !has_repr_periods(scen)
+
+    # Periods of operational structures and single periods
+    rp_1, rp_2 = repr_periods(rps_osc)
+    @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
+    sc = first(opscenarios(osc))
+    @test !has_opscenarios(sc) && !has_repr_periods(sc)
+    sp = first(strat_periods(osc))
+    @test has_opscenarios(sp) && !has_repr_periods(sp)
+    rp = first(repr_periods(osc))
+    @test has_opscenarios(rp) && !has_repr_periods(rp)
+end
+
 @run_package_tests
 Aqua.test_all(TimeStruct; ambiguities = false, unbound_args = false)
