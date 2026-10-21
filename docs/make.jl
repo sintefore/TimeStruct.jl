@@ -16,6 +16,7 @@ pages = [
     "Tutorials" => [
         "Basic usage" => "tutorials/basic_usage.md",
         "Battery sizing" => "tutorials/battery_sizing.md",
+        "Chance-constrained emissions" => "tutorials/chance_constraints.md",
     ],
     "Showcases" => ["EnergyModelsX" => "showcases/emx.md"],
     "Manual" => [

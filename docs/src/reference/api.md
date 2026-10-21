@@ -52,6 +52,20 @@ strategic_periods
 strategic_scenarios
 ```
 
+### [Scenario paths](@id api-iter-paths)
+
+```@docs
+scenario_paths
+path_scenarios
+path_marginals
+scenario_probabilities
+ScenarioPairing
+PairingMethod
+generate_pairing
+DiagonalPairing
+TimeStruct.ScenarioPath
+```
+
 ### [Specialized iterators](@id api-iter-spec)
 
 ```@docs
