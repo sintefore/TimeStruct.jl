@@ -2806,16 +2806,24 @@ end
         sp_1, sp_2 = first(sps), last(sps)
         @test !has_opscenarios(sp_1) && !has_repr_periods(sp_1)
         @test has_opscenarios(sp_2) && has_repr_periods(sp_2)
+        @test operational_type(sp_1) == typeof(day)
+        @test operational_type(sp_2) == typeof(rps_osc)
+        @test operational_type(first(opscenarios(sp_1))) == typeof(day)
 
         # Representative periods and operational scenarios of a strategic period
         rp_1, rp_2 = repr_periods(sp_2)
         @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
         @test !has_repr_periods(rp_2)
+        @test operational_type(rp_1) == typeof(day)
+        @test operational_type(rp_2) == typeof(osc)
         sc = first(opscenarios(rp_2))
         @test !has_opscenarios(sc) && !has_repr_periods(sc)
+        @test operational_type(sc) == typeof(day)
+        @test operational_type(first(opscenarios(rp_1))) == typeof(day)
     end
     for ts in [TwoLevel(2, 1, day), TwoLevelTree(1, [2], day)]
         @test !has_opscenarios(ts) && !has_repr_periods(ts)
+        @test operational_type(first(strat_periods(ts))) == typeof(day)
     end
 
     # Strategic scenarios, in which only the second scenario of the tree includes the
@@ -2828,15 +2836,26 @@ end
     scen = first(strategic_scenarios(day))
     @test !has_opscenarios(scen) && !has_repr_periods(scen)
 
+    # Strategic scenarios do not have a unique operational time structure
+    @test_throws MethodError operational_type(scen_1)
+    @test_throws MethodError operational_type(scen)
+
     # Periods of operational structures and single periods
     rp_1, rp_2 = repr_periods(rps_osc)
     @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
+    @test operational_type(rp_1) == typeof(day)
+    @test operational_type(rp_2) == typeof(osc)
+    @test operational_type(first(opscenarios(rp_2))) == typeof(day)
     sc = first(opscenarios(osc))
     @test !has_opscenarios(sc) && !has_repr_periods(sc)
+    @test operational_type(sc) == typeof(day)
+    @test operational_type(first(opscenarios(day))) == typeof(day)
     sp = first(strat_periods(osc))
     @test has_opscenarios(sp) && !has_repr_periods(sp)
+    @test operational_type(sp) == typeof(osc)
     rp = first(repr_periods(osc))
     @test has_opscenarios(rp) && !has_repr_periods(rp)
+    @test operational_type(rp) == typeof(osc)
 end
 
 @run_package_tests

@@ -59,6 +59,8 @@ _strat_per(osc::SingleScenario) = 1
 
 probability(osc::SingleScenario) = 1.0
 
+operational_type(osc::SingleScenario) = typeof(osc.ts)
+
 StrategicIndexable(::Type{<:SingleScenario}) = HasStratIndex()
 RepresentativeIndexable(::Type{<:SingleScenario}) = HasRepresentativeIndex()
 
@@ -137,6 +139,8 @@ _opscen(osc::OperationalScenario) = osc.scen
 
 probability(osc::OperationalScenario) = osc.probability
 mult_scen(osc::OperationalScenario) = osc.mult_scen
+
+operational_type(osc::OperationalScenario) = typeof(osc.operational)
 
 Base.show(io::IO, osc::OperationalScenario) = print(io, "sc-$(osc.scen)")
 

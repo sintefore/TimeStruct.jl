@@ -106,4 +106,5 @@ objective_weight
 ```@docs
 has_opscenarios
 has_repr_periods
+operational_type
 ```

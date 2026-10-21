@@ -354,3 +354,20 @@ has_repr_periods(ts::AbstractStrategicPeriod) = has_repr_periods(ts.operational)
 has_repr_periods(ts::SingleStrategicPeriod) = has_repr_periods(ts.ts)
 has_repr_periods(ts::AbstractRepresentativePeriod) = false
 has_repr_periods(::AbstractOperationalScenario) = false
+
+"""
+    operational_type(ts::TimeStructurePeriod)
+
+Returns the type of the operational time structure of the `TimeStructurePeriod` `ts`,
+*e.g.*, `SimpleTimes{Int64}`, `OperationalScenarios{...}`, or `RepresentativePeriods{...}`.
+
+The method is implemented for [`AbstractStrategicPeriod`](@ref),
+[`AbstractRepresentativePeriod`](@ref), and [`AbstractOperationalScenario`](@ref). For nested
+periods (*e.g.*, a representative period of a strategic period), the type of the innermost
+operational time structure is returned.
+
+!!! note
+    The method is not implemented for strategic scenarios as these scenarios include multiple
+    operational time structures.
+"""
+function operational_type end

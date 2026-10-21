@@ -48,6 +48,8 @@ _rper(rp::SingleReprPeriod) = 1
 
 mult_repr(rp::SingleReprPeriod) = 1.0
 
+operational_type(rp::SingleReprPeriod) = typeof(rp.ts)
+
 StrategicIndexable(::Type{<:SingleReprPeriod}) = HasStratIndex()
 
 Base.length(rp::SingleReprPeriod) = length(rp.ts)
@@ -109,6 +111,8 @@ end
 _rper(rp::RepresentativePeriod) = rp.rp
 
 mult_repr(rp::RepresentativePeriod) = rp.mult_rp
+
+operational_type(rp::RepresentativePeriod) = typeof(rp.operational)
 
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(_rper(rp))")
 
