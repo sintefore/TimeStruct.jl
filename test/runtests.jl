@@ -2722,5 +2722,370 @@ end
     @test hasproperty(df4, :start_time)
 end
 
+@testitem "Scenario paths" begin
+    day = SimpleTimes(4, 1)
+    oscs = OperationalScenarios([day, day, day], [0.5, 0.3, 0.2])
+    rps = RepresentativePeriods(2, 8760, oscs)
+    all_pers = collect(rps)
+
+    # Diagonal pairing: scenario k in all representative periods
+    paths = scenario_paths(rps, DiagonalPairing())
+    @test length(paths) == 3
+    @test path_scenarios.(paths) == [[1, 1], [2, 2], [3, 3]]
+    @test probability.(paths) ≈ [0.5, 0.3, 0.2]
+    @test repr(paths[2]) == "path2(sc2,2)"
+    pers = collect(paths[2])
+    @test length(pers) == length(paths[2]) == 8
+    @test all(t in all_pers for t in pers)
+    @test [TimeStruct._rper(t) for t in pers] == [1, 1, 1, 1, 2, 2, 2, 2]
+    @test all(TimeStruct._opscen(t) == 2 for t in pers)
+    @test [TimeStruct._rper(osc) for osc in opscenarios(paths[2])] == [1, 2]
+
+    # Explicit pairing
+    scens = [1 1; 2 2; 3 3; 2 3; 3 2]
+    pairing = ScenarioPairing(scens, [0.5, 0.2, 0.1, 0.1, 0.1])
+    @test pairing.scenarios ==
+          ScenarioPairing([[1, 1], [2, 2], [3, 3], [2, 3], [3, 2]], fill(0.2, 5)).scenarios
+    paths = @test_logs scenario_paths(rps, pairing)
+    @test path_scenarios.(paths) == [[1, 1], [2, 2], [3, 3], [2, 3], [3, 2]]
+    @test probability.(paths) ≈ [0.5, 0.2, 0.1, 0.1, 0.1]
+    @test all(TimeStruct._opscen(t) == 3 for t in paths[4] if TimeStruct._rper(t) == 2)
+    # All combinations cover all operational periods
+    all_scens = [[s1, s2] for s1 in 1:3 for s2 in 1:3]
+    all_probs = [oscs.probability[s1] * oscs.probability[s2] for (s1, s2) in all_scens]
+    paths = scenario_paths(rps, ScenarioPairing(all_scens, all_probs))
+    @test length(paths) == 9
+    @test Set(Iterators.flatten(paths)) == Set(all_pers)
+
+    @test_throws ArgumentError ScenarioPairing([1 1; 2 3], [0.5, 0.3, 0.2])
+    @test_throws ArgumentError ScenarioPairing([1 1; 2 3], [1.5, -0.5])
+    @test_throws ArgumentError ScenarioPairing([[1, 1], [2]], [0.5, 0.5])
+    @test_logs (:warn,) ScenarioPairing([1 1; 2 3], [0.5, 0.3])
+    @test_throws ArgumentError scenario_paths(rps, ScenarioPairing([1 1 1], [1.0]))
+    @test_throws ArgumentError scenario_paths(rps, ScenarioPairing([1 4], [1.0]))
+
+    # Diagonal pairing requires consistent scenarios
+    oscs2 = OperationalScenarios(2, day)
+    @test_throws ArgumentError scenario_paths(
+        RepresentativePeriods(8760, [0.5, 0.5], [oscs, oscs2]),
+        DiagonalPairing(),
+    )
+    oscs3 = OperationalScenarios(3, day)
+    @test_throws ArgumentError scenario_paths(
+        RepresentativePeriods(8760, [0.5, 0.5], [oscs, oscs3]),
+        DiagonalPairing(),
+    )
+    # Representative periods with a single scenario are part of all paths
+    rps_mixed =
+        RepresentativePeriods(8760, [0.5, 0.5], [oscs, OperationalScenarios(1, day)])
+    paths = scenario_paths(rps_mixed, DiagonalPairing())
+    @test path_scenarios.(paths) == [[1, 1], [2, 1], [3, 1]]
+    @test probability.(paths) ≈ [0.5, 0.3, 0.2]
+
+    # Time structures without representative periods or operational scenarios
+    paths = scenario_paths(oscs, DiagonalPairing())
+    @test path_scenarios.(paths) == [[1], [2], [3]]
+    @test collect(paths[3]) == collect(opscenarios(oscs)[3])
+    paths = scenario_paths(day, DiagonalPairing())
+    @test length(paths) == 1
+    @test probability(only(paths)) == 1
+    @test collect(only(paths)) == collect(day)
+
+    # TwoLevel: paths per strategic period
+    ts = TwoLevel(2, 1, rps)
+    paths = scenario_paths(ts, ScenarioPairing(all_scens, all_probs))
+    @test length(paths) == 2 * 9
+    @test Set(Iterators.flatten(paths)) == Set(ts)
+    sp = last(strategic_periods(ts))
+    paths = scenario_paths(sp, DiagonalPairing())
+    @test all(TimeStruct._strat_per(t) == 2 for p in paths for t in p)
+    @test sum(probability, paths) ≈ 1
+
+    # TwoLevelTree: paths per strategic node, probabilities conditional on the node
+    tree = regular_tree(2, [2], rps)
+    paths = scenario_paths(tree, DiagonalPairing())
+    @test length(paths) == 3 * 3
+    @test probability.(paths[1:3]) ≈ [0.5, 0.3, 0.2]
+    @test Set(Iterators.flatten(paths)) == Set(tree)
+end
+
+@testitem "Scenario paths - consistent probabilities" begin
+    day = SimpleTimes(4, 1)
+    oscs = OperationalScenarios([day, day, day], [0.5, 0.3, 0.2])
+    rps = RepresentativePeriods(2, 8760, oscs)
+    probs = [[0.5, 0.3, 0.2], [0.5, 0.3, 0.2]]
+
+    # Scenario probabilities
+    @test scenario_probabilities(rps) == probs
+    @test scenario_probabilities(oscs) == [[0.5, 0.3, 0.2]]
+    @test scenario_probabilities(day) == [[1.0]]
+    @test scenario_probabilities(TwoLevel(2, 1, rps)) == [probs, probs]
+
+    # Diagonal pairing is consistent
+    @test path_marginals(rps, DiagonalPairing()) ≈ probs
+
+    # Given probabilities are checked
+    pairing = ScenarioPairing([1 1; 2 3; 3 2], [0.5, 0.3, 0.2])
+    @test path_marginals(rps, pairing) ≈ [[0.5, 0.3, 0.2], [0.5, 0.2, 0.3]]
+    @test_logs (:warn, r"not consistent") scenario_paths(rps, pairing)
+    pairing = ScenarioPairing([1 1; 2 3; 3 2], [0.5, 0.3, 0.2]; check_marginals = :none)
+    @test_logs scenario_paths(rps, pairing)
+    pairing = ScenarioPairing([1 1; 2 3; 3 2], [0.5, 0.3, 0.2]; check_marginals = :error)
+    @test_throws ArgumentError scenario_paths(rps, pairing)
+    pairing = ScenarioPairing([1 1; 2 2; 3 3], [0.5, 0.3, 0.2]; check_marginals = :error)
+    @test probability.(scenario_paths(rps, pairing)) ≈ [0.5, 0.3, 0.2]
+    @test_throws ArgumentError ScenarioPairing([1 1], [1.0]; check_marginals = :other)
+    # The check is performed when the pairing is stored
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs;
+        pairing = ScenarioPairing(
+            [1 1; 2 3; 3 2],
+            [0.5, 0.3, 0.2];
+            check_marginals = :error,
+        ),
+    )
+
+    # Scenario probabilities derived from the path probabilities
+    oscs_eq = OperationalScenarios(3, day)
+    pairing = ScenarioPairing([1 1; 2 3; 3 2], [0.5, 0.3, 0.2]; check_marginals = :error)
+    rps_fp = @test_logs RepresentativePeriods(
+        2,
+        8760,
+        oscs_eq;
+        pairing,
+        scenario_probability = :from_pairing,
+    )
+    @test scenario_probabilities(rps_fp) ≈ [[0.5, 0.3, 0.2], [0.5, 0.2, 0.3]]
+    @test oscs_eq.probability ≈ fill(1 / 3, 3)
+    @test probability.(scenario_paths(rps_fp)) ≈ [0.5, 0.3, 0.2]
+    @test path_marginals(rps_fp) ≈ [[0.5, 0.3, 0.2], [0.5, 0.2, 0.3]]
+    @test Set(probability(t) for t in rps_fp if TimeStruct._rper(t) == 2) ==
+          Set([0.5, 0.2, 0.3])
+    # All constructors forward the keyword
+    for rps_c in (
+        RepresentativePeriods(
+            2,
+            8760,
+            [0.5, 0.5],
+            [oscs_eq, oscs_eq];
+            pairing,
+            scenario_probability = :from_pairing,
+        ),
+        RepresentativePeriods(
+            8760,
+            [0.5, 0.5],
+            [oscs_eq, oscs_eq];
+            pairing,
+            scenario_probability = :from_pairing,
+        ),
+        RepresentativePeriods(
+            8760,
+            [0.5, 0.5],
+            oscs_eq;
+            pairing,
+            scenario_probability = :from_pairing,
+        ),
+        RepresentativePeriods(
+            8760,
+            [oscs_eq, oscs_eq];
+            pairing,
+            scenario_probability = :from_pairing,
+        ),
+    )
+        @test path_marginals(rps_c) ≈ [[0.5, 0.3, 0.2], [0.5, 0.2, 0.3]]
+    end
+    # Representative periods with a single scenario and unused scenarios
+    rps_fp =
+        @test_logs (:warn, r"scenario 3 of representative period 1") RepresentativePeriods(
+            8760,
+            [0.5, 0.5],
+            [oscs_eq, OperationalScenarios(1, day)];
+            pairing = ScenarioPairing([1 1; 2 1], [0.7, 0.3]),
+            scenario_probability = :from_pairing,
+        )
+    @test scenario_probabilities(rps_fp) ≈ [[0.7, 0.3, 0.0], [1.0]]
+    @test probability.(scenario_paths(rps_fp)) ≈ [0.7, 0.3]
+    # A method is resolved before the scenario probabilities are derived
+    rps_fp = RepresentativePeriods(
+        2,
+        8760,
+        oscs;
+        pairing = DiagonalPairing(),
+        scenario_probability = :from_pairing,
+    )
+    @test scenario_probabilities(rps_fp) ≈ probs
+    # Invalid use
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs_eq;
+        scenario_probability = :from_pairing,
+    )
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs_eq;
+        pairing = ScenarioPairing([1 4], [1.0]),
+        scenario_probability = :from_pairing,
+    )
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs_eq;
+        pairing,
+        scenario_probability = :other,
+    )
+    # Only `OperationalScenarios` can get new probabilities
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        RepresentativePeriods(2, 24, oscs_eq; pairing = DiagonalPairing());
+        pairing = ScenarioPairing([1 1; 2 2; 3 3], [0.5, 0.3, 0.2]),
+        scenario_probability = :from_pairing,
+    )
+
+    # TwoLevel: marginals per strategic period
+    ts = TwoLevel(2, 1, RepresentativePeriods(2, 8760, oscs; pairing = DiagonalPairing()))
+    marg = path_marginals(ts)
+    @test length(marg) == 2
+    @test all(m ≈ probs for m in marg)
+    @test all(m ≈ probs for m in path_marginals(ts, DiagonalPairing()))
+end
+
+@testitem "Scenario paths - pairing methods" begin
+    day = SimpleTimes(4, 1)
+    oscs = OperationalScenarios([day, day, day], [0.5, 0.3, 0.2])
+    rps = RepresentativePeriods(2, 8760, oscs)
+    probs = [[0.5, 0.3, 0.2], [0.5, 0.3, 0.2]]
+
+    # Diagonal pairing as a method
+    @test DiagonalPairing() isa PairingMethod
+    pairing = generate_pairing(DiagonalPairing(), rps)
+    @test pairing isa ScenarioPairing
+    @test pairing.scenarios == [1 1; 2 2; 3 3]
+    @test pairing.probability ≈ [0.5, 0.3, 0.2]
+    @test pairing.check_marginals == :warn
+    @test generate_pairing(DiagonalPairing(), probs).scenarios == pairing.scenarios
+    @test generate_pairing(DiagonalPairing(), [[0.5, 0.5], [1.0]]).scenarios == [1 1; 2 1]
+    @test generate_pairing(DiagonalPairing(), rps; check_marginals = :error).check_marginals ==
+          :error
+    @test_throws ArgumentError generate_pairing(DiagonalPairing(), [[0.5, 0.5], [0.3, 0.7]])
+    @test_throws ArgumentError generate_pairing(
+        DiagonalPairing(),
+        [[0.5, 0.5], [1 / 3, 1 / 3, 1 / 3]],
+    )
+    # Strategic periods must be handled individually
+    @test_throws ArgumentError generate_pairing(DiagonalPairing(), TwoLevel(2, 1, rps))
+    @test length(scenario_paths(TwoLevel(2, 1, rps), DiagonalPairing())) == 6
+
+    # User-defined method
+    struct _Reversed <: PairingMethod end
+    function TimeStruct._paths(::_Reversed, probs)
+        n = length(probs[1])
+        return [[k, n + 1 - k] for k in 1:n], probs[1]
+    end
+    TimeStruct._default_check_marginals(::_Reversed) = :none
+    pairing = generate_pairing(_Reversed(), rps)
+    @test pairing.scenarios == [1 3; 2 2; 3 1]
+    @test pairing.check_marginals == :none
+    @test path_scenarios.(scenario_paths(rps, _Reversed())) == [[1, 3], [2, 2], [3, 1]]
+    @test path_marginals(rps, _Reversed()) ≈ [[0.5, 0.3, 0.2], [0.2, 0.3, 0.5]]
+    rps_rev = RepresentativePeriods(2, 8760, oscs; pairing = _Reversed())
+    @test rps_rev.pairing.scenarios == [1 3; 2 2; 3 1]
+    @test path_marginals(TwoLevel(2, 1, rps), _Reversed())[2] ≈
+          [[0.5, 0.3, 0.2], [0.2, 0.3, 0.5]]
+end
+
+@testitem "Scenario paths - stored pairing" begin
+    day = SimpleTimes(4, 1)
+    oscs = OperationalScenarios([day, day, day], [0.5, 0.3, 0.2])
+    explicit = ScenarioPairing([1 1; 2 2; 3 3; 2 3; 3 2], [0.5, 0.2, 0.1, 0.1, 0.1])
+
+    # All constructors accept the pairing
+    rps_all = [
+        RepresentativePeriods(
+            2,
+            8760,
+            [0.5, 0.5],
+            [oscs, oscs];
+            pairing = DiagonalPairing(),
+        ),
+        RepresentativePeriods(2, 8760, oscs; pairing = DiagonalPairing()),
+        RepresentativePeriods(8760, [0.5, 0.5], [oscs, oscs]; pairing = DiagonalPairing()),
+        RepresentativePeriods(8760, [0.5, 0.5], oscs; pairing = DiagonalPairing()),
+        RepresentativePeriods(8760, [oscs, oscs]; pairing = DiagonalPairing()),
+    ]
+    for rps in rps_all
+        # The method is resolved and stored as a `ScenarioPairing`
+        @test rps.pairing isa ScenarioPairing
+        @test rps.pairing.scenarios == [1 1; 2 2; 3 3]
+        @test rps.pairing.probability ≈ [0.5, 0.3, 0.2]
+        @test path_scenarios.(scenario_paths(rps)) == [[1, 1], [2, 2], [3, 3]]
+    end
+    rps = first(rps_all)
+    @test RepresentativePeriods(2, 8760, oscs; pairing = explicit).pairing === explicit
+
+    # A provided pairing overrides the stored pairing
+    @test length(scenario_paths(rps, explicit)) == 5
+
+    # No pairing stored
+    rps_none = RepresentativePeriods(2, 8760, oscs)
+    @test isnothing(rps_none.pairing)
+    @test_throws ArgumentError scenario_paths(rps_none)
+    @test_throws ArgumentError path_marginals(rps_none)
+    @test length(scenario_paths(rps_none, explicit)) == 5
+    # Not required for a single representative period or without representative periods
+    @test length(scenario_paths(RepresentativePeriods(1, 8760, oscs))) == 3
+    @test length(scenario_paths(oscs)) == 3
+    @test length(scenario_paths(day)) == 1
+
+    # The pairing is validated when creating the time structure
+    oscs2 = OperationalScenarios(2, day)
+    @test_throws ArgumentError RepresentativePeriods(
+        8760,
+        [0.5, 0.5],
+        [oscs, oscs2];
+        pairing = DiagonalPairing(),
+    )
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs;
+        pairing = ScenarioPairing([1 4], [1.0]),
+    )
+    @test_throws ArgumentError RepresentativePeriods(
+        2,
+        8760,
+        oscs;
+        pairing = ScenarioPairing([1 1 1], [1.0]),
+    )
+    # Only the first `len` representative periods are validated
+    rps_len = RepresentativePeriods(
+        1,
+        8760,
+        [1.0, 0.0],
+        [oscs, oscs2];
+        pairing = DiagonalPairing(),
+    )
+    @test length(scenario_paths(rps_len)) == 3
+
+    # TwoLevel: the pairing of each strategic period is used
+    rps_expl = RepresentativePeriods(2, 8760, oscs; pairing = explicit)
+    ts = TwoLevel(1, [rps, rps_expl])
+    @test length(scenario_paths(ts)) == 3 + 5
+    @test length(scenario_paths(last(strategic_periods(ts)))) == 5
+    @test length(scenario_paths(ts, DiagonalPairing())) == 3 + 3
+    @test_throws ArgumentError scenario_paths(TwoLevel(2, 1, rps_none))
+    @test length(scenario_paths(TwoLevel(2, 1, oscs))) == 2 * 3
+
+    # TwoLevelTree
+    tree = regular_tree(2, [2], rps_expl)
+    paths = scenario_paths(tree)
+    @test length(paths) == 3 * 5
+    @test Set(Iterators.flatten(paths)) ⊆ Set(tree)
+end
+
 @run_package_tests
 Aqua.test_all(TimeStruct; ambiguities = false, unbound_args = false)

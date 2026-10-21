@@ -6,6 +6,7 @@ import TimeZones
 import .Base: first, last, isempty, length, size, eltype, IteratorSize, IteratorEltype
 
 include("structures.jl")
+include("scenario_pairing.jl")
 include("simple.jl")
 include("calendar.jl")
 include("representative/core_types.jl")
@@ -26,6 +27,7 @@ include("op_scenarios/tree_periods.jl")
 include("discount.jl")
 include("profiles.jl")
 include("utils.jl")
+include("scenario_paths.jl")
 
 include("partitions/strat_periods.jl")
 include("partitions/tree_periods.jl")
@@ -52,6 +54,8 @@ export StrategicStochasticProfile
 export RepresentativeProfile
 
 export opscenarios
+export scenario_paths, path_scenarios, path_marginals, scenario_probabilities
+export ScenarioPairing, PairingMethod, DiagonalPairing, generate_pairing
 export repr_periods
 export strat_periods, strategic_periods
 export regular_tree, strat_nodes, strategic_scenarios

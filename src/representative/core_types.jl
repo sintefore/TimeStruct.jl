@@ -1,13 +1,13 @@
 """
     struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
 
-    RepresentativePeriods(len::Integer, duration::S, period_share::Vector{<:Real}, rep_periods::Vector{OP}) where {S<:Duration, T, OP<:TimeStructure{T}}
-    RepresentativePeriods(len::Integer, duration::S, rep_periods::TimeStructure{T}) where {S<:Duration, T}
+    RepresentativePeriods(len::Integer, duration::S, period_share::Vector{<:Real}, rep_periods::Vector{OP}; pairing = nothing, scenario_probability = :given) where {S<:Duration, T, OP<:TimeStructure{T}}
+    RepresentativePeriods(len::Integer, duration::S, rep_periods::TimeStructure{T}; pairing = nothing, scenario_probability = :given) where {S<:Duration, T}
 
-    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::Vector{<:TimeStructure{T}}) where {S<:Duration, T}
-    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::TimeStructure{T}) where {S<:Duration, T}
+    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::Vector{<:TimeStructure{T}}; pairing = nothing, scenario_probability = :given) where {S<:Duration, T}
+    RepresentativePeriods(duration::S, period_share::Vector{<:Real}, rep_periods::TimeStructure{T}; pairing = nothing, scenario_probability = :given) where {S<:Duration, T}
 
-    RepresentativePeriods(duration::S, rep_periods::Vector{<:TimeStructure{T}}) where {S<:Duration, T}
+    RepresentativePeriods(duration::S, rep_periods::Vector{<:TimeStructure{T}}; pairing = nothing, scenario_probability = :given) where {S<:Duration, T}
 
 
 Time structure that allows a time period to be represented by one or more
@@ -17,6 +17,23 @@ The representative periods are an ordered sequence of TimeStructures that are
 used for each representative period. In addition, each representative period
 has an associated share that specifies how much of the total duration that
 is attributed to it.
+
+The optional keyword argument `pairing` specifies how the [`OperationalScenarios`](@ref) of
+the individual representative periods are combined into joint scenario paths, see
+[`ScenarioPairing`](@ref) and [`scenario_paths`](@ref). It is either a `ScenarioPairing` or
+a [`PairingMethod`](@ref), which is resolved with the scenario probabilities of the
+representative periods when the time structure is created. In both cases, the stored pairing
+is a `ScenarioPairing`, validated against the representative periods.
+
+The keyword argument `scenario_probability` specifies the source of the probabilities of the
+operational scenarios:
+- `:given` (default) uses the probabilities of the provided [`OperationalScenarios`](@ref).
+- `:from_pairing` sets the probability of each operational scenario to the sum of the
+  probabilities of the paths using it. It requires the keyword `pairing`, and that
+  each representative period is either an `OperationalScenarios` or has a single scenario.
+  The path probabilities are then consistent with the scenario probabilities by
+  construction. This is the natural choice when the scenario data are joint paths, *e.g.*,
+  weighted weather years.
 
 !!! note
     - The `TimeStructure`s of all representative periods must use the same type for the
@@ -40,6 +57,20 @@ RepresentativePeriods(8760, [0.7, 0.3], SimpleTimes(24, 1))
 # A year represented by two days with hourly resolution and relative shares of 0.5
 RepresentativePeriods(2, 8760, SimpleTimes(24, 1))
 RepresentativePeriods(8760, [SimpleTimes(24, 1), SimpleTimes(24,1)])
+
+# Two days with three operational scenarios each, where scenario k describes the same
+# weather year in both days
+RepresentativePeriods(2, 8760, OperationalScenarios(3, SimpleTimes(24, 1)); pairing = DiagonalPairing())
+
+# Three weighted paths through two days, where the scenario probabilities are derived from
+# the path probabilities
+RepresentativePeriods(
+    2,
+    8760,
+    OperationalScenarios(3, SimpleTimes(24, 1));
+    pairing = ScenarioPairing([1 1; 2 3; 3 2], [0.5, 0.3, 0.2]),
+    scenario_probability = :from_pairing,
+)
 ```
 """
 struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructure{T}
@@ -47,11 +78,14 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructur
     duration::S
     period_share::Vector{Float64}
     rep_periods::Vector{OP}
+    pairing::Union{Nothing,ScenarioPairing}
     function RepresentativePeriods(
         len::Integer,
         duration::S,
         period_share::Vector{<:Real},
-        rep_periods::Vector{OP},
+        rep_periods::Vector{OP};
+        pairing::Union{Nothing,PairingOrMethod} = nothing,
+        scenario_probability::Symbol = :given,
     ) where {S<:Duration,T,OP<:TimeStructure{T}}
         if len > length(period_share)
             throw(
@@ -71,54 +105,92 @@ struct RepresentativePeriods{S<:Duration,T,OP<:TimeStructure{T}} <: TimeStructur
                 "This can lead to unexpected behavior."
             )
         end
+        if pairing isa PairingMethod
+            pairing = generate_pairing(pairing, _scenario_probs(rep_periods[1:len]))
+        end
+        if scenario_probability == :from_pairing
+            rep_periods = _probabilities_from_pairing(rep_periods, len, pairing)
+        elseif scenario_probability != :given
+            throw(
+                ArgumentError(
+                    "`scenario_probability` must be `:given` or `:from_pairing`.",
+                ),
+            )
+        end
+        if !isnothing(pairing)
+            # Throws an error if the pairing is not valid for the representative periods
+            _pair_scenarios(pairing, _scenario_probs(rep_periods[1:len]))
+        end
         return new{S,T,OP}(
             len,
             duration,
             convert(Vector{Float64}, period_share),
             rep_periods,
+            pairing,
         )
     end
 end
 function RepresentativePeriods(
     len::Integer,
     duration::S,
-    rep_periods::TimeStructure{T},
+    rep_periods::TimeStructure{T};
+    pairing = nothing,
+    scenario_probability = :given,
 ) where {S<:Duration,T}
     return RepresentativePeriods(
         len,
         duration,
         fill(1.0 / len, len),
-        fill(rep_periods, len),
+        fill(rep_periods, len);
+        pairing,
+        scenario_probability,
     )
 end
 function RepresentativePeriods(
     duration::S,
     period_share::Vector{<:Real},
-    rep_periods::Vector{<:TimeStructure{T}},
+    rep_periods::Vector{<:TimeStructure{T}};
+    pairing = nothing,
+    scenario_probability = :given,
 ) where {S<:Duration,T}
-    return RepresentativePeriods(length(rep_periods), duration, period_share, rep_periods)
+    return RepresentativePeriods(
+        length(rep_periods),
+        duration,
+        period_share,
+        rep_periods;
+        pairing,
+        scenario_probability,
+    )
 end
 function RepresentativePeriods(
     duration::S,
     period_share::Vector{<:Real},
-    rep_periods::TimeStructure{T},
+    rep_periods::TimeStructure{T};
+    pairing = nothing,
+    scenario_probability = :given,
 ) where {S<:Duration,T}
     return RepresentativePeriods(
         length(period_share),
         duration,
         period_share,
-        fill(rep_periods, length(period_share)),
+        fill(rep_periods, length(period_share));
+        pairing,
+        scenario_probability,
     )
 end
 function RepresentativePeriods(
     duration::S,
-    rep_periods::Vector{<:TimeStructure{T}},
+    rep_periods::Vector{<:TimeStructure{T}};
+    pairing = nothing,
+    scenario_probability = :given,
 ) where {S<:Duration,T}
     return RepresentativePeriods(
         length(rep_periods),
         duration,
         fill(1.0 / length(rep_periods), length(rep_periods)),
-        rep_periods,
+        rep_periods;
+        pairing,
+        scenario_probability,
     )
 end
 
