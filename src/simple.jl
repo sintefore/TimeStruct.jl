@@ -39,6 +39,9 @@ SimpleTimes(dur::Vector{T}) where {T<:Duration} = SimpleTimes(length(dur), dur)
 
 _total_duration(st::SimpleTimes) = st.total_duration
 
+has_opscenarios(::SimpleTimes) = false
+has_repr_periods(::SimpleTimes) = false
+
 # Add basic functions of iterators
 Base.length(st::SimpleTimes) = st.len
 Base.eltype(::Type{SimpleTimes{T}}) where {T} = SimplePeriod{T}

@@ -168,6 +168,9 @@ function _multiple_adj(ts::TwoLevel, sp)
     return stripunit(mult)
 end
 
+has_opscenarios(ts::TwoLevel) = any(has_opscenarios, ts.operational)
+has_repr_periods(ts::TwoLevel) = any(has_repr_periods, ts.operational)
+
 # Add basic functions of iterators
 function Base.length(ts::TwoLevel)
     return sum(length(op) for op in ts.operational)

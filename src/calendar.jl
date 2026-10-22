@@ -73,6 +73,9 @@ end
 
 _total_duration(ts::CalendarTimes) = ts.total_duration
 
+has_opscenarios(::CalendarTimes) = false
+has_repr_periods(::CalendarTimes) = false
+
 # Add basic functions of iterators
 Base.length(ts::CalendarTimes) = ts.length
 Base.eltype(::Type{CalendarTimes{T}}) where {T} = CalendarPeriod{T}

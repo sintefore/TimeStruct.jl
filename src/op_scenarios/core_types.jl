@@ -86,6 +86,9 @@ function _multiple_adj(oscs::OperationalScenarios, scen)
     return stripunit(_total_duration(oscs) / _total_duration(oscs.scenarios[scen]))
 end
 
+has_opscenarios(::OperationalScenarios) = true
+has_repr_periods(::OperationalScenarios) = false
+
 # Add basic functions of iterators
 function Base.length(oscs::OperationalScenarios)
     return sum(length(oscs.scenarios[osc]) for osc in 1:oscs.len)

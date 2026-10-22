@@ -27,6 +27,8 @@ mult_repr(rp::StratNodeReprPeriod) = rp.mult_rp
 probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
 probability(rp::StratNodeReprPeriod) = rp.prob_branch
 
+operational_type(rp::StratNodeReprPeriod) = operational_type(rp.operational)
+
 StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
 

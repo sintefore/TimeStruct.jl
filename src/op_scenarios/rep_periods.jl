@@ -20,6 +20,8 @@ probability(osc::ReprOpScenario) = osc.probability
 mult_scen(osc::ReprOpScenario) = osc.mult_scen
 mult_repr(osc::ReprOpScenario) = osc.mult_rp
 
+operational_type(osc::ReprOpScenario) = operational_type(osc.operational)
+
 RepresentativeIndexable(::Type{<:ReprOpScenario}) = HasReprIndex()
 
 # Provide a constructor to simplify the design

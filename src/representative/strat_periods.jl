@@ -18,6 +18,8 @@ _rper(rp::StratReprPeriod) = rp.rp
 mult_strat(rp::StratReprPeriod) = rp.mult_sp
 mult_repr(rp::StratReprPeriod) = rp.mult_rp
 
+operational_type(rp::StratReprPeriod) = operational_type(rp.operational)
+
 StrategicIndexable(::Type{<:StratReprPeriod}) = HasStratIndex()
 
 # Provide a constructor to simplify the design

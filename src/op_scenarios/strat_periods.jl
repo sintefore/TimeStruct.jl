@@ -20,6 +20,8 @@ mult_strat(osc::StratOpScenario) = osc.mult_sp
 mult_scen(osc::StratOpScenario) = osc.mult_scen
 probability(osc::StratOpScenario) = osc.probability
 
+operational_type(osc::StratOpScenario) = operational_type(osc.operational)
+
 StrategicIndexable(::Type{<:StratOpScenario}) = HasStratIndex()
 ScenarioIndexable(::Type{<:StratOpScenario}) = HasScenarioIndex()
 
@@ -142,6 +144,8 @@ probability(osc::StratReprOpScenario) = osc.probability
 mult_strat(osc::StratReprOpScenario) = osc.mult_sp
 mult_repr(osc::StratReprOpScenario) = osc.mult_rp
 mult_scen(osc::StratReprOpScenario) = osc.mult_scen
+
+operational_type(osc::StratReprOpScenario) = operational_type(osc.operational)
 
 StrategicIndexable(::Type{<:StratReprOpScenario}) = HasStratIndex()
 function RepresentativeIndexable(::Type{<:StratReprOpScenario})

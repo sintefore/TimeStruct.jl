@@ -31,6 +31,8 @@ probability_branch(osc::StratNodeOpScenario) = osc.prob_branch
 
 _oper_struct(osc::StratNodeOpScenario) = osc.operational
 
+operational_type(osc::StratNodeOpScenario) = operational_type(osc.operational)
+
 # Provide a constructor to simplify the design
 function TreePeriod(osc::StratNodeOpScenario, per::TimePeriod)
     mult = mult_strat(osc) * multiple(per)
@@ -131,6 +133,8 @@ probability_scen(osc::StratNodeReprOpScenario) = osc.prob_scen
 probability(osc::StratNodeReprOpScenario) = osc.prob_branch * osc.prob_scen
 
 _oper_struct(osc::StratNodeReprOpScenario) = osc.operational
+
+operational_type(osc::StratNodeReprOpScenario) = operational_type(osc.operational)
 
 StrategicTreeIndexable(::Type{<:StratNodeReprOpScenario}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprOpScenario}) = HasStratIndex()

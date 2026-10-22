@@ -57,6 +57,8 @@ mult_strat(n::StratNode) = n.mult_sp
 duration_strat(n::StratNode) = n.duration
 multiple_strat(sp::StratNode, t) = multiple(t) / duration_strat(sp)
 
+operational_type(n::StratNode) = typeof(n.operational)
+
 _parent(n::StratNode) = n.parent
 
 isfirst(n::StratNode) = n.sp == 1
