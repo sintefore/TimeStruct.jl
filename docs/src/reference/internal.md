@@ -6,6 +6,7 @@
 TimeStruct.TimeStructurePeriod
 TimeStruct.TimeStructInnerIter
 TimeStruct.TimeStructOuterIter
+TimeStruct.PeriodPartition
 ```
 
 ## [Strategic period types ([`TwoLevelTree`](@ref))](@id int-types-twoleveltree)
@@ -14,16 +15,21 @@ TimeStruct.TimeStructOuterIter
 
 ```@docs
 TimeStruct.AbstractTreeNode
+TimeStruct.AbstractStrategicScenario
 TimeStruct.StratNode
 TimeStruct.StrategicScenario
+TimeStruct.SingleStrategicScenario
 ```
 
 ### [Iterator types](@id int-types-twoleveltree-iter)
 
 ```@docs
 TimeStruct.AbstractTreeStructure
+TimeStruct.AbstractStratScens
 TimeStruct.StratTreeNodes
-TimeStruct.StrategicScenarios
+TimeStruct.StratScens
+TimeStruct.ScenTreeNodes
+TimeStruct.SingleStrategicScenarioWrapper
 ```
 
 ## [Strategic period types ([`TwoLevel`](@ref))](@id int-types-strat_twolevel)

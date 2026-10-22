@@ -5,18 +5,26 @@
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://sintefore.github.io/TimeStruct.jl/stable/)
 [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://sintefore.github.io/TimeStruct.jl/dev/)
 
-TimeStruct is a Julia package that supports the efficient development of optimization models with multi-horizon time modelling and possible uncertainty. 
-The package is designed to be used in combination with the JuMP package for optimization modeling in Julia.
+TimeStruct is a Julia package that supports the efficient development of optimization models with multi-horizon time modeling and possible uncertainty. 
+The package is designed to be used in combination with [JuMP](https://jump.dev/) for optimization modeling in Julia.
 
 ## Installation
 
+TimeStruct.jl is a registered Julia package. Install it using the package manager:
+
+```julia
+using Pkg
+Pkg.add("TimeStruct")
 ```
-] add TimeStruct
+
+Or in the Julia REPL package mode (press `]`):
+```
+pkg> add TimeStruct
 ```
 
 ## Example
 
-The following shows a simple example of usage. For further details we refer to the documentation. 
+The following shows a simple example of usage. For further details, refer to the [documentation](https://sintefore.github.io/TimeStruct.jl/stable/). 
 
 ```julia 
 using JuMP
@@ -32,9 +40,8 @@ model = Model()
 @objective(model, Min, sum(income[t] * x[t] for t in periods))
 ```
 
-## Cite
-If you find TimeStruct useful in your work, we kindly request that you cite the
-following [paper](https://doi.org/10.21105/joss.07578):
+## Citation
+If you find TimeStruct useful in your work, we kindly request that you cite the following [paper](https://doi.org/10.21105/joss.07578):
 ```
 @article{Flatberg2025,
   doi = {10.21105/joss.07578},

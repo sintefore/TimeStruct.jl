@@ -83,11 +83,15 @@ end
 """
     chunk(iter, n; cyclic = false)
 
-Iterator wrapper that yields chunks where each chunk is an iterator over at most
-`n` consecutive time periods starting at each time period of the original iterator.
+Iterator wrapper that yields chunks where each chunk is an iterator over at most `n`
+consecutive time periods starting at each time period of the original iterator.
 
-It is possible to get the `n` consecutive time periods in a cyclic fashion, by
-setting `cyclic` to true.
+It is possible to get the `n` consecutive time periods in a cyclic fashion, by setting
+`cyclic` to true.
+
+!!! warning "TwoLevelTree"
+    Usage of the function for the strategic periods of a [`TwoLevelTree`](@ref) time
+    structure results in an error.
 """
 chunk(iter, n; cyclic = false) = Chunk(iter, n, cyclic)
 Base.length(w::Chunk) = length(w.itr)
@@ -102,6 +106,12 @@ function Base.iterate(w::Chunk, state = nothing)
     end
     next = Iterators.take(isnothing(state) ? itr : Iterators.rest(itr, state), w.ns)
     return next, n[2]
+end
+
+function chunk(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+    return error(
+        "`chunk` can not be used when iterating nodes of a strategic tree structure.",
+    )
 end
 
 struct TakeDuration{I}
@@ -132,8 +142,12 @@ end
 """
     chunk_duration(iter, dur)
 
-Iterator wrapper that yields chunks based on duration where each chunk is an iterator over the following
-time periods until at least `dur` time is covered or the end is reached.
+Iterator wrapper that yields chunks based on duration where each chunk is an iterator over
+the following time periods until at least `dur` time is covered or the end is reached.
+
+!!! warning "TwoLevelTree"
+    Usage of the function for the strategic periods of a [`TwoLevelTree`](@ref) time
+    structure results in an error.
 """
 chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
 
@@ -150,6 +164,62 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     end
     next = take_duration(isnothing(state) ? itr : Iterators.rest(itr, state...), w.duration)
     return next, n[2]
+end
+
+function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+    return error(
+        "`chunk_duration` can not be used when iterating nodes of a strategic tree structure.",
+    )
+end
+struct PartitionDurationIterator{I<:TimeStructure,T<:Duration,D<:TimeProfile{T}}
+    itr::I
+    duration::D
+end
+function PartitionDurationIterator(itr::TimeStructure, dur::Duration)
+    return PartitionDurationIterator(itr, FixedProfile(dur))
+end
+function PartitionDurationIterator(itr::TimeStructure, dur::Vector{<:Duration})
+    return PartitionDurationIterator(itr, PartitionProfile(dur))
+end
+
+"""
+    partition_duration(itr, dur)
+
+Iterator wrapper that yields partitions of time periods where each partition is an iterator
+over the following time periods until at least `dur` time is covered or the end is reached.
+
+
+!!! note "Application"
+    The partitions only cover time periods within an operational scenario, representative
+    period, or strategic period depending on the chosen time structure.
+
+    The reason for this approach is the lack of meaning of a partition of a
+    [`TimeStructurePeriod`](@ref).
+"""
+partition_duration(itr, dur) = PartitionDurationIterator(itr, dur)
+
+IteratorSize(::Type{<:PartitionDurationIterator}) = Base.SizeUnknown()
+
+function Base.iterate(
+    w::PartitionDurationIterator{I,T,D},
+    state = (nothing, 1),
+) where {I,T,D}
+    isa(state[1], Iterators.IterationCutShort) && return nothing
+    y = iterate(w.itr, state[1])
+    isnothing(y) && return nothing
+    part = state[2]
+    dur_part = w.duration[PeriodPartition(w.itr, part, (y[1],))]
+    chunk = eltype(w.itr)[]
+    acc = zero(T)
+    while !isnothing(y)
+        push!(chunk, y[1])
+        acc += duration(y[1])
+        acc >= dur_part && break
+        y = iterate(w.itr, y[2])
+    end
+    pd = PeriodPartition(w.itr, part, Tuple(chunk))
+    isnothing(y) && return pd, (Iterators.IterationCutShort(), part+1)
+    return pd, (y[2], part+1)
 end
 
 """
@@ -235,3 +305,43 @@ function Base.iterate(ts::TreeStructure, state = nothing)
 
     return TreePeriod(ts, next[1]), next[2]
 end
+
+"""
+    has_opscenarios(ts::TimeStructure)
+    has_opscenarios(ts::TimeStructurePeriod)
+
+Returns `true` if any operational structure within the `TimeStructure` includes
+`OperationalScenarios`. Specific methods for `TimeStructurePeriod`s are also included
+
+An [`AbstractOperationalScenario`](@ref) corresponds to an individual scenario, and hence,
+cannot contain `OperationalScenarios`.
+"""
+function has_opscenarios end
+
+"""
+    has_repr_periods(ts::TimeStructure)
+    has_repr_periods(ts::TimeStructurePeriod)
+
+Returns `true` if any operational structure within the `TimeStructure` includes
+`RepresentativePeriods`. Specific methods for `TimeStructurePeriod`s are also included
+
+An [`AbstractRepresentativePeriod`](@ref) corresponds to an individual representative period,
+and hence, cannot contain `RepresentativePeriods`.
+"""
+function has_repr_periods end
+
+"""
+    operational_type(ts::TimeStructurePeriod)
+
+Returns the type of the operational time structure of the `TimeStructurePeriod` `ts`,
+*e.g.*, `SimpleTimes{Int64}`, `OperationalScenarios{...}`, or `RepresentativePeriods{...}`.
+These types then can be utilized for creating new methods.
+
+The method is implemented for [`AbstractStrategicPeriod`](@ref),
+[`AbstractRepresentativePeriod`](@ref), and [`AbstractOperationalScenario`](@ref).
+
+!!! note
+    The method is not implemented for strategic scenarios as these scenarios include multiple
+    operational time structures.
+"""
+function operational_type end

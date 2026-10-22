@@ -27,6 +27,8 @@ mult_repr(rp::StratNodeReprPeriod) = rp.mult_rp
 probability_branch(rp::StratNodeReprPeriod) = rp.prob_branch
 probability(rp::StratNodeReprPeriod) = rp.prob_branch
 
+operational_type(rp::StratNodeReprPeriod) = operational_type(rp.operational)
+
 StrategicTreeIndexable(::Type{<:StratNodeReprPeriod}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprPeriod}) = HasStratIndex()
 
@@ -40,7 +42,7 @@ end
 function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(_strat_per(rp))-br$(_branch(rp))-rp$(_rper(rp))")
 end
-Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
+Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(OP)}
 
 """
     struct StratNodeReprPers{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
@@ -93,11 +95,12 @@ end
 Base.eltype(_::StratNodeReprPers) = StratNodeReprPeriod
 
 """
-When the `TimeStructure` is a [`TwoLevelTree`](@ref), `repr_periods` returns an `Array` of
-all [`StratNodeReprPeriod`](@ref)s.
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a
+[`StrategicScenario`](@ref), `repr_periods` returns an `Array` of all
+[`StratNodeReprPeriod`](@ref)s.
 
 These are equivalent to a [`StratReprPeriod`](@ref) of a [`TwoLevel`](@ref) time structure.
 """
-function repr_periods(ts::TwoLevelTree)
+function repr_periods(ts::Union{TwoLevelTree,StratScens,StrategicScenario})
     return collect(Iterators.flatten(repr_periods(sp) for sp in strat_periods(ts)))
 end

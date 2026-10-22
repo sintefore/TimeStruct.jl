@@ -31,6 +31,8 @@ probability_branch(osc::StratNodeOpScenario) = osc.prob_branch
 
 _oper_struct(osc::StratNodeOpScenario) = osc.operational
 
+operational_type(osc::StratNodeOpScenario) = operational_type(osc.operational)
+
 # Provide a constructor to simplify the design
 function TreePeriod(osc::StratNodeOpScenario, per::TimePeriod)
     mult = mult_strat(osc) * multiple(per)
@@ -46,7 +48,7 @@ StrategicIndexable(::Type{<:StratNodeOpScenario}) = HasStratIndex()
 function Base.show(io::IO, osc::StratNodeOpScenario)
     return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-sc$(_opscen(osc))")
 end
-Base.eltype(_::StratNodeOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
+Base.eltype(_::StratNodeOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(OP)}
 
 """
     struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
@@ -132,6 +134,8 @@ probability(osc::StratNodeReprOpScenario) = osc.prob_branch * osc.prob_scen
 
 _oper_struct(osc::StratNodeReprOpScenario) = osc.operational
 
+operational_type(osc::StratNodeReprOpScenario) = operational_type(osc.operational)
+
 StrategicTreeIndexable(::Type{<:StratNodeReprOpScenario}) = HasStratTreeIndex()
 StrategicIndexable(::Type{<:StratNodeReprOpScenario}) = HasStratIndex()
 function RepresentativeIndexable(::Type{<:StratNodeReprOpScenario})
@@ -153,7 +157,9 @@ function Base.show(io::IO, osc::StratNodeReprOpScenario)
         "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))",
     )
 end
-Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(op)}
+function Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP}
+    return TreePeriod{ReprPeriod{eltype(OP)}}
+end
 
 """
     struct StratNodeReprOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
@@ -239,23 +245,15 @@ function opscenarios(n::StratNode{S,T,OP}) where {S,T,OP<:RepresentativePeriods}
 end
 
 """
-When the `TimeStructure` is a [`TwoLevelTree`](@ref), `opscenarios` returns an `Array` of
-all [`StratNodeOpScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
-dependening on whether the [`TwoLevelTree`](@ref) includes [`RepresentativePeriods`](@ref)
+When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a
+[`StrategicScenario`](@ref), `opscenarios` returns an `Array` of all
+[`StratNodeOpScenario`](@ref)s or [`StratNodeReprOpScenario`](@ref)s types,
+depending on whether the `TimeStructure` includes [`RepresentativePeriods`](@ref)
 or not.
 
 These are equivalent to a [`StratOpScenario`](@ref) and [`StratReprOpScenario`](@ref)
 of a [`TwoLevel`](@ref) time structure.
 """
-function opscenarios(ts::TwoLevelTree)
+function opscenarios(ts::Union{TwoLevelTree,StratScens,StrategicScenario})
     return collect(Iterators.flatten(opscenarios(sp) for sp in strat_periods(ts)))
-end
-function opscenarios(
-    ts::TwoLevelTree{T,StratNode{S,T,OP}},
-) where {S,T,OP<:RepresentativePeriods}
-    return collect(
-        Iterators.flatten(
-            opscenarios(rp) for sp in strat_periods(ts) for rp in repr_periods(sp)
-        ),
-    )
 end

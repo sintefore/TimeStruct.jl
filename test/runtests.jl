@@ -162,8 +162,8 @@ end
     @test_throws ArgumentError OperationalScenarios(2, [day, week], [1.0])
     @test_throws ArgumentError OperationalScenarios(2, [day], [0.5, 0.5])
     msg =
-        "The sum of the probablity vector is given by $(2.0). " *
-        "This can lead to unexpected behaviour."
+        "The sum of the probability vector is given by $(2.0). " *
+        "This can lead to unexpected behavior."
     @test_logs (:warn, msg) OperationalScenarios([day, day], [0.5, 1.5])
 end
 
@@ -224,7 +224,7 @@ end
     @test_throws ArgumentError RepresentativePeriods(2, 8760, [0.5, 0.5], [day])
     msg =
         "The sum of the `period_share` vector is given by $(2.0). " *
-        "This can lead to unexpected behaviour."
+        "This can lead to unexpected behavior."
     @test_logs (:warn, msg) RepresentativePeriods(8760, [0.5, 1.5], [day, day])
 
     # Testing of the external constructors providing the same case
@@ -369,11 +369,14 @@ end
     @test pers[1] < pers[2]
     @test pers[24] < pers[25]
 
-    sp = collect(strat_periods(ts))
+    sps = collect(strat_periods(ts))
 
     # Test that collect is working correctly
-    ops = collect(sp[1])
-    @test sum(ops[it] == op for (it, op) in enumerate(sp[1])) == 24
+    ops = collect(sps[1])
+    @test sum(ops[it] == op for (it, op) in enumerate(sps[1])) == 24
+
+    # Test that the branch probability is 1
+    @test all(probability_branch(sp) == 1.0 for sp in sps)
 end
 
 @testitem "TwoLevel with units" begin
@@ -662,12 +665,12 @@ end
     test_invariants(TwoLevel(5, 10, SimpleTimes(10, 1)))
     test_invariants(TwoLevel(5, 30, opscen))
 
-    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    two_level = TwoLevel(100, [repr, repr, repr]; op_per_strat = 1.0)
+    rpers = RepresentativePeriods(2, 20, [0.2, 0.8], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    two_level = TwoLevel(100, [rpers, rpers, rpers]; op_per_strat = 1.0)
     test_invariants(two_level)
 
-    repr = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
-    two_level = TwoLevel(100, [repr, repr]; op_per_strat = 1.0)
+    rpers = RepresentativePeriods(2, 20, [0.2, 0.8], [opscen, opscen])
+    two_level = TwoLevel(100, [rpers, rpers]; op_per_strat = 1.0)
     test_invariants(two_level)
 end
 
@@ -775,13 +778,13 @@ end
     twolevel_rep = TwoLevel(2, 1, rep)
     test_multiple(twolevel_rep)
 
-    regtree_simple = regular_tree(5, [3, 2], periods)
+    regtree_simple = TwoLevelTree(5, [3, 2], periods)
     test_multiple(regtree_simple)
 
-    regtree_opscen = regular_tree(5, [3, 2], opscen)
+    regtree_opscen = TwoLevelTree(5, [3, 2], opscen)
     test_multiple(regtree_opscen)
 
-    regtree = TimeStruct.regular_tree(
+    regtree = TwoLevelTree(
         5,
         [3, 2],
         RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
@@ -915,6 +918,97 @@ end
     @test sum(sspdiv[t] for t in tsc) == 200 / 0.5
 end
 
+@testitem "TreeNode constructors" begin
+    # Different structures to be used
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
+    oscs = OperationalScenarios(2, week)
+    rps = RepresentativePeriods(2, 1, day)
+
+    leaf_node = TreeNode(2, day)
+    @test leaf_node.duration == 2
+    @test leaf_node.ts == day
+    @test leaf_node.probability == [1]
+    @test leaf_node.children == [nothing]
+
+    lin_node = TreeNode(5, week, leaf_node)
+    @test lin_node.duration == 5
+    @test lin_node.ts == week
+    @test lin_node.probability == [1]
+    @test lin_node.children == [leaf_node]
+
+    all_equal_node = TreeNode(10, oscs, 3, leaf_node)
+    @test all_equal_node.duration == 10
+    @test all_equal_node.ts == oscs
+    @test all_equal_node.probability == [1, 1, 1] / 3
+    @test all_equal_node.children == [leaf_node, leaf_node, leaf_node]
+
+    prob_equal_node = TreeNode(20, rps, [leaf_node, lin_node])
+    @test prob_equal_node.duration == 20
+    @test prob_equal_node.ts == rps
+    @test prob_equal_node.probability == [1, 1] / 2
+    @test prob_equal_node.children == [leaf_node, lin_node]
+
+    children_equal_node = TreeNode(20, rps, [0.6, 0.4], leaf_node)
+    @test children_equal_node.duration == 20
+    @test children_equal_node.ts == rps
+    @test children_equal_node.probability == [0.6, 0.4]
+    @test children_equal_node.children == [leaf_node, leaf_node]
+
+    unequal_node = TreeNode(25, day, [0.3, 0.7], [leaf_node, lin_node])
+    @test unequal_node.duration == 25
+    @test unequal_node.ts == day
+    @test unequal_node.probability == [0.3, 0.7]
+    @test unequal_node.children == [leaf_node, lin_node]
+
+    @test_throws ArgumentError TreeNode(25, day, [0.3], [leaf_node, lin_node])
+    msg =
+        "The sum of the probability vector is given by 0.8. " *
+        "This can lead to unexpected behavior."
+    @test_logs (:warn, msg) TreeNode(25, day, [0.5, 0.3], lin_node)
+end
+
+@testitem "TwoLevelTree constructors" begin
+    # Declare the individual time structure
+    day = SimpleTimes(24, 1)
+
+    # Regular tree with 3 strategic periods of duration 5, 3 branches for the second strategic
+    # period, and 6 branchs in the thirdand forth strategic period
+    regtree_1 = TwoLevelTree(5, [3, 2, 1], day)
+    regtree_2 = regular_tree(5, [3, 2, 1], day)
+
+    # Equivalent structure using `TreeNode` and the different constructors
+    regtree_3 = TwoLevelTree(
+        TreeNode(
+            5,
+            day,
+            [
+                TreeNode(5, day, 2, TreeNode(5, day, TreeNode(5, day)))
+                TreeNode(5, day, [0.5, 0.5], TreeNode(5, day, TreeNode(5, day)))
+                TreeNode(
+                    5,
+                    day,
+                    [
+                        TreeNode(5, day, TreeNode(5, day)),
+                        TreeNode(5, day, TreeNode(5, day)),
+                    ],
+                )
+            ],
+        ),
+    )
+
+    # Test that they are equivalent
+    # The test on TwoLevelTree level is not working, even though all fields are equal
+    regtree_1.len == regtree_2.len
+    regtree_1.root == regtree_2.root
+    regtree_1.nodes == regtree_2.nodes
+    regtree_1.op_per_strat == regtree_2.op_per_strat
+    regtree_1.len == regtree_3.len
+    regtree_1.root == regtree_3.root
+    regtree_1.nodes == regtree_3.nodes
+    regtree_1.op_per_strat == regtree_3.op_per_strat
+end
+
 # Function for testing all iterators. Can be beneficial for all other tests as well
 @testmodule TwoLevelTreeTest begin
     using TimeStruct, Test
@@ -1000,15 +1094,17 @@ end
         for oscs in oscs_inv[2:end]
             @test [probability_branch(osc) for osc in oscs] == p_branch[1]
         end
-
         return ops_inv[1]
     end
 end
 
 @testitem "TwoLevelTree with SimpleTimes" setup = [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    regtree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     n_sp = 10
     n_op = n_sp * 5
+
+    @test all(TimeStruct._multiple_adj(regtree, t) == 1 for t in 1:n_sp)
+
     ops = TwoLevelTreeTest.fun(regtree, n_sp, n_op)
 
     op = ops[31]
@@ -1016,30 +1112,57 @@ end
     @test TimeStruct._strat_per(op) == 3
     @test TimeStruct._branch(op) == 4
     @test TimeStruct._oper(op) == 1
+    @test TimeStruct._rper(op) == 1
     @test duration(op) == 1
     @test probability(op) == 1 / 6
     @test op isa eltype(typeof(regtree))
+    @test repr(op) == "sp3-br4-t1"
+    @test op < ops[32]
+    @test ops[4] < op
+    @test TimeStruct.StrategicTreeIndexable(typeof(op)) == TimeStruct.HasStratTreeIndex()
 
     nodes = strat_nodes(regtree)
     for sp in 1:3
-        @test sum(TimeStruct.probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
+        @test sum(probability_branch(n) for n in nodes if n.sp == sp) ≈ 1.0
     end
     node = nodes[2]
     @test length(node) == 5
     @test first(node) isa eltype(typeof(node))
+    @test repr(node) == "sp2-br1"
+    @test all(multiple_strat(node, t) ≈ 0.2 for t in node)
+    @test TimeStruct.StrategicTreeIndexable(typeof(node)) == TimeStruct.HasStratTreeIndex()
 
+    # Test helper functions
     leaves = TimeStruct.leaves(regtree)
-    @test length(leaves) == TimeStruct.nleaves(regtree)
+    @test length(leaves) == n_leaves(regtree)
+    @test leaves[3] == TimeStruct.get_leaf(regtree, 3)
+    @test n_branches(regtree, 2) == 3
+    @test n_branches(regtree, 3) == 6
 
-    scens = collect(TimeStruct.strategic_scenarios(regtree))
+    @test n_children(regtree.root, regtree) == 3
+    @test TimeStruct.children(regtree.root, regtree) == regtree.nodes[[2, 5, 8]]
+    @test TimeStruct.get_strat_node(regtree, 2, 1) == regtree.nodes[2]
+    @test TimeStruct.get_strat_node(regtree, 3, 2) == regtree.nodes[4]
+    @test TimeStruct.get_strat_node(regtree, 3, 3) == regtree.nodes[6]
+    @test TimeStruct.get_strat_node(regtree, 3, 6) == regtree.nodes[10]
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 3, 8)
+    @test_throws ErrorException TimeStruct.get_strat_node(regtree, 4, 1)
+
+    @test n_strat_per(regtree) == 3
+
+    # Test strategic periods
+    sps = strat_periods(regtree)
+    @test eltype(sps) == typeof(node)
+    @test sps[2] == node
+
+    # Test strategic scenarios
+    scens = collect(strategic_scenarios(regtree))
+    @test length(strategic_scenarios(regtree)) == n_leaves(regtree)
     @test length(scens[2].nodes) == regtree.len
+    @test last(scens[1]) == last(regtree.nodes[3])
     @test scens[3].nodes[1] == regtree.nodes[1]
 
-    ssp = TimeStruct.StrategicStochasticProfile([
-        [10],
-        [11, 12, 13],
-        [20, 21, 22, 23, 30, 40],
-    ])
+    ssp = StrategicStochasticProfile([[10], [11, 12, 13], [20, 21, 22, 23, 30, 40]])
 
     @test ssp[nodes[3]] == 20
     @test ssp[nodes[8]] == 13
@@ -1047,7 +1170,7 @@ end
     price1 = OperationalProfile([1, 2, 2, 5, 6])
     price2 = FixedProfile(4)
 
-    dsp = TimeStruct.StrategicStochasticProfile([
+    dsp = StrategicStochasticProfile([
         [price1],
         [price1, price2, price2],
         [price1, price2, price2, price1, price2, price2],
@@ -1056,7 +1179,7 @@ end
 end
 
 @testitem "TwoLevelTree with OperationalScenarios" setup = [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+    regtree = TwoLevelTree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
     n_sp = 10
     n_sc = n_sp * 3
     n_op = n_sc * 5
@@ -1064,8 +1187,7 @@ end
 end
 
 @testitem "TwoLevelTree with RepresentativePeriods" setup = [TwoLevelTreeTest] begin
-    regtree =
-        TimeStruct.regular_tree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
+    regtree = TwoLevelTree(5, [3, 2], RepresentativePeriods(2, 1, SimpleTimes(5, 1)))
     n_sp = 10
     n_rp = n_sp * 2
     n_op = n_rp * 5
@@ -1074,7 +1196,7 @@ end
 
 @testitem "TwoLevelTree with RepresentativePeriods and OperationalScenarios" setup =
     [TwoLevelTreeTest] begin
-    regtree = TimeStruct.regular_tree(
+    regtree = TwoLevelTree(
         5,
         [3, 2],
         RepresentativePeriods(2, 1, OperationalScenarios(3, SimpleTimes(5, 1))),
@@ -1086,31 +1208,143 @@ end
     TwoLevelTreeTest.fun(regtree, n_sp, n_op; n_sc, n_rp)
 end
 
-@testitem "Strategic scenarios with operational scenarios" begin
-    regtree = TimeStruct.regular_tree(5, [3, 2], OperationalScenarios(3, SimpleTimes(5, 1)))
+@testitem "Strategic scenarios with TwoLevelTree" begin
+    const TS = TimeStruct
+    oper_scens = OperationalScenarios(3, SimpleTimes(5, 1))
+    regtree = TwoLevelTree(5, [3, 2], oper_scens)
+    scens = strategic_scenarios(regtree)
 
-    @test length(TimeStruct.strategic_scenarios(regtree)) == 6
+    # Test general functionality
+    @test eltype(scens) == TS.StrategicScenario
+    @test length(scens) == 6
+    @test last(scens) == scens[6]
+    @test eachindex(scens) == Base.OneTo(6)
 
-    for sc in TimeStruct.strategic_scenarios(regtree)
+    # Test that the strategic periods are correct
+    sps = strat_periods(regtree)
+    sps_scens = strat_periods(scens)
+    sps_scen_1 = strat_periods(first(scens))
+    @test sps == sps_scens
+    @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+    @test last(sps_scen_1) == collect(sps)[3]
+    @test isa(sps_scen_1, TS.ScenTreeNodes)
+
+    # Test that the representative periods are correct
+    rps = repr_periods(regtree)
+    rps_scens = repr_periods(scens)
+    rps_scen_1 = repr_periods(first(scens))
+    @test rps == rps_scens
+    @test all(rps1 === rps2 for (rps1, rps2) in zip(rps_scen_1, rps[1:9]))
+
+    # Test that the operational scenarios are correct
+    oscs = opscenarios(regtree)
+    oscs_scens = opscenarios(scens)
+    oscs_scen_1 = opscenarios(first(scens))
+    @test oscs == oscs_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_scen_1, oscs[1:3]))
+
+    # Test that the operational scenarios are correct when using representative periods
+    rep_pers = RepresentativePeriods(20, [0.25, 0.25, 0.25, 0.25], oper_scens)
+    regtree_rp = TwoLevelTree(5, [3, 2], rep_pers)
+    scens_rp = strategic_scenarios(regtree_rp)
+    oscs_rp = opscenarios(regtree_rp)
+    oscs_rp_scens = opscenarios(scens_rp)
+    oscs_rp_scen_1 = opscenarios(first(scens_rp))
+    @test oscs_rp == oscs_rp_scens
+    @test all(oscs1 === oscs2 for (oscs1, oscs2) in zip(oscs_rp_scen_1, oscs_rp[1:3]))
+
+    # Test that the tree periods are correct
+    ops_scen_1 = first(scens)
+    @test length(ops_scen_1) == 45
+    @test last(ops_scen_1) == collect(regtree)[45]
+    @test all(tp1 === tp2 for (tp1, tp2) in zip(ops_scen_1, collect(regtree)[1:45]))
+    InnerPeriod = TS.ScenarioPeriod{TS.SimplePeriod{Int64}}
+    @test isa(first(ops_scen_1), TS.TreePeriod{InnerPeriod})
+
+    ops_rp_scen_1 = first(scens_rp)
+    @test length(ops_rp_scen_1) == 180
+    @test last(ops_rp_scen_1) == collect(regtree_rp)[180]
+    @test all(tp1 === tp2 for (tp1, tp2) in zip(ops_rp_scen_1, collect(regtree_rp)[1:180]))
+    @test isa(first(ops_rp_scen_1), TS.TreePeriod{TS.ReprPeriod{InnerPeriod}})
+
+    # Test some additional functionality
+    for (k, sc) in enumerate(scens)
         @test length(sc) == length(collect(sc))
-
-        for (prev_sp, sp) in withprev(sc)
-            if !isnothing(prev_sp)
-                @test TimeStruct._strat_per(prev_sp) + 1 == TimeStruct._strat_per(sp)
-            end
-        end
+        @test repr(sc) == "scen$(k)"
+        @test eltype(typeof(sc)) == eltype(typeof(regtree))
     end
+
+    # Test that non regular structures are working
+    day = SimpleTimes(24, 1)
+    week = SimpleTimes(168, 1)
+    scen = OperationalScenarios(2, [day, week], [7, 1]/8)
+    rpers = RepresentativePeriods(4, 8760, scen)
+
+    ts = TwoLevelTree(
+        TreeNode(
+            5,
+            rpers,
+            [0.7, 0.05, 0.1, 0.15],
+            [
+                TreeNode(5, rpers, TreeNode(5, rpers, TreeNode(5, week))),
+                TreeNode(2, week, TreeNode(8, week, TreeNode(5, week))),
+                TreeNode(
+                    4,
+                    scen,
+                    [
+                        TreeNode(6, week, TreeNode(5, week)),
+                        TreeNode(6, week, 2, TreeNode(5, week)),
+                    ],
+                ),
+                TreeNode(5, rpers, 2, TreeNode(8, rpers, TreeNode(5, week))),
+            ],
+        ),
+        ;
+        op_per_strat = 8760.0,
+    )
+
+    # Test that the strategic periods are correct
+    sps = strat_periods(ts)
+    scens = strategic_scenarios(ts)
+    sps_scens = strat_periods(scens)
+    sps_scen_1 = strat_periods(first(scens))
+    @test sps == sps_scens
+    @test all(sps1 === sps2 for (sps1, sps2) in zip(sps_scen_1, collect(sps)[1:3]))
+    @test last(sps_scen_1) == collect(sps)[4]
+    @test isa(sps_scen_1, TS.ScenTreeNodes)
 end
 
-@testitem "TwoLevel as a tree" begin
+@testitem "Strategic scenarios with TwoLevel" begin
+    const TS = TimeStruct
     two_level = TwoLevel(5, 10, SimpleTimes(10, 1))
+    sps = strat_periods(two_level)
 
-    scens = TimeStruct.strategic_scenarios(two_level)
+    # Test the Indexing
+    @test TS.StrategicTreeIndexable(typeof(first(sps))) == TS.NoStratTreeIndex()
+    @test TS.StrategicTreeIndexable(typeof(first(first(sps)))) == TS.HasStratTreeIndex()
+
+    # Test that we get the correct types and that their utilities are working
+    scens = strategic_scenarios(two_level)
+    @test isa(scens, TS.SingleStrategicScenarioWrapper{Int64,typeof(two_level)})
     @test length(scens) == 1
-    sps = collect(
-        sp for sc in TimeStruct.strategic_scenarios(two_level) for sp in strat_periods(sc)
-    )
-    @test length(sps) == 5
+    @test eltype(scens) == TS.SingleStrategicScenario{Int64,typeof(two_level)}
+    @test last(scens) == first(scens)
+
+    scen = first(scens)
+    @test isa(scen, TS.SingleStrategicScenario{Int64,typeof(two_level)})
+    @test length(scen) == 10 * 5
+    @test eltype(scen) == TS.OperationalPeriod{TS.SimplePeriod{Int64}}
+    @test last(scen) == last(two_level)
+    @test all(op1 === op2 for (op1, op2) in zip(scen, two_level))
+
+    # Test that the iteration utilities are working
+    @test all(t_scen == t for (t_scen, t) in zip(scen, two_level))
+
+    # Test the iterators
+    @test strat_periods(two_level) === strat_periods(scens)
+    @test strat_periods(two_level) === strat_periods(scen)
+    @test length(strat_periods(scens)) == 5
+    @test length(strat_periods(scen)) == 5
 end
 
 @testitem "Profiles constructors" begin
@@ -1139,8 +1373,8 @@ end
     vals = collect(profile[sp] for sp in strat_periods(ts))
     @test vals == [1, 2, 3]
 
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[sp] for sp in strat_periods(ts))
     @test vals == [1, 2, 3]
@@ -1158,8 +1392,8 @@ end
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [1, 1, 1]
 
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[rp] for rp in repr_periods(ts))
     @test vals == [1, 2, 1, 2, 1, 2]
@@ -1185,8 +1419,8 @@ end
     @test vals == [1, 1, 1]
 
     oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
-    repr = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
-    ts = TwoLevel(3, 5, repr)
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, rpers)
 
     vals = collect(profile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
@@ -1195,6 +1429,132 @@ end
     sprofile = StrategicProfile([rprofile, 2 * rprofile, 3 * rprofile])
     vals = collect(sprofile[sc] for sc in opscenarios(ts))
     @test vals == [1, 2, 3, 4, 2, 4, 6, 8, 3, 6, 9, 12]
+end
+
+@testitem "Profiles and partitions" begin
+    # Declaration of the time profiles
+    pp = PartitionProfile([3, 1, 2])
+    pp_vals = [3, 1, 2]
+
+    scp1 = ScenarioProfile([3, 1])
+    scp1_vals = [3, 3, 3, 1, 1, 1]
+    scp2 = ScenarioProfile([pp, pp+10])
+    scp2_vals = [3, 1, 2, 13, 11, 12]
+
+    rp1 = RepresentativeProfile([3, 1])
+    rp1_vals(x::Int) = vcat(ones(Int64, x)*3, ones(Int64, x))
+    rp2 = RepresentativeProfile([pp, pp+100])
+    rp2_vals(x::Int) = vcat(repeat(pp_vals, x), repeat(pp_vals .+ 100, x))
+    rp3 = RepresentativeProfile([scp1, scp1+100])
+    rp3_vals = vcat(scp1_vals, scp1_vals .+ 100)
+    rp4 = RepresentativeProfile([scp2, scp2+100])
+    rp4_vals = vcat(scp2_vals, scp2_vals .+ 100)
+
+    sp1 = StrategicProfile([3, 1])
+    sp1_vals(x::Int) = vcat(ones(Int64, x)*3, ones(Int64, x))
+    sp2 = StrategicProfile([pp, pp+1000])
+    sp2_vals(x::Int) = vcat(repeat(pp_vals, x), repeat(pp_vals .+ 1000, x))
+    sp3 = StrategicProfile([scp1, scp1+1000])
+    sp3_vals(x::Int) = vcat(repeat(scp1_vals, x), repeat(scp1_vals .+ 1000, x))
+    sp4 = StrategicProfile([scp2, scp2+1000])
+    sp4_vals(x::Int) = vcat(repeat(scp2_vals, x), repeat(scp2_vals .+ 1000, x))
+    sp5 = StrategicProfile([rp1, rp1+1000])
+    sp5_vals(x::Int) = vcat(rp1_vals(x), rp1_vals(x) .+ 1000)
+    sp6 = StrategicProfile([rp2, rp2+1000])
+    sp6_vals(x::Int) = vcat(rp2_vals(x), rp2_vals(x) .+ 1000)
+    sp7 = StrategicProfile([rp3, rp3+1000])
+    sp8 = StrategicProfile([rp4, rp4+1000])
+
+    sn1 = StrategicStochasticProfile([[1], [21, 22]])
+    sn1_vals(x::Int) = vcat(ones(Int, x)*1, ones(Int, x)*21, ones(Int, x)*22)
+    sn2 = StrategicStochasticProfile([[pp], [pp+1000, pp+1500]])
+    sn2_vals(x::Int) =
+        vcat(repeat(pp_vals, x), repeat(pp_vals .+ 1000, x), repeat(pp_vals .+ 1500, x))
+
+    # Declaration of the core time structures and utilities
+    st = SimpleTimes(6, 2)
+    oscs = OperationalScenarios(2, st)
+    rps1 = RepresentativePeriods(2, 1, st)
+    rps2 = RepresentativePeriods(2, 1, oscs)
+    pd_fun(ts) = partition_duration(ts, 4)
+
+    # Tests for an operational scenarios time structure
+    @test collect(pp[pd] for pd in pd_fun(oscs)) == repeat(pp_vals, 2)
+    @test collect(scp1[pd] for pd in pd_fun(oscs)) == scp1_vals
+    @test collect(scp2[pd] for pd in pd_fun(oscs)) == scp2_vals
+
+    # Tests for an representative periods time structure
+    @test collect(pp[pd] for pd in pd_fun(rps1)) == repeat(pp_vals, 2)
+    @test collect(rp1[pd] for pd in pd_fun(rps1)) == rp1_vals(3)
+    @test collect(rp2[pd] for pd in pd_fun(rps1)) == rp2_vals(1)
+
+    # Tests for an representative periods time structure with operational scenarios
+    @test collect(pp[pd] for pd in pd_fun(rps2)) == repeat(pp_vals, 4)
+    @test collect(scp1[pd] for pd in pd_fun(rps2)) == repeat(scp1_vals, 2)
+    @test collect(scp2[pd] for pd in pd_fun(rps2)) == repeat(scp2_vals, 2)
+    @test collect(rp1[pd] for pd in pd_fun(rps2)) == rp1_vals(6)
+    @test collect(rp2[pd] for pd in pd_fun(rps2)) == rp2_vals(2)
+    @test collect(rp3[pd] for pd in pd_fun(rps2)) == rp3_vals
+    @test collect(rp4[pd] for pd in pd_fun(rps2)) == rp4_vals
+
+    # Tests for a TwoLevel time structure
+    ts = TwoLevel(2, 1, st)
+
+    @test collect(pp[pd] for pd in pd_fun(ts)) == repeat(pp_vals, 2)
+    @test collect(sp1[pd] for pd in pd_fun(ts)) == sp1_vals(3)
+    @test collect(sp2[pd] for pd in pd_fun(ts)) == sp2_vals(1)
+
+    # Tests for a TwoLevel time structure with
+    # operational scenarios
+    ts = TwoLevel(2, 1, oscs)
+
+    @test collect(pp[pd] for pd in pd_fun(ts)) == repeat(pp_vals, 4)
+    @test collect(scp1[pd] for pd in pd_fun(ts)) == repeat(scp1_vals, 2)
+    @test collect(scp2[pd] for pd in pd_fun(ts)) == repeat(scp2_vals, 2)
+    @test collect(sp1[pd] for pd in pd_fun(ts)) == sp1_vals(6)
+    @test collect(sp2[pd] for pd in pd_fun(ts)) == sp2_vals(2)
+    @test collect(sp3[pd] for pd in pd_fun(ts)) == sp3_vals(1)
+    @test collect(sp4[pd] for pd in pd_fun(ts)) == sp4_vals(1)
+
+    # Tests for a TwoLevel time structure with
+    # representative periods
+    ts = TwoLevel(2, 1, rps1)
+
+    @test collect(pp[pd] for pd in pd_fun(ts)) == repeat(pp_vals, 4)
+    @test collect(rp1[pd] for pd in pd_fun(ts)) == repeat(rp1_vals(3), 2)
+    @test collect(rp2[pd] for pd in pd_fun(ts)) == repeat(rp2_vals(1), 2)
+    @test collect(sp1[pd] for pd in pd_fun(ts)) == sp1_vals(6)
+    @test collect(sp2[pd] for pd in pd_fun(ts)) == sp2_vals(2)
+    @test collect(sp5[pd] for pd in pd_fun(ts)) == sp5_vals(3)
+    @test collect(sp6[pd] for pd in pd_fun(ts)) == sp6_vals(1)
+
+    # Tests for a TwoLevel time structure with
+    # representative periods and operational scenarios
+    ts = TwoLevel(2, 1, rps2)
+
+    @test collect(pp[pd] for pd in pd_fun(ts)) == repeat(pp_vals, 8)
+    @test collect(scp1[pd] for pd in pd_fun(ts)) == repeat(scp1_vals, 4)
+    @test collect(scp2[pd] for pd in pd_fun(ts)) == repeat(scp2_vals, 4)
+    @test collect(rp1[pd] for pd in pd_fun(ts)) == repeat(rp1_vals(6), 2)
+    @test collect(rp2[pd] for pd in pd_fun(ts)) == repeat(rp2_vals(2), 2)
+    @test collect(rp3[pd] for pd in pd_fun(ts)) == repeat(rp3_vals, 2)
+    @test collect(rp4[pd] for pd in pd_fun(ts)) == repeat(rp4_vals, 2)
+    @test collect(sp1[pd] for pd in pd_fun(ts)) == sp1_vals(12)
+    @test collect(sp2[pd] for pd in pd_fun(ts)) == sp2_vals(4)
+    @test collect(sp3[pd] for pd in pd_fun(ts)) == sp3_vals(2)
+    @test collect(sp4[pd] for pd in pd_fun(ts)) == sp4_vals(2)
+    @test collect(sp5[pd] for pd in pd_fun(ts)) == sp5_vals(6)
+    @test collect(sp6[pd] for pd in pd_fun(ts)) == sp6_vals(2)
+    @test collect(sp7[pd] for pd in pd_fun(ts)) == vcat(rp3_vals, rp3_vals .+ 1000)
+    @test collect(sp8[pd] for pd in pd_fun(ts)) == vcat(rp4_vals, rp4_vals .+ 1000)
+
+    # Tests for a TwoLevel tree time structure with
+    # representative periods and operational scenarios
+    ts = TwoLevelTree(1, [2], st)
+
+    @test collect(pp[pd] for pd in pd_fun(ts)) == repeat(pp_vals, 3)
+    @test collect(sn1[pd] for pd in pd_fun(ts)) == sn1_vals(3)
+    @test collect(sn2[pd] for pd in pd_fun(ts)) == sn2_vals(1)
 end
 
 @testitem "Profile conversion" begin
@@ -1302,6 +1662,267 @@ end
           "2-element StrategicStochasticProfile with eltype Int64:\n[\n" *
           "  2-element Vector\n  [\n    FixedProfile[1]\n    FixedProfile[2]\n  ]\n" *
           "  1-element Vector\n  [\n    FixedProfile[3]\n  ]\n]"
+
+    pp = PartitionProfile([1, 2])
+    @test repr(pp) == "PartitionProfile([1, 2])"
+    @test plain(pp) == "2-element PartitionProfile with eltype Int64: [1, 2]"
+    stp = StrategicProfile([pp, FixedProfile(3)])
+    @test plain(stp) ==
+          "2-element StrategicProfile with eltype Int64:\n" *
+          "[\n  2-element PartitionProfile[1, 2]\n  FixedProfile[3]\n]"
+end
+
+@testitem "Profile and unary operators" begin
+    # FixedProfile
+    profile = +FixedProfile(10)
+    @test profile.val == 10
+
+    profile = -FixedProfile(10)
+    @test profile.val == -10
+
+    # OperationalProfile
+    profile = +OperationalProfile([1, 2, 3])
+    @test profile.vals == [1, 2, 3]
+
+    profile = -OperationalProfile([1, 2, 3])
+    @test profile.vals == [-1, -2, -3]
+
+    # PartitionProfile
+    profile = +PartitionProfile([1, 2, 3])
+    @test profile.vals == [1, 2, 3]
+
+    profile = -PartitionProfile([1, 2, 3])
+    @test profile.vals == [-1, -2, -3]
+
+    # StrategicProfile
+    simple = SimpleTimes(10, 1)
+    ts = TwoLevel(3, 5, simple)
+
+    profile = +StrategicProfile([1, 2, 3])
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [1, 2, 3]
+
+    profile = -StrategicProfile([1, 2, 3])
+    vals = collect(profile[sp] for sp in strat_periods(ts))
+    @test vals == [-1, -2, -3]
+
+    # ScenarioProfile
+    oscen = OperationalScenarios([SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [oscen, oscen])
+    ts = TwoLevel(3, 5, rpers)
+    profile = +ScenarioProfile([1, 2, 3])
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]
+
+    profile = -ScenarioProfile([1, 2, 3])
+    vals = collect(profile[sc] for sc in opscenarios(ts))
+    @test vals == [-1, -2, -1, -2, -1, -2, -1, -2, -1, -2, -1, -2]
+
+    # RepresentativeProfile
+    rpers = RepresentativePeriods(2, 5, [0.6, 0.4], [SimpleTimes(5, 1), SimpleTimes(5, 1)])
+    ts = TwoLevel(3, 5, rpers)
+
+    profile = +RepresentativeProfile([1, 2, 3])
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [1, 2, 1, 2, 1, 2]
+
+    profile = -RepresentativeProfile([1, 2, 3])
+    vals = collect(profile[rp] for rp in repr_periods(ts))
+    @test vals == [-1, -2, -1, -2, -1, -2]
+
+    # StrategicStochasticProfile
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    ssp_unary = StrategicStochasticProfile([[1], [2, 3, 4], [5, 6, 7, 8, 9, 10]])
+
+    profile = +ssp_unary
+    @test all(profile[n] == ssp_unary[n] for n in strat_nodes(tree))
+
+    profile = -ssp_unary
+    @test all(profile[n] == -ssp_unary[n] for n in strat_nodes(tree))
+end
+
+@testitem "Profile addition and subtraction" begin
+    day = SimpleTimes(5, 1)
+    ts_strat = TwoLevel(3, 10, SimpleTimes(5, 1))
+    ts_part = partition_duration(ts_strat, 2)
+    ts_scen = TwoLevel(2, 10, OperationalScenarios(3, SimpleTimes(5, 1)))
+    ts_repr = TwoLevel(
+        2,
+        5,
+        RepresentativePeriods(2, 5, [0.5, 0.5], [SimpleTimes(5, 1), SimpleTimes(5, 1)]),
+    )
+    ts_repr_part = partition_duration(ts_repr, 2)
+    ts_scen_part = partition_duration(ts_scen, 2)
+
+    fp = FixedProfile(3)
+    fp2 = FixedProfile(10)
+    op = OperationalProfile([1, 2, 3, 4, 5])
+    op2 = OperationalProfile([6, 7, 8, 9, 10])
+    pp = PartitionProfile([1, 2, 3])
+    pp2 = PartitionProfile([6, 7, 8])
+    sp = StrategicProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    sp2 = StrategicProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    scp = ScenarioProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+        FixedProfile(2),
+    ])
+    scp2 = ScenarioProfile([FixedProfile(1), FixedProfile(2), FixedProfile(3)])
+    rp = RepresentativeProfile([
+        OperationalProfile([1, 2, 3, 4, 5]),
+        OperationalProfile([6, 7, 8, 9, 10]),
+    ])
+    rp2 = RepresentativeProfile([FixedProfile(1), FixedProfile(2)])
+
+    # FixedProfile + FixedProfile
+    @test all((fp+fp2)[t] == fp[t] + fp2[t] for t in day)
+    @test all((fp+fp2)[t] == (fp2+fp)[t] for t in day)
+
+    # OperationalProfile + OperationalProfile
+    @test all((op+op2)[t] == op[t] + op2[t] for t in day)
+    @test all((op+op2)[t] == (op2+op)[t] for t in day)
+
+    # FixedProfile + OperationalProfile
+    @test all((fp+op)[t] == fp[t] + op[t] for t in day)
+    @test all((fp+op)[t] == (op+fp)[t] for t in day)
+
+    # PartitionProfile + PartitionProfile
+    @test all((pp+pp2)[t] == pp[t] + pp2[t] for t in ts_part)
+    @test all((pp+pp2)[t] == (pp2+pp)[t] for t in ts_part)
+
+    # FixedProfile + PartitionProfile
+    @test all((fp+pp)[t] == fp[t] + pp[t] for t in ts_part)
+    @test all((fp+pp)[t] == (pp+fp)[t] for t in ts_part)
+
+    # StrategicProfile + StrategicProfile
+    @test all((sp+sp2)[t] == sp[t] + sp2[t] for t in ts_strat)
+    @test all((sp+sp2)[t] == (sp2+sp)[t] for t in ts_strat)
+
+    # StrategicProfile + OperationalProfile
+    @test all((sp+op)[t] == sp[t] + op[t] for t in ts_strat)
+    @test all((sp+op)[t] == (op+sp)[t] for t in ts_strat)
+
+    # StrategicProfile + PartitionProfile
+    @test all((sp2+pp)[t] == sp2[t] + pp[t] for t in ts_part)
+    @test all((sp2+pp)[t] == (pp+sp2)[t] for t in ts_part)
+
+    # FixedProfile + StrategicProfile
+    @test all((fp+sp)[t] == fp[t] + sp[t] for t in ts_strat)
+    @test all((fp+sp)[t] == (sp+fp)[t] for t in ts_strat)
+
+    # ScenarioProfile + ScenarioProfile
+    @test all((scp+scp2)[t] == scp[t] + scp2[t] for t in ts_scen)
+    @test all((scp+scp2)[t] == (scp2+scp)[t] for t in ts_scen)
+
+    # ScenarioProfile + OperationalProfile
+    @test all((scp+op)[t] == scp[t] + op[t] for t in ts_scen)
+    @test all((scp+op)[t] == (op+scp)[t] for t in ts_scen)
+
+    # ScenarioProfile + OperationalProfile
+    @test all((scp2+pp)[t] == scp2[t] + pp[t] for t in ts_scen_part)
+    @test all((scp2+pp)[t] == (pp+scp2)[t] for t in ts_scen_part)
+
+    # FixedProfile + ScenarioProfile
+    @test all((fp+scp)[t] == fp[t] + scp[t] for t in ts_scen)
+    @test all((fp+scp)[t] == (scp+fp)[t] for t in ts_scen)
+
+    # RepresentativeProfile + RepresentativeProfile
+    @test all((rp+rp2)[t] == rp[t] + rp2[t] for t in ts_repr)
+    @test all((rp+rp2)[t] == (rp2+rp)[t] for t in ts_repr)
+
+    # RepresentativeProfile + OperationalProfile
+    @test all((rp+op)[t] == rp[t] + op[t] for t in ts_repr)
+    @test all((rp+op)[t] == (op+rp)[t] for t in ts_repr)
+
+    # RepresentativeProfile + PartitionProfile
+    @test all((rp2+pp)[t] == rp2[t] + pp[t] for t in ts_repr_part)
+    @test all((rp2+pp)[t] == (pp+rp2)[t] for t in ts_repr_part)
+
+    # FixedProfile + RepresentativeProfile
+    @test all((fp+rp)[t] == fp[t] + rp[t] for t in ts_repr)
+    @test all((fp+rp)[t] == (rp+fp)[t] for t in ts_repr)
+
+    # Subtraction: a - b = a + (-b), spot-check across profile type pairs
+    @test all((fp-fp2)[t] == fp[t] - fp2[t] for t in day)
+    @test all((op-fp)[t] == op[t] - fp[t] for t in day)
+    @test all((fp-op)[t] == fp[t] - op[t] for t in day)
+    @test all((sp-op)[t] == sp[t] - op[t] for t in ts_strat)
+    @test all((fp-sp)[t] == fp[t] - sp[t] for t in ts_strat)
+    @test all((scp-op)[t] == scp[t] - op[t] for t in ts_scen)
+    @test all((fp-scp)[t] == fp[t] - scp[t] for t in ts_scen)
+    @test all((rp-op)[t] == rp[t] - op[t] for t in ts_repr)
+    @test all((fp-rp)[t] == fp[t] - rp[t] for t in ts_repr)
+
+    # StrategicStochasticProfile setup
+    tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
+    tree_part = partition_duration(tree, 2)
+    ssp = StrategicStochasticProfile([
+        [OperationalProfile([1, 2, 3, 4, 5])],
+        [
+            OperationalProfile([2, 3, 4, 5, 6]),
+            OperationalProfile([3, 4, 5, 6, 7]),
+            OperationalProfile([4, 5, 6, 7, 8]),
+        ],
+        [
+            OperationalProfile([5, 6, 7, 8, 9]),
+            OperationalProfile([6, 7, 8, 9, 10]),
+            OperationalProfile([7, 8, 9, 10, 11]),
+            OperationalProfile([8, 9, 10, 11, 12]),
+            OperationalProfile([9, 10, 11, 12, 13]),
+            OperationalProfile([10, 11, 12, 13, 14]),
+        ],
+    ])
+    ssp2 = StrategicStochasticProfile([
+        [FixedProfile(1)],
+        [FixedProfile(2), FixedProfile(3), FixedProfile(4)],
+        [
+            FixedProfile(5),
+            FixedProfile(6),
+            FixedProfile(7),
+            FixedProfile(8),
+            FixedProfile(9),
+            FixedProfile(10),
+        ],
+    ])
+
+    # StrategicStochasticProfile + Number
+    @test all((ssp+10)[t] == ssp[t] + 10 for t in tree)
+    @test all((10+ssp)[t] == ssp[t] + 10 for t in tree)
+
+    # StrategicStochasticProfile - Number
+    @test all((ssp-1)[t] == ssp[t] - 1 for t in tree)
+
+    # StrategicStochasticProfile * Number
+    @test all((ssp*2)[t] == ssp[t] * 2 for t in tree)
+    @test all((2*ssp)[t] == ssp[t] * 2 for t in tree)
+
+    # StrategicStochasticProfile / Number
+    @test all((ssp/2)[t] == ssp[t] / 2 for t in tree)
+
+    # StrategicStochasticProfile + StrategicStochasticProfile
+    @test all((ssp+ssp2)[t] == ssp[t] + ssp2[t] for t in tree)
+    @test all((ssp+ssp2)[t] == (ssp2+ssp)[t] for t in tree)
+
+    # StrategicStochasticProfile + OperationalProfile
+    @test all((ssp+op)[t] == ssp[t] + op[t] for t in tree)
+    @test all((ssp+op)[t] == (op+ssp)[t] for t in tree)
+
+    # StrategicStochasticProfile + PartitionProfile
+    @test all((ssp2+pp)[t] == ssp2[t] + pp[t] for t in tree_part)
+    @test all((ssp2+pp)[t] == (pp+ssp2)[t] for t in tree_part)
+
+    # FixedProfile + StrategicStochasticProfile
+    @test all((fp+ssp)[t] == fp[t] + ssp[t] for t in tree)
+    @test all((fp+ssp)[t] == (ssp+fp)[t] for t in tree)
+
+    # StrategicStochasticProfile subtraction (via unary -)
+    @test all((ssp-ssp2)[t] == ssp[t] - ssp2[t] for t in tree)
+    @test all((ssp-op)[t] == ssp[t] - op[t] for t in tree)
+    @test all((fp-ssp)[t] == fp[t] - ssp[t] for t in tree)
 end
 
 @testitem "Iteration utilities" begin
@@ -1325,13 +1946,19 @@ end
         end
     end
 
-    two_level_tree = regular_tree(5, [3, 2], uniform_day)
-
+    two_level_tree = TwoLevelTree(5, [3, 2], uniform_day)
     for (prev, n) in withprev(strat_periods(two_level_tree))
         @test n.parent == prev
     end
 
+    strat_scen_1 = first(strategic_scenarios(two_level_tree))
+    for (prev, n) in withprev(strat_periods(strat_scen_1))
+        @test n.parent == prev
+    end
+
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
+    @test_throws ErrorException chunk(strat_periods(two_level_tree), 2)
+    @test_throws ErrorException chunk_duration(strat_periods(two_level_tree), 2)
 
     periods = SimpleTimes(10, 1)
 
@@ -1360,6 +1987,545 @@ end
     for s in sdur
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
     end
+
+    @testset "Partitions" begin
+        ts_ops = SimpleTimes([1, 2, 3, 6, 1, 1, 1, 1, 1, 1])
+
+        # Test of the duration partitions when using operational scenarios
+        @testset "Partitions - OperationalScenarios" begin
+            ts = OperationalScenarios(2, ts_ops)
+            ops = collect(ts)
+
+            osc = first(opscenarios(ts))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_osc[1]) <: TimeStruct.OpScenPart{3,<:TimeStruct.ScenarioPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.OpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using representative periods
+        @testset "Partitions - RepresentativePeriods" begin
+            ts = RepresentativePeriods(2, 1, ts_ops)
+            ops = collect(ts)
+
+            rp = first(repr_periods(ts))
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_rp[1]) <: TimeStruct.ReprPart{3,<:TimeStruct.ReprPeriod}
+            @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_rp[1]) == first(ops)
+            @test last(pds_rp[1]) == ops[3]
+            @test length(pds_rp[1]) == 3
+            @test repr(pds_rp[3]) == "rp1-part3"
+
+            @test length(pds_rp) == 3
+            @test isa(
+                partition_duration(rp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(rp, 6)) == TimeStruct.ReprPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using representative periods
+        # with operational scenarios
+        @testset "Partitions - RepresentativePeriods{OperationalScenarios}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            ts = RepresentativePeriods(2, 1, oscs)
+            ops = collect(ts)
+
+            rp = first(repr_periods(ts))
+            osc = first(opscenarios(rp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_osc[1]) <: TimeStruct.ReprOpScenPart{3,<:TimeStruct.ReprPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "rp1-sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.ReprOpScenario{
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.ReprOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            @test length(pds_tl) == 12
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods
+        @testset "Partitions - TwoLevel" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            ops = collect(ts)
+
+            sp = first(strategic_periods(ts))
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_sp[1]) <:
+                  TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_sp[1]) == first(ops)
+            @test last(pds_sp[1]) == ops[3]
+            @test length(pds_sp[1]) == 3
+            @test repr(pds_sp[3]) == "sp1-part3"
+
+            @test length(pds_sp) == 3
+            @test isa(
+                partition_duration(sp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(sp, 6)) == TimeStruct.StratPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_sp)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods with
+        # operational scenarios
+        @testset "Partitions - TwoLevel{OperationalScenarios}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            ts = TwoLevel(2, 1, oscs)
+            ops = collect(ts)
+
+            sp = first(strategic_periods(ts))
+            osc = first(opscenarios(sp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratOpScenPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp1-sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratOpScenario{
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 12
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods with
+        # representative periods
+        @testset "Partitions - TwoLevel{RepresentativePeriods}" begin
+            rps = RepresentativePeriods(2, 1, ts_ops)
+            ts = TwoLevel(2, 1, rps)
+            ops = collect(ts)
+
+            sp = first(strategic_periods(ts))
+            rp = first(repr_periods(sp))
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_rp[1]) <:
+                  TimeStruct.StratReprPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_rp[1]) == first(ops)
+            @test last(pds_rp[1]) == ops[3]
+            @test length(pds_rp[1]) == 3
+            @test repr(pds_rp[3]) == "sp1-rp1-part3"
+
+            @test length(pds_rp) == 3
+            @test isa(
+                partition_duration(rp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratReprPeriod{
+                        Int,
+                        TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(rp, 6)) == TimeStruct.StratReprPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 12
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods with
+        # operational scenarios and representative periods
+        @testset "Partitions - TwoLevel{RepresentativePeriods{OperationalScenarios}}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            rps = RepresentativePeriods(2, 1, oscs)
+            ts = TwoLevel(2, 1, rps)
+            ops = collect(ts)
+
+            sp = first(strategic_periods(ts))
+            rp = first(repr_periods(sp))
+            osc = first(opscenarios(rp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [1:3, 4:4, 5:10]
+
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratReprOpScenPart{3,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == first(ops)
+            @test last(pds_osc[1]) == ops[3]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp1-rp1-sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratReprOpScenario{
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratReprOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            @test length(pds_tl) == 24
+            @test length(pds_sp) == 12
+            @test length(pds_rp) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods and a vector of durations
+        @testset "Partitions - TwoLevel w Vector" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            ops = collect(ts)
+
+            sp = first(strategic_periods(ts))
+            dur = [3, 9, 6]
+            pds_sp = [pd for pd in partition_duration(sp, dur)]
+            idx = [1:2, 3:4, 5:10]
+
+            @test typeof(pds_sp[1]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_sp[1]) == first(ops)
+            @test last(pds_sp[1]) == ops[2]
+            @test length(pds_sp[1]) == 2
+            @test repr(pds_sp[3]) == "sp1-part3"
+
+            @test length(pds_sp) == 3
+            @test isa(
+                partition_duration(sp, dur),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
+                    Int,
+                    PartitionProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart
+            @test all(
+                sum(duration(t) for t in pd) >= dur[k] for (k, pd) in enumerate(pds_sp)
+            )
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, dur)
+            @test length(pds_tl) == 6
+            @test all(pds_sp[k] == pds_tl[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic periods and a time profile of
+        # durations
+        @testset "Partitions - TwoLevel w TimeProfile" begin
+            ts = TwoLevel(2, 1, ts_ops)
+            sp = first(strategic_periods(ts))
+            ops = collect(ts)
+
+            dur = StrategicProfile([FixedProfile(6), PartitionProfile([3, 9, 3, 3])])
+            pds_ts = partition_duration(ts, dur)
+            idx = [1:3, 4:4, 5:10, 11:12, 13:14, 15:17, 18:20]
+
+            @test typeof(pds_ts[1]) <:
+                  TimeStruct.StratPart{3,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[2]) <:
+                  TimeStruct.StratPart{1,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[4]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test typeof(pds_ts[5]) <:
+                  TimeStruct.StratPart{2,<:TimeStruct.OperationalPeriod}
+            @test all(collect(pds_ts[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_ts[1]) == first(ops)
+            @test last(pds_ts[1]) == ops[3]
+            @test length(pds_ts[1]) == 3
+            @test repr(pds_ts[3]) == "sp1-part3"
+
+            @test length(pds_ts) == 7
+            @test isa(
+                partition_duration(sp, dur),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StrategicPeriod{Int,Int,SimpleTimes{Int}},
+                    Int,
+                    StrategicProfile{Int,TimeProfile{Int}},
+                },
+            )
+            @test eltype(partition_duration(sp, dur)) == TimeStruct.StratPart
+            @test all(sum(duration(t) for t in pd) >= dur[pd] for pd in pds_ts)
+
+            # Test of the iterator invariants
+            pds_sp = [pd for pd in partition_duration(sp, dur)]
+            @test length(pds_sp) == 3
+            @test all(pds_sp[k] == pds_ts[k] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic nodes
+        @testset "Partitions - TwoLevelTree" begin
+            ts = TwoLevelTree(1, [2], ts_ops)
+            ops = collect(ts)
+
+            sp = strategic_periods(ts)[2]
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            idx = [11:13, 14:14, 15:20]
+
+            @test typeof(pds_sp[1]) <: TimeStruct.StratNodePart{3,<:TimeStruct.TreePeriod}
+            @test all(collect(pds_sp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_sp[1]) == ops[11]
+            @test last(pds_sp[1]) == ops[13]
+            @test length(pds_sp[1]) == 3
+            @test repr(pds_sp[3]) == "sp2-br1-part3"
+
+            @test length(pds_sp) == 3
+            @test isa(
+                partition_duration(sp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratNode{Int,Int,SimpleTimes{Int}},
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(sp, 6)) == TimeStruct.StratNodePart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_sp)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            @test length(pds_tl) == 9
+            @test all(pds_sp[k] == pds_tl[k+3] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic nodes with
+        # operational scenarios
+        @testset "Partitions - TwoLevelTree{OperationalScenarios}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            ts = TwoLevelTree(1, [2], oscs)
+            ops = collect(ts)
+
+            sp = strategic_periods(ts)[2]
+            osc = first(opscenarios(sp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [21:23, 24:24, 25:30]
+
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratNodeOpScenPart{3,<:TimeStruct.TreePeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == ops[21]
+            @test last(pds_osc[1]) == ops[23]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp2-br1-sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratNodeOpScenario{
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratNodeOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 18
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k+6] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k+6] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic nodes with
+        # representative periods
+        @testset "Partitions - TwoLevelTree{RepresentativePeriods}" begin
+            rps = RepresentativePeriods(2, 1, ts_ops)
+            ts = TwoLevelTree(1, [2], rps)
+            ops = collect(ts)
+
+            sp = strategic_periods(ts)[2]
+            rp = first(repr_periods(sp))
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            idx = [21:23, 24:24, 25:30]
+
+            @test typeof(pds_rp[1]) <:
+                  TimeStruct.StratNodeReprPart{3,<:TimeStruct.TreePeriod}
+            @test all(collect(pds_rp[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_rp[1]) == ops[21]
+            @test last(pds_rp[1]) == ops[23]
+            @test length(pds_rp[1]) == 3
+            @test repr(pds_rp[3]) == "sp2-br1-rp1-part3"
+
+            @test length(pds_rp) == 3
+            @test isa(
+                partition_duration(rp, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratNodeReprPeriod{
+                        Int,
+                        TimeStruct.RepresentativePeriod{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(rp, 6)) == TimeStruct.StratNodeReprPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_rp)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            @test length(pds_tl) == 18
+            @test length(pds_sp) == 6
+            @test all(pds_sp[k] == pds_tl[k+6] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k+6] for k in 1:3)
+        end
+
+        # Test of the duration partitions when using strategic nodes with
+        # operational scenarios and representative periods
+        @testset "Partitions - TwoLevel{RepresentativePeriods{OperationalScenarios}}" begin
+            oscs = OperationalScenarios(2, ts_ops)
+            rps = RepresentativePeriods(2, 1, oscs)
+            ts = TwoLevelTree(1, [2], rps)
+            ops = collect(ts)
+
+            sp = strategic_periods(ts)[2]
+            rp = first(repr_periods(sp))
+            osc = first(opscenarios(rp))
+            pds_osc = [pd for pd in partition_duration(osc, 6)]
+            idx = [41:43, 44:44, 45:50]
+
+            @test typeof(pds_osc[1]) <:
+                  TimeStruct.StratNodeReprOpScenPart{3,<:TimeStruct.TreePeriod}
+            @test all(collect(pds_osc[k]) == ops[l] for (k, l) in enumerate(idx))
+            @test first(pds_osc[1]) == ops[41]
+            @test last(pds_osc[1]) == ops[43]
+            @test length(pds_osc[1]) == 3
+            @test repr(pds_osc[3]) == "sp2-br1-rp1-sc1-part3"
+
+            @test length(pds_osc) == 3
+            @test isa(
+                partition_duration(osc, 6),
+                TimeStruct.PartitionDurationIterator{
+                    TimeStruct.StratNodeReprOpScenario{
+                        Int,
+                        TimeStruct.OperationalScenario{Int,SimpleTimes{Int}},
+                    },
+                    Int,
+                    FixedProfile{Int},
+                },
+            )
+            @test eltype(partition_duration(osc, 6)) == TimeStruct.StratNodeReprOpScenPart
+            @test all(sum(duration(t) for t in pd) >= 6 for pd in pds_osc)
+
+            # Test of the iterator invariants
+            pds_tl = partition_duration(ts, 6)
+            pds_sp = [pd for pd in partition_duration(sp, 6)]
+            pds_rp = [pd for pd in partition_duration(rp, 6)]
+            @test length(pds_tl) == 36
+            @test length(pds_sp) == 12
+            @test length(pds_rp) == 6
+            @test all(pds_sp[k] == pds_tl[k+12] for k in 1:3)
+            @test all(pds_rp[k] == pds_tl[k+12] for k in 1:3)
+            @test all(pds_osc[k] == pds_tl[k+12] for k in 1:3)
+        end
+    end
 end
 
 @testitem "Indexing of operational structures" begin
@@ -1383,22 +2549,116 @@ end
     using Unitful
 
     uniform_years = TwoLevel(10, 1, SimpleTimes(1, 1))  # 10 years with duration of 1 year
+    uniform_years_tlt = TwoLevelTree(1, ones(Int, 9)*2, SimpleTimes(1, 1))
     disc = Discounter(0.04, 1, uniform_years)
+    disc_tlt = Discounter(0.04, 1, uniform_years_tlt)
 
     δ = 1 / 1.04
     for (i, t) in enumerate(uniform_years)
         @test discount(disc, t) == δ^(i - 1)
     end
 
+    @test sum(
+        discount(sp, uniform_years, 0.06; type = "avg_year") for
+        sp in strat_periods(uniform_years)
+    ) ≈ 7.8017 atol = 1e-3
+
     @test sum(objective_weight(t, disc) for t in uniform_years) ≈ 8.435 atol = 1e-3
+    @test sum(objective_weight(t, disc_tlt) for t in uniform_years_tlt) ≈ 8.435 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1)
-    periods = TwoLevel(10, 8760, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, uniform_day)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, uniform_day)
 
     @test sum(
-        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760) for
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") for
         sp in strat_periods(periods)
-    ) ≈ 8.435 atol = 1e-3
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) for sp in strat_periods(periods_tlt)
+    ) ≈ 4.825 atol = 1e-3
+
+    @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(uniform_day) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(uniform_day) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
+    ) ≈ 4.825 atol = 1e-3
+
+    @test sum(
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg_year")
+        for sp in strat_periods(periods)
+    ) ≈ 4.468 atol = 1e-3
+    @test sum(
+        objective_weight(
+            sp,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "avg_year",
+        ) for sp in strat_periods(periods_tlt)
+    ) ≈ 4.468 atol = 1e-3
+
+    @test sum(
+        objective_weight(sp, periods, 0.04; timeunit_to_year = 1 / 8760, type = "avg") for
+        sp in strat_periods(periods)
+    ) ≈ 4.382 atol = 1e-3
+    @test sum(
+        objective_weight(sp, periods_tlt, 0.04; timeunit_to_year = 1 / 8760, type = "avg")
+        for sp in strat_periods(periods_tlt)
+    ) ≈ 4.382 atol = 1e-3
+
+    oscs = OperationalScenarios(2, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, oscs)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, oscs)
+
+    @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(oscs) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(oscs) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
+    ) ≈ 4.825 atol = 1e-3
+
+    rps = RepresentativePeriods(2, 1, uniform_day)
+    periods = TwoLevel(10, 5 * 8760, rps)
+    periods_tlt = TwoLevelTree(5 * 8760, ones(Int, 9)*2, rps)
+
+    @test sum(
+        objective_weight(t, periods, 0.04; timeunit_to_year = 1 / 8760, type = "start") /
+        (length(rps) * probability(t) * multiple(t)) for t in periods
+    ) ≈ 4.825 atol = 1e-3
+    @test sum(
+        objective_weight(
+            t,
+            periods_tlt,
+            0.04;
+            timeunit_to_year = 1 / 8760,
+            type = "start",
+        ) / (length(rps) * probability(t) * multiple(t) / probability_branch(t)) for
+        t in periods_tlt
+    ) ≈ 4.825 atol = 1e-3
 
     uniform_day = SimpleTimes(24, 1u"hr")
     periods_unit = TwoLevel(10, 365.125u"d", uniform_day)
@@ -1424,8 +2684,10 @@ end
                   discount(t, periods, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.OperationalPeriod(5, TimeStruct.SimplePeriod(1, 1), 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, periods)
 
-    tree = regular_tree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365)
+    tree = TwoLevelTree(5, [2, 3], SimpleTimes(7, 1); op_per_strat = 365.0)
     for sp in strat_periods(tree)
         sp_per = strat_periods(periods)[TimeStruct._strat_per(sp)]
         @test discount(sp, tree, 0.05) == discount(sp_per, periods, 0.05)
@@ -1437,6 +2699,8 @@ end
                   discount(t, tree, 0.05; type = "avg")
         end
     end
+    per = TimeStruct.TreePeriod(2, 3, TimeStruct.SimplePeriod(1, 1), 1.0, 1.0)
+    @test_throws ErrorException TimeStruct._sp_period(per, tree)
 end
 
 @testitem "Start and end times" begin
@@ -1477,7 +2741,7 @@ end
         @test end_oper_time(t, year) - start_oper_time(t, year) == duration(t)
     end
 
-    reg_tree = regular_tree(5, [3, 2], SimpleTimes(5, 1))
+    reg_tree = TwoLevelTree(5, [3, 2], SimpleTimes(5, 1))
     for t in reg_tree
         @test end_oper_time(t, reg_tree) - start_oper_time(t, reg_tree) == duration(t)
     end
@@ -1521,5 +2785,143 @@ end
     @test hasproperty(df4, :start_time)
 end
 
+@testitem "Hashing of periods" begin
+    using Dates
+
+    day = SimpleTimes(24, 1)
+    cal = CalendarTimes(DateTime(2024, 1, 1), 12, Hour(1))
+    osc = OperationalScenarios(3, day)
+    rp_osc = RepresentativePeriods(2, 8760, [0.5, 0.5], [osc, osc])
+    two_level = TwoLevel(3, 8760, rp_osc)
+    tree = regular_tree(2, [3, 2], RepresentativePeriods(2, 8760, [0.5, 0.5], [day, day]))
+    sps = strat_periods(two_level)
+
+    # The periods of each kind, collected twice (as new objects) to compare with
+    function periods()
+        return [
+            collect(day),
+            collect(cal),
+            collect(osc),
+            collect(two_level),
+            collect(tree),
+            collect(opscenarios(osc)),
+            collect(sps),
+            [rp for sp in sps for rp in repr_periods(sp)],
+            [sc for sp in sps for rp in repr_periods(sp) for sc in opscenarios(rp)],
+            collect(strat_nodes(tree)),
+            collect(strategic_scenarios(tree)),
+            [pd for sp in sps for pd in partition_duration(sp, 4)],
+            [pd for n in strat_nodes(tree) for pd in partition_duration(n, 4)],
+        ]
+    end
+    for (xs, ys) in zip(periods(), periods())
+        # Equal periods have equal hashes
+        @test all(isequal(x, y) && hash(x) == hash(y) for (x, y) in zip(xs, ys))
+        # Distinct periods have distinct hashes (no collisions within a structure)
+        @test length(unique(hash.(xs))) == length(xs)
+        # Dictionaries keyed by periods (and tuples with periods)
+        d = Dict(("n", x) => k for (k, x) in enumerate(xs))
+        @test all(d[("n", y)] == k for (k, y) in enumerate(ys))
+    end
+
+    # The time structure a period holds is not hashed: strategic periods that only
+    # differ in their operational periods hash alike (and are not equal)
+    sp = first(sps)
+    sp_other = TimeStruct.StrategicPeriod(sp.sp, sp.duration, sp.mult_sp, SimpleTimes(5, 1))
+    @test hash(sp_other) == hash(sp)
+    @test !isequal(sp_other, sp)
+
+    # Periods defined outside TimeStruct are hashed by their fields as well
+    struct _NamedPeriod <: TimeStruct.TimePeriod
+        name::String
+        op::Int
+    end
+    named = [_NamedPeriod(n, k) for n in ("a", "b") for k in 1:3]
+    @test length(unique(hash.(named))) == length(named)
+    @test hash(_NamedPeriod("a", 1)) == hash(_NamedPeriod("a", 1))
+end
+
+@testitem "Identification of operational structures" begin
+    using Dates
+
+    day = SimpleTimes(24, 1)
+    cal = CalendarTimes(DateTime(2024, 1, 1), 24, Hour(1))
+    osc = OperationalScenarios(2, day)
+    rps = RepresentativePeriods(2, 8760, [0.5, 0.5], [day, day])
+    rps_osc = RepresentativePeriods(2, 8760, [0.5, 0.5], [day, osc])
+
+    # Operational structures
+    for (ts, has_osc, has_rp) in [
+        (day, false, false),
+        (cal, false, false),
+        (osc, true, false),
+        (rps, false, true),
+        (rps_osc, true, true),
+    ]
+        @test has_opscenarios(ts) == has_osc
+        @test has_repr_periods(ts) == has_rp
+    end
+
+    # Strategic structures, in which only the last strategic period/node includes the
+    # operational scenarios and representative periods
+    two_level = TwoLevel([day, rps_osc])
+    tree = TwoLevelTree(TreeNode(1, day, [TreeNode(1, day), TreeNode(1, rps_osc)]))
+    for (ts, sps) in [(two_level, strat_periods(two_level)), (tree, strat_nodes(tree))]
+        @test has_opscenarios(ts) && has_repr_periods(ts)
+        sp_1, sp_2 = first(sps), last(sps)
+        @test !has_opscenarios(sp_1) && !has_repr_periods(sp_1)
+        @test has_opscenarios(sp_2) && has_repr_periods(sp_2)
+        @test operational_type(sp_1) == typeof(day)
+        @test operational_type(sp_2) == typeof(rps_osc)
+        @test operational_type(first(opscenarios(sp_1))) == typeof(day)
+
+        # Representative periods and operational scenarios of a strategic period
+        rp_1, rp_2 = repr_periods(sp_2)
+        @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
+        @test !has_repr_periods(rp_2)
+        @test operational_type(rp_1) == typeof(day)
+        @test operational_type(rp_2) == typeof(osc)
+        sc = first(opscenarios(rp_2))
+        @test !has_opscenarios(sc) && !has_repr_periods(sc)
+        @test operational_type(sc) == typeof(day)
+        @test operational_type(first(opscenarios(rp_1))) == typeof(day)
+    end
+    for ts in [TwoLevel(2, 1, day), TwoLevelTree(1, [2], day)]
+        @test !has_opscenarios(ts) && !has_repr_periods(ts)
+        @test operational_type(first(strat_periods(ts))) == typeof(day)
+    end
+
+    # Strategic scenarios, in which only the second scenario of the tree includes the
+    # operational scenarios and representative periods
+    scen_1, scen_2 = strategic_scenarios(tree)
+    @test !has_opscenarios(scen_1) && !has_repr_periods(scen_1)
+    @test has_opscenarios(scen_2) && has_repr_periods(scen_2)
+    scen = first(strategic_scenarios(two_level))
+    @test has_opscenarios(scen) && has_repr_periods(scen)
+    scen = first(strategic_scenarios(day))
+    @test !has_opscenarios(scen) && !has_repr_periods(scen)
+
+    # Strategic scenarios do not have a unique operational time structure
+    @test_throws MethodError operational_type(scen_1)
+    @test_throws MethodError operational_type(scen)
+
+    # Periods of operational structures and single periods
+    rp_1, rp_2 = repr_periods(rps_osc)
+    @test !has_opscenarios(rp_1) && has_opscenarios(rp_2)
+    @test operational_type(rp_1) == typeof(day)
+    @test operational_type(rp_2) == typeof(osc)
+    @test operational_type(first(opscenarios(rp_2))) == typeof(day)
+    sc = first(opscenarios(osc))
+    @test !has_opscenarios(sc) && !has_repr_periods(sc)
+    @test operational_type(sc) == typeof(day)
+    @test operational_type(first(opscenarios(day))) == typeof(day)
+    sp = first(strat_periods(osc))
+    @test has_opscenarios(sp) && !has_repr_periods(sp)
+    @test operational_type(sp) == typeof(osc)
+    rp = first(repr_periods(osc))
+    @test has_opscenarios(rp) && !has_repr_periods(rp)
+    @test operational_type(rp) == typeof(osc)
+end
+
 @run_package_tests
-Aqua.test_all(TimeStruct; ambiguities = false)
+Aqua.test_all(TimeStruct; ambiguities = false, unbound_args = false)

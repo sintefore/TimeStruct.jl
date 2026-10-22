@@ -14,6 +14,9 @@ function probability(scen::AbstractOperationalScenario)
     return error("probabilty not implemented for type $(typeof(scen))")
 end
 
+has_opscenarios(::AbstractOperationalScenario) = false
+has_repr_periods(::AbstractOperationalScenario) = false
+
 """
     probability_scen(scen)
 
@@ -59,6 +62,8 @@ _strat_per(osc::SingleScenario) = 1
 
 probability(osc::SingleScenario) = 1.0
 
+operational_type(osc::SingleScenario) = typeof(osc.ts)
+
 StrategicIndexable(::Type{<:SingleScenario}) = HasStratIndex()
 RepresentativeIndexable(::Type{<:SingleScenario}) = HasRepresentativeIndex()
 
@@ -78,7 +83,7 @@ function Base.eachindex(osc::SingleScenario)
     return eachindex(osc.ts)
 end
 Base.last(osc::SingleScenario) = last(osc.ts)
-function Base.last( # TODO: Considering removing the function as the the structure is opposite
+function Base.last( # TODO: Considering removing the function as the structure is opposite
     osc::SingleScenario{T,RepresentativePeriod{T,OP}},
 ) where {T,OP}
     period = last(osc.ts.operational)
@@ -137,6 +142,8 @@ _opscen(osc::OperationalScenario) = osc.scen
 
 probability(osc::OperationalScenario) = osc.probability
 mult_scen(osc::OperationalScenario) = osc.mult_scen
+
+operational_type(osc::OperationalScenario) = typeof(osc.operational)
 
 Base.show(io::IO, osc::OperationalScenario) = print(io, "sc-$(osc.scen)")
 

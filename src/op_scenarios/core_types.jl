@@ -12,16 +12,19 @@ and an associated probability. These scenarios are in general represented as
 [`SimpleTimes`](@ref).
 
 !!! note
-    - All scenarios must use the same type for the duration, _.i.e._, either Integer or Float.
+    - The `TimeStructure`s of all operational scenarios must use the same type for the
+      duration, *i.e.*, either Integer or Float.
     - If the `probability` is not specified, it assigns the same probability to each scenario.
     - It is possible that `sum(probability)` is larger or smaller than 1. This can lead to
       problems in your application. Hence, it is advised to scale it. Currently, a warning
-      will be given if the period shares do not sum to one as an automatic scaling will
+      will be given if the period shares do not sum to one, as an automatic scaling will
       correspond to a breaking change.
 
 ## Example
+
 The following examples create a time structure with 2 operational scenarios corresponding to
 a single day with equal probability.
+
 ```julia
 day = SimpleTimes(24, 1)
 OperationalScenarios(2, day)
@@ -33,6 +36,7 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
     len::Int
     scenarios::Vector{OP}
     probability::Vector{Float64}
+    total_duration::T
     function OperationalScenarios(
         len::Integer,
         scenarios::Vector{OP},
@@ -52,11 +56,16 @@ struct OperationalScenarios{T,OP<:TimeStructure{T}} <: TimeStructure{T}
             )
         elseif !isapprox(sum(probability), 1; atol = 1e-6)
             @warn(
-                "The sum of the probablity vector is given by $(sum(probability)). " *
-                "This can lead to unexpected behaviour."
+                "The sum of the probability vector is given by $(sum(probability)). " *
+                "This can lead to unexpected behavior."
             )
         end
-        return new{T,OP}(len, scenarios, convert(Vector{Float64}, probability))
+        return new{T,OP}(
+            len,
+            scenarios,
+            convert(Vector{Float64}, probability),
+            maximum(_total_duration(osc) for osc in scenarios),
+        )
     end
 end
 function OperationalScenarios(len::Integer, oper::TimeStructure{T}) where {T}
@@ -70,12 +79,15 @@ function OperationalScenarios(oper::Vector{<:TimeStructure{T}}) where {T}
 end
 
 function _total_duration(oscs::OperationalScenarios)
-    return maximum(_total_duration(osc) for osc in oscs.scenarios)
+    return oscs.total_duration
 end
 
 function _multiple_adj(oscs::OperationalScenarios, scen)
     return stripunit(_total_duration(oscs) / _total_duration(oscs.scenarios[scen]))
 end
+
+has_opscenarios(::OperationalScenarios) = true
+has_repr_periods(::OperationalScenarios) = false
 
 # Add basic functions of iterators
 function Base.length(oscs::OperationalScenarios)

@@ -1,154 +1,110 @@
-# [Available time structures](@id api-ts)
+# [Interface for using `TimeStruct`](@id api)
+
+## [Available time structures](@id api-ts)
+
+### [Abstract supertypes](@id api-ts-abstract)
 
 ```@docs
 TimeStructure
 ```
 
+### [Concrete types](@id api-ts-con)
+
 ```@docs
 SimpleTimes
-```
-
-```@docs
 CalendarTimes
-```
-
-```@docs
-RepresentativePeriods
-```
-
-```@docs
 OperationalScenarios
-```
-
-```@docs
+RepresentativePeriods
 TwoLevel
-```
-
-```@docs
 TwoLevelTree
+TreeNode
 regular_tree
 ```
 
-# [Properties of time structures](@id api-prop_ts)
+## [Properties of time structures](@id api-prop_ts)
 
 ```@docs
 mult_scen
-```
-
-```@docs
 mult_repr
-```
-
-```@docs
 mult_strat
+probability_scen
+probability_branch
 ```
+
+The following properties are included for a [`TwoLevelTree`](@ref) time structure:
 
 ```@docs
-probability_scen
+n_strat_per
+n_children
+n_leaves
+n_branches
 ```
 
-# [Iterating time structures](@id api-iter)
+## [Iterating time structures](@id api-iter)
+
+### [For individual time structures](@id api-iter-ts)
 
 ```@docs
 repr_periods
-```
-
-```@docs
 opscenarios
-```
-
-```@docs
 strat_periods
 strategic_periods
-```
-
-```@docs
 strategic_scenarios
 ```
 
+### [Specialized iterators](@id api-iter-spec)
+
 ```@docs
 withprev
-```
-
-```@docs
 withnext
-```
-
-```@docs
 chunk
-```
-
-```@docs
 chunk_duration
+partition_duration
 ```
 
-# [Properties of time periods](@id api-prop_per)
+## [Properties of time periods](@id api-prop_per)
 
 ```@docs
 duration
-```
-
-```@docs
 isfirst
-```
-
-```@docs
 multiple
-```
-
-```@docs
 multiple_strat
-```
-
-```@docs
 probability
-```
-
-```@docs
 start_oper_time
-```
-
-```@docs
 end_oper_time
 ```
 
-
-# [Time profiles](@id api-prof)
+## [Time profiles](@id api-prof)
 
 ```@docs
 FixedProfile
-```
-
-```@docs
 OperationalProfile
-```
-
-```@docs
+PartitionProfile
 RepresentativeProfile
-```
-
-```@docs
 ScenarioProfile
-```
-
-```@docs
 StrategicProfile
-```
-
-```@docs
 StrategicStochasticProfile
 ```
 
-# [Discounting](@id api-disc)
+## [Discounting](@id api-disc)
 
-```@docs
-discount
-```
-
-```@docs
-objective_weight
-```
+### [Type](@id api-disc-type)
 
 ```@docs
 Discounter
+```
+
+### [Functions](@id api-disc-func)
+
+```@docs
+discount
+objective_weight
+```
+
+## [Identification methods](@id api-ident)
+
+```@docs
+has_opscenarios
+has_repr_periods
+operational_type
 ```

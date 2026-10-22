@@ -6,9 +6,9 @@
     SimpleTimes(dur::Vector{T}) where {T<:Duration}
 
 A simple time structure consisting of consecutive time periods of varying duration.
-`SimpleTimes` is always the lowest level in a `TimeStruct` time structure. if used.
+`SimpleTimes` is always the lowest level in a `TimeStruct` time structure, if used.
 
-An alternative for `SimpleTimes` is [`CalendarTimes`](@ref)
+An alternative to `SimpleTimes` is [`CalendarTimes`](@ref)
 
 ## Example
 ```julia
@@ -19,6 +19,7 @@ varying = SimpleTimes([2, 2, 2, 4, 10]) # 5 periods of varying length
 struct SimpleTimes{T} <: TimeStructure{T}
     len::Int
     duration::Vector{T}
+    total_duration::T
     function SimpleTimes(len::Integer, duration::Vector{T}) where {T<:Duration}
         if len > length(duration)
             throw(
@@ -27,7 +28,7 @@ struct SimpleTimes{T} <: TimeStructure{T}
                 ),
             )
         else
-            new{T}(len, duration)
+            new{T}(len, duration, sum(duration))
         end
     end
 end
@@ -36,7 +37,10 @@ function SimpleTimes(len::Integer, duration::Duration)
 end
 SimpleTimes(dur::Vector{T}) where {T<:Duration} = SimpleTimes(length(dur), dur)
 
-_total_duration(st::SimpleTimes) = sum(st.duration)
+_total_duration(st::SimpleTimes) = st.total_duration
+
+has_opscenarios(::SimpleTimes) = false
+has_repr_periods(::SimpleTimes) = false
 
 # Add basic functions of iterators
 Base.length(st::SimpleTimes) = st.len

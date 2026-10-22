@@ -14,6 +14,7 @@ include("strategic/core_types.jl")
 include("strategic/strat_periods.jl")
 include("strat_scenarios/tree_periods.jl")
 include("strat_scenarios/core_types.jl")
+include("strat_scenarios/strat_scenarios.jl")
 include("representative/rep_periods.jl")
 include("representative/strat_periods.jl")
 include("representative/tree_periods.jl")
@@ -22,9 +23,16 @@ include("op_scenarios/rep_periods.jl")
 include("op_scenarios/strat_periods.jl")
 include("op_scenarios/tree_periods.jl")
 
-include("utils.jl")
 include("discount.jl")
 include("profiles.jl")
+include("utils.jl")
+
+include("partitions/strat_periods.jl")
+include("partitions/tree_periods.jl")
+include("partitions/rep_periods.jl")
+include("partitions/opscenarios.jl")
+
+include("hashing.jl")
 
 export TimeStructure
 export SimpleTimes
@@ -34,9 +42,12 @@ export RepresentativePeriods
 export TwoLevel
 export TwoLevelTree
 
+export TreeNode
+
 export TimeProfile
 export FixedProfile
 export OperationalProfile
+export PartitionProfile
 export ScenarioProfile
 export StrategicProfile
 export StrategicStochasticProfile
@@ -46,13 +57,16 @@ export opscenarios
 export repr_periods
 export strat_periods, strategic_periods
 export regular_tree, strat_nodes, strategic_scenarios
-export withprev, withnext, chunk, chunk_duration
+export withprev, withnext, chunk, chunk_duration, partition_duration
 export isfirst, duration, duration_strat, multiple
 export probability, probability_branch, probability_scen
 export multiple_strat
 export mult_scen, mult_repr, mult_strat
 export start_time, end_time, remaining
 export start_oper_time, end_oper_time
+export n_strat_per, n_children, n_leaves, n_branches
+
+export has_opscenarios, has_repr_periods, operational_type
 
 export Discounter
 export discount

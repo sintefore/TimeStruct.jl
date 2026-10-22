@@ -13,6 +13,9 @@ end
 
 isfirst(rp::AbstractRepresentativePeriod) = _rper(rp) == 1
 
+has_opscenarios(ts::AbstractRepresentativePeriod) = has_opscenarios(ts.operational)
+has_repr_periods(::AbstractRepresentativePeriod) = false
+
 """
     mult_repr(rp)
 
@@ -47,6 +50,10 @@ end
 _rper(rp::SingleReprPeriod) = 1
 
 mult_repr(rp::SingleReprPeriod) = 1.0
+
+operational_type(rp::SingleReprPeriod) = typeof(rp.ts)
+
+has_opscenarios(ts::SingleReprPeriod) = has_opscenarios(ts.ts)
 
 StrategicIndexable(::Type{<:SingleReprPeriod}) = HasStratIndex()
 
@@ -109,6 +116,8 @@ end
 _rper(rp::RepresentativePeriod) = rp.rp
 
 mult_repr(rp::RepresentativePeriod) = rp.mult_rp
+
+operational_type(rp::RepresentativePeriod) = typeof(rp.operational)
 
 Base.show(io::IO, rp::RepresentativePeriod) = print(io, "rp-$(_rper(rp))")
 

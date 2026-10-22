@@ -72,7 +72,7 @@ duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 
 Returns true if the time period is the first in a sequence and has no previous time period
 """
-isfirst(t::TimePeriod) = error("isfirst() not implemented for$(typeof(t))")
+isfirst(t::TimePeriod) = error("isfirst() not implemented for $(typeof(t))")
 
 """
     multiple(t::TimePeriod)
@@ -84,9 +84,18 @@ multiple(t::TimePeriod) = 1.0
 
 """
     probability(t::TimePeriod)
-Returns the probability associated with the time period.
+
+Returns the probability associated with the time period. This include both the probability
+through [`OperationalScenarios`](@ref) and through [`TwoLevelTree`](@ref) structures.
 """
 probability(t::TimePeriod) = 1.0
+
+"""
+    probability_branch(t::Union{TimePeriod, TimeStructurePeriod})
+
+Returns the branch probability associated with the time period or time structure period.
+"""
+probability_branch(t::Union{TimePeriod,TimeStructurePeriod}) = 1.0
 
 # Functions used for indexing into time profiles
 # TODO: Consider either setting all as default to one, including _oper, or none
@@ -105,3 +114,36 @@ _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 _multiple_adj(ts::TimeStructure, per) = 1.0
 
 stripunit(val) = val
+
+"""
+    abstract type PeriodPartition{T<:TimePeriod}
+
+Supertype for individual partitions for operational time periods. Subtypes must be created
+for all potential time structures to be able to identify the respective
+[`TimeStructurePeriod`](@ref).
+"""
+abstract type PeriodPartition{T<:TimePeriod} end
+function PeriodPartition(itr, part, chunk)
+    return throw(
+        ArgumentError(
+            "`PeriodPartition` (used by `partition_duration`) is not implemented for " *
+            "iterator type $(typeof(itr)).",
+        ),
+    )
+end
+
+Base.iterate(pd::PeriodPartition) = iterate(pd.chunk)
+Base.iterate(pd::PeriodPartition, state) = iterate(pd.chunk, state)
+Base.length(pd::PeriodPartition) = length(pd.chunk)
+Base.first(pd::PeriodPartition) = first(pd.chunk)
+Base.last(pd::PeriodPartition) = last(pd.chunk)
+
+_part(pd::PeriodPartition) = pd.part
+
+abstract type PartitionIndexable end
+
+struct HasPartIndex <: PartitionIndexable end
+struct NoPartIndex <: PartitionIndexable end
+
+PartitionIndexable(::Type) = NoPartIndex()
+PartitionIndexable(::Type{<:PeriodPartition}) = HasPartIndex()

@@ -20,6 +20,8 @@ mult_strat(osc::StratOpScenario) = osc.mult_sp
 mult_scen(osc::StratOpScenario) = osc.mult_scen
 probability(osc::StratOpScenario) = osc.probability
 
+operational_type(osc::StratOpScenario) = operational_type(osc.operational)
+
 StrategicIndexable(::Type{<:StratOpScenario}) = HasStratIndex()
 ScenarioIndexable(::Type{<:StratOpScenario}) = HasScenarioIndex()
 
@@ -142,6 +144,8 @@ probability(osc::StratReprOpScenario) = osc.probability
 mult_strat(osc::StratReprOpScenario) = osc.mult_sp
 mult_repr(osc::StratReprOpScenario) = osc.mult_rp
 mult_scen(osc::StratReprOpScenario) = osc.mult_scen
+
+operational_type(osc::StratReprOpScenario) = operational_type(osc.operational)
 
 StrategicIndexable(::Type{<:StratReprOpScenario}) = HasStratIndex()
 function RepresentativeIndexable(::Type{<:StratReprOpScenario})
@@ -275,19 +279,9 @@ correct behavior based on the substructure.
 opscenarios(ts::SingleStrategicPeriod) = opscenarios(ts.ts)
 """
 When the `TimeStructure` is a [`TwoLevel`](@ref), `opscenarios` returns a vector of
-[`StratOpScenario`](@ref)s.
+[`StratOpScenario`](@ref)s or a a vector of [`StratReprOpScenario`](@ref)s depending on
+whether the `TimeStructure` includes [`RepresentativePeriods`](@ref) or not.
 """
 function opscenarios(ts::TwoLevel{S,T,OP}) where {S,T,OP}
     return collect(Iterators.flatten(opscenarios(sp) for sp in strategic_periods(ts)))
-end
-"""
-When the `TimeStructure` is a [`TwoLevel`](@ref) with [`RepresentativePeriods`](@ref),
-`opscenarios` returns a vector of [`StratReprOpScenario`](@ref)s.
-"""
-function opscenarios(ts::TwoLevel{S1,T,RepresentativePeriods{S2,T,OP}}) where {S1,S2,T,OP}
-    return collect(
-        Iterators.flatten(
-            opscenarios(rp) for sp in strategic_periods(ts) for rp in repr_periods(sp)
-        ),
-    )
 end

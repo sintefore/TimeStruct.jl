@@ -30,7 +30,7 @@ end
 function Base.getindex(
     fp::FixedProfile,
     _::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return fp.val
 end
 
@@ -88,6 +88,53 @@ function _internal_convert(::Type{T}, op::OperationalProfile{S}) where {T,S}
 end
 
 """
+    PartitionProfile(vals::Vector{T}) where {T}
+
+Time profile with a value that varies with the partition (as returned by `partition_duration`).
+This profile cannot be accessed using [`AbstractOperationalScenario`](@ref),
+[`AbstractRepresentativePeriod`](@ref), or [`AbstractStrategicPeriod`](@ref).
+
+If too few values are provided, the last provided value will be repeated.
+
+## Example
+```julia
+profile = PartitionProfile([1, 2, 3, 4, 5])
+```
+"""
+struct PartitionProfile{T} <: TimeProfile{T}
+    vals::Vector{T}
+    function PartitionProfile(vals::Vector{T}) where {T}
+        if T <: Array
+            throw(
+                ArgumentError(
+                    "It is not possible to use a `Vector{<:Array}` as input " *
+                    "to a `PartitionProfile`.",
+                ),
+            )
+        else
+            new{T}(vals)
+        end
+    end
+end
+
+_internal_convert(::Type{T}, pp::PartitionProfile{T}) where {T} = pp
+function _internal_convert(::Type{T}, pp::PartitionProfile{S}) where {T,S}
+    return PartitionProfile(_internal_convert.(T, pp.vals))
+end
+
+function _value_lookup(::HasPartIndex, pp::PartitionProfile, period)
+    return pp.vals[_part(period) > length(pp.vals) ? end : _part(period)]
+end
+
+function _value_lookup(::NoPartIndex, pp::PartitionProfile, period)
+    return error("Type $(typeof(period)) can not be used as index for a partition profile")
+end
+
+function Base.getindex(pp::PartitionProfile, period::T) where {T<:PeriodPartition}
+    return _value_lookup(PartitionIndexable(T), pp, period)
+end
+
+"""
     StrategicProfile(vals::Vector{P}) where {T, P<:TimeProfile{T}}
     StrategicProfile(vals::Vector)
 
@@ -141,7 +188,7 @@ end
 function Base.getindex(
     sp::StrategicProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(StrategicIndexable(T), sp, period)
 end
 
@@ -202,7 +249,7 @@ end
 function Base.getindex(
     sp::ScenarioProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(ScenarioIndexable(T), sp, period)
 end
 
@@ -261,7 +308,7 @@ end
 function Base.getindex(
     rp::RepresentativeProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(RepresentativeIndexable(T), rp, period)
 end
 
@@ -328,7 +375,7 @@ end
 function Base.getindex(
     ssp::StrategicStochasticProfile,
     period::T,
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return _value_lookup(StrategicTreeIndexable(T), ssp, period)
 end
 
@@ -337,7 +384,7 @@ Base.getindex(TP::TimeProfile, inds...) = [TP[i] for i in inds]
 function Base.getindex(
     TP::TimeProfile,
     inds::Vector{T},
-) where {T<:Union{TimePeriod,TimeStructurePeriod}}
+) where {T<:Union{TimePeriod,TimeStructurePeriod,PeriodPartition}}
     return [TP[i] for i in inds]
 end
 function Base.getindex(
@@ -356,6 +403,9 @@ import Base: +, -, *, /
 function +(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .+ b)
 end
+function +(a::PartitionProfile{T}, b::Number) where {T}
+    return PartitionProfile(a.vals .+ b)
+end
 function +(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .+ b)
 end
@@ -365,10 +415,16 @@ end
 function +(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .+ b)
 end
+function +(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .+ b for v in a.vals])
+end
 +(a::Number, b::TimeProfile{T}) where {T} = b + a
 -(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val - b)
 function -(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .- b)
+end
+function -(a::PartitionProfile{T}, b::Number) where {T}
+    return PartitionProfile(a.vals .- b)
 end
 function -(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .- b)
@@ -379,10 +435,16 @@ end
 function -(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .- b)
 end
+function -(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .- b for v in a.vals])
+end
 
 *(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val .* b)
 function *(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals .* b)
+end
+function *(a::PartitionProfile{T}, b::Number) where {T}
+    return PartitionProfile(a.vals .* b)
 end
 function *(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals .* b)
@@ -393,11 +455,17 @@ end
 function *(a::RepresentativeProfile{T}, b::Number) where {T}
     return RepresentativeProfile(a.vals .* b)
 end
+function *(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v .* b for v in a.vals])
+end
 
 *(a::Number, b::TimeProfile{T}) where {T} = b * a
 /(a::FixedProfile{T}, b::Number) where {T} = FixedProfile(a.val / b)
 function /(a::OperationalProfile{T}, b::Number) where {T}
     return OperationalProfile(a.vals ./ b)
+end
+function /(a::PartitionProfile{T}, b::Number) where {T}
+    return PartitionProfile(a.vals ./ b)
 end
 function /(a::StrategicProfile{T}, b::Number) where {T}
     return StrategicProfile(a.vals ./ b)
@@ -428,7 +496,7 @@ _layers(vals::Vector) = maximum(_layers(v) for v in vals)
 _layers(vals::Vector{<:Vector}) = maximum(_layers(v) for v in vals) + 1
 _layers(p::TimeProfile) = _layers(p.vals) + 1
 _layers(p::FixedProfile) = 1
-_layers(p::OperationalProfile) = 1
+_layers(p::Union{OperationalProfile,PartitionProfile}) = 1
 
 function _print_lines(io::IO, vals, indent_level)
     for (i, v) in enumerate(vals)
@@ -461,7 +529,7 @@ _profile_name(v::Vector) = "$(length(v))-element Vector"
 
 # Separator between the summary and the values in the multi-line display
 _summary_sep(p::TimeProfile) = ":"
-_summary_sep(p::Union{FixedProfile,OperationalProfile}) = ": "
+_summary_sep(p::Union{FixedProfile,OperationalProfile,PartitionProfile}) = ": "
 
 function _print_profile(io::IO, p, indent_level)
     print(io, _indent(indent_level), _profile_name(p))
@@ -475,7 +543,7 @@ function _print_body(io::IO, vals::Vector, indent_level)
     return print(io, "\n", _indent(indent_level), "]")
 end
 _print_body(io::IO, fp::FixedProfile, indent_level) = print(io, "[", fp.val, "]")
-function _print_body(io::IO, op::OperationalProfile, indent_level)
+function _print_body(io::IO, op::Union{OperationalProfile,PartitionProfile}, indent_level)
     print(io, "[")
     _print_values(io, op.vals)
     return print(io, "]")
@@ -531,3 +599,101 @@ function Base.show(io::IO, ::MIME"text/plain", p::TimeProfile)
     # Show values with reduced precision, as Base does for array elements
     return _print_body(IOContext(io, :compact => true), p, 0)
 end
+
+function /(a::StrategicStochasticProfile{T}, b::Number) where {T}
+    return StrategicStochasticProfile([v ./ b for v in a.vals])
+end
+
+-(a::FixedProfile{T}) where {T} = FixedProfile(-a.val)
+-(a::OperationalProfile{T}) where {T} = OperationalProfile(-a.vals)
+-(a::PartitionProfile{T}) where {T} = PartitionProfile(-a.vals)
+-(a::StrategicProfile{T}) where {T} = StrategicProfile(-a.vals)
+-(a::ScenarioProfile{T}) where {T} = ScenarioProfile(-a.vals)
+-(a::RepresentativeProfile{T}) where {T} = RepresentativeProfile(-a.vals)
+function -(a::StrategicStochasticProfile{T}) where {T}
+    return StrategicStochasticProfile([.-v for v in a.vals])
+end
+
++(a::TimeProfile{T}) where {T} = a
+
+function +(a::FixedProfile{T}, b::FixedProfile{S}) where {T,S}
+    return FixedProfile(a.val + b.val)
+end
+function +(a::OperationalProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.vals .+ b.vals)
+end
+function +(a::PartitionProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return PartitionProfile(a.vals .+ b.vals)
+end
+function +(a::StrategicProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile(a.vals .+ b.vals)
+end
+function +(a::ScenarioProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile(a.vals .+ b.vals)
+end
+function +(a::RepresentativeProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile(a.vals .+ b.vals)
+end
+function +(a::StrategicStochasticProfile{T}, b::StrategicStochasticProfile{S}) where {T,S}
+    return StrategicStochasticProfile([va .+ vb for (va, vb) in zip(a.vals, b.vals)])
+end
+
+function +(a::StrategicProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return StrategicProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::StrategicProfile{S}) where {T,S} = b + a
+function +(a::StrategicProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return StrategicProfile([p + b for p in a.vals])
+end
++(a::PartitionProfile{T}, b::StrategicProfile{S}) where {T,S} = b + a
+function +(a::ScenarioProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return ScenarioProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
+function +(a::ScenarioProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return ScenarioProfile([p + b for p in a.vals])
+end
++(a::PartitionProfile{T}, b::ScenarioProfile{S}) where {T,S} = b + a
+function +(a::RepresentativeProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return RepresentativeProfile([p + b for p in a.vals])
+end
++(a::OperationalProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
+function +(a::RepresentativeProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return RepresentativeProfile([p + b for p in a.vals])
+end
++(a::PartitionProfile{T}, b::RepresentativeProfile{S}) where {T,S} = b + a
+
+function +(a::FixedProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return OperationalProfile(a.val .+ b.vals)
+end
++(a::OperationalProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return PartitionProfile(a.val .+ b.vals)
+end
++(a::PartitionProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::StrategicProfile{S}) where {T,S}
+    return StrategicProfile([a + p for p in b.vals])
+end
++(a::StrategicProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::ScenarioProfile{S}) where {T,S}
+    return ScenarioProfile([a + p for p in b.vals])
+end
++(a::ScenarioProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::RepresentativeProfile{S}) where {T,S}
+    return RepresentativeProfile([a + p for p in b.vals])
+end
++(a::RepresentativeProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+function +(a::StrategicStochasticProfile{T}, b::OperationalProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[p + b for p in v] for v in a.vals])
+end
++(a::OperationalProfile{T}, b::StrategicStochasticProfile{S}) where {T,S} = b + a
+function +(a::StrategicStochasticProfile{T}, b::PartitionProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[p + b for p in v] for v in a.vals])
+end
++(a::PartitionProfile{T}, b::StrategicStochasticProfile{S}) where {T,S} = b + a
+function +(a::FixedProfile{T}, b::StrategicStochasticProfile{S}) where {T,S}
+    return StrategicStochasticProfile([[a + p for p in v] for v in b.vals])
+end
++(a::StrategicStochasticProfile{T}, b::FixedProfile{S}) where {T,S} = b + a
+
+-(a::TimeProfile{T}, b::TimeProfile{S}) where {T,S} = a + (-b)

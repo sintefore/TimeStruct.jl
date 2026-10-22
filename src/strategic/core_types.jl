@@ -13,14 +13,18 @@
 A time structure with two levels of time periods.
 
 On the top level it has a sequence of strategic periods of varying duration.
-For each strategic period a separate time structure is used for
+For each strategic period, a separate time structure is used for
 operational decisions. Iterating the structure will go through all operational periods.
 It is possible to use different time units for the two levels by providing the number
-of operational time units per strategic time unit through the kewyord argument `op_per_strat`.
+of operational time units per strategic time unit through the keyword argument `op_per_strat`.
 
 Potential time structures are [`SimpleTimes`](@ref), [`CalendarTimes`](@ref),
 [`OperationalScenarios`](@ref), or [`RepresentativePeriods`](@ref), as well as combinations
 of these.
+
+!!! note
+    - The `TimeStructure`s of all strategic periods must use the same type for the
+      duration, *i.e.*, either Integer or Float.
 
 !!! danger "Usage of op_per_strat"
     The optional keyword `op_per_strat` is important for the overall calculations.
@@ -37,7 +41,8 @@ of these.
     corresponds in this case to the sum of the duration of all operational periods divided
     by the value of the field `op_per_strat`.
 
-Example
+## Example
+
 ```julia
 # 5 years with 24 hours of operations for each year. Note that in this case we use as unit
 # `hour` for both the duration of strategic periods and operational periods
@@ -48,7 +53,7 @@ TwoLevel(5, 8760, SimpleTimes(24, 1))
 TwoLevel(5, 1, SimpleTimes(24, 1); op_per_strat=8760.0)
 
 # All individual constructors
-TwoLevel(2, ones(2), [SimpleTimes(24, 1), SimpleTimes(24, 1)], op_per_strat=8760.0)
+TwoLevel(2, ones(2), [SimpleTimes(24, 1), SimpleTimes(24, 1)], 8760.0)
 TwoLevel(2, 1, SimpleTimes(24, 1); op_per_strat=8760.0)
 TwoLevel(1, [SimpleTimes(24, 1), SimpleTimes(24, 1)]; op_per_strat=8760.0)
 TwoLevel(ones(2), SimpleTimes(24, 1); op_per_strat=8760.0)
@@ -162,6 +167,9 @@ function _multiple_adj(ts::TwoLevel, sp)
     mult = ts.duration[sp] * ts.op_per_strat / _total_duration(ts.operational[sp])
     return stripunit(mult)
 end
+
+has_opscenarios(ts::TwoLevel) = any(has_opscenarios, ts.operational)
+has_repr_periods(ts::TwoLevel) = any(has_repr_periods, ts.operational)
 
 # Add basic functions of iterators
 function Base.length(ts::TwoLevel)

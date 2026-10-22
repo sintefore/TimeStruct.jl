@@ -1,17 +1,15 @@
 # [Time profiles](@id man-prof)
 
-To provide data for different time structures there is a flexible system of different time
-profiles that can be indexed by time periods.
+To provide data for different time structures, there is a flexible system of different time profiles that can be indexed by time periods.
 
 - [`FixedProfile`](@ref): Time profile with the same value for all time periods
 - [`OperationalProfile`](@ref): Time profile with values varying with operational time periods
 - [`ScenarioProfile`](@ref): Holds a separate time profile for each operational scenario
 - [`RepresentativeProfile`](@ref): Holds a separate time profile for each representative period
-- [`StrategicProfile`](@ref) : Holds a separate time profile for each strategic period
-- [`StrategicStochasticProfile`](@ref) : Holds a separate time profile for each strategic node in a strategic tree
+- [`StrategicProfile`](@ref): Holds a separate time profile for each strategic period
+- [`StrategicStochasticProfile`](@ref): Holds a separate time profile for each strategic node in a strategic tree
 
-The following code example shows how these profile types can be combined in a flexible
-manner to produce different overall profiles.
+The following code example shows how these profile types can be combined in a flexible manner to produce different overall profiles.
 
 ```julia
 rep_periods = RepresentativePeriods(2, 365, [0.6, 0.4], [SimpleTimes(7,1), SimpleTimes(7,1)])
@@ -30,5 +28,5 @@ cost = StrategicProfile(
         )
 ```
 
-Illustration of profile values for the various time periods as defined in the profile example
+Illustration of profile values for the various time periods as defined in the profile example:
 ![Time profile values](./../figures/profiles.png)
