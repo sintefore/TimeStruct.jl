@@ -790,7 +790,6 @@ end
 end
 
 @testitem "Duration invariants" begin
-
     #=
     day = SimpleTimes(24,1)
     @test sum(duration(sp) for sp in strat_periods(day)) == TimeStruct._total_duration(day)
@@ -802,7 +801,6 @@ end
     @test sum(duration(sp) for sp in strat_periods(periods)) == TimeStruct._total_duration(periods)
     @test sum(duration(rp) for sp in strat_periods(periods) for rp in repr_periods(sp)) == TimeStruct._total_duration(periods)
     =#
-
 end
 
 @testitem "Profiles" begin
@@ -1247,6 +1245,63 @@ end
     push!(v, OperationalProfile([4.0, 5.0]))
     push!(v, OperationalProfile([6, 7]))
     @test typeof(v) == Vector{OperationalProfile{Float64}}
+end
+
+@testitem "Profile printing" begin
+    plain(p; limit = false) = sprint(show, MIME"text/plain"(), p; context = :limit => limit)
+
+    fp = FixedProfile(3.0)
+    @test repr(fp) == "FixedProfile(3.0)"
+    @test plain(fp) == "FixedProfile with eltype Float64: [3.0]"
+    @test sprint(show, fp; context = :compact => true) == "FixedProfile with eltype Float64"
+
+    op = OperationalProfile(collect(1:12))
+    @test repr(op) == "OperationalProfile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])"
+    @test sprint(show, op; context = :limit => true) ==
+          "OperationalProfile([1, 2, 3, 4, 5  …  8, 9, 10, 11, 12])"
+    @test plain(op) ==
+          "12-element OperationalProfile with eltype Int64: " *
+          "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+    @test plain(op; limit = true) ==
+          "12-element OperationalProfile with eltype Int64: [1, 2, 3, 4, 5  …  8, 9, 10, 11, 12]"
+
+    stp = StrategicProfile([OperationalProfile([1, 2]), FixedProfile(3)])
+    @test repr(stp) == "StrategicProfile([OperationalProfile([1, 2]), FixedProfile(3)])"
+    @test plain(stp) ==
+          "2-element StrategicProfile with eltype Int64:\n" *
+          "[\n  2-element OperationalProfile[1, 2]\n  FixedProfile[3]\n]"
+    @test !occursin('\n', string(stp))
+
+    stp = StrategicProfile(collect(1:12))
+    @test count(==('\n'), plain(stp)) == 14
+    @test plain(stp; limit = true) ==
+          "12-element StrategicProfile with eltype Int64:\n[\n  FixedProfile[1]\n" *
+          "  FixedProfile[2]\n  ⋮\n  FixedProfile[11]\n  FixedProfile[12]\n]"
+
+    # Small values are not rounded away, and short and long profiles print alike
+    @test plain(OperationalProfile([0.1 + 0.2, 1 / 3])) ==
+          "2-element OperationalProfile with eltype Float64: [0.3, 0.333333]"
+    @test plain(OperationalProfile(collect(1:11) .* 1e-7); limit = true) ==
+          "11-element OperationalProfile with eltype Float64: " *
+          "[1.0e-7, 2.0e-7, 3.0e-7, 4.0e-7, 5.0e-7  …  7.0e-7, 8.0e-7, 9.0e-7, 1.0e-6, 1.1e-6]"
+    @test plain(FixedProfile(1 / 3)) == "FixedProfile with eltype Float64: [0.333333]"
+
+    # No vertical ellipsis unless elements are hidden
+    nested(n) = StrategicProfile([RepresentativeProfile([1, 2]) for _ in 1:n])
+    @test !occursin('⋮', plain(nested(4); limit = true))
+    @test occursin('⋮', plain(nested(5); limit = true))
+    stp = StrategicProfile([
+        RepresentativeProfile([ScenarioProfile([1, 2]) for _ in 1:2]) for _ in 1:3
+    ])
+    @test !occursin('⋮', plain(stp; limit = true))
+
+    ssp = StrategicStochasticProfile([[1, 2], [3]])
+    @test repr(ssp) ==
+          "StrategicStochasticProfile([[FixedProfile(1), FixedProfile(2)], [FixedProfile(3)]])"
+    @test plain(ssp) ==
+          "2-element StrategicStochasticProfile with eltype Int64:\n[\n" *
+          "  2-element Vector\n  [\n    FixedProfile[1]\n    FixedProfile[2]\n  ]\n" *
+          "  1-element Vector\n  [\n    FixedProfile[3]\n  ]\n]"
 end
 
 @testitem "Iteration utilities" begin
