@@ -411,82 +411,107 @@ end
 
 # Profile printing
 
-_display_val(val) = val
-_display_val(val::Float64) = round(val; digits = 5)
-_display_val(val::Float32) = round(val; digits = 5)
+_truncate(io::IO, n, max_elems) = get(io, :limit, false) && n > max_elems
 
-function _print_values(vals; delim = ',', max_elems = 10)
+function _print_values(io::IO, vals; max_elems = 10)
     n = length(vals)
-    sep = delim * " "
-    if n <= max_elems
-        return join(vals, sep)
+    if !_truncate(io, n, max_elems)
+        return join(io, vals, ", ")
     end
     nshow = round(Int, max_elems / 2)
-    seq1 = _display_val.(vals[1:nshow])
-    seq2 = _display_val.(vals[(end-nshow+1):end])
-    return join(seq1, sep) * "  …  " * join(seq2, sep)
+    join(io, vals[1:nshow], ", ")
+    print(io, "  …  ")
+    return join(io, vals[(end-nshow+1):end], ", ")
 end
 
 _layers(vals::Vector) = maximum(_layers(v) for v in vals)
+_layers(vals::Vector{<:Vector}) = maximum(_layers(v) for v in vals) + 1
 _layers(p::TimeProfile) = _layers(p.vals) + 1
 _layers(p::FixedProfile) = 1
 _layers(p::OperationalProfile) = 1
 
-function _print_values_indent(vals, indent_level; max_lines = 5)
+function _print_lines(io::IO, vals, indent_level)
+    for (i, v) in enumerate(vals)
+        i > 1 && println(io)
+        _print_profile(io, v, indent_level)
+    end
+end
+
+function _print_values_indent(io::IO, vals, indent_level; max_lines = 5)
     n = length(vals)
     m = _layers(vals)
-    if n <= max_lines - 2m + 2
-        return join([_print_profile(v, indent_level) for v in vals], "\n")
-    end
     nshow = round(Int, max_lines / 2 - m + 1)
-    seq1 = vals[1:max(nshow, 2)]
-    seq2 = vals[(end-max(nshow, 1)+1):end]
-    indent = " "^(indent_level * 2)
-    return join([_print_profile(v, indent_level) for v in seq1], "\n") *
-           "\n" *
-           indent *
-           "⋮\n" *
-           join([_print_profile(v, indent_level) for v in seq2], "\n")
+    nhead = max(nshow, 2)
+    ntail = max(nshow, 1)
+    # Only truncate when at least one element is hidden
+    if !_truncate(io, n, max(max_lines - 2m + 2, nhead + ntail))
+        return _print_lines(io, vals, indent_level)
+    end
+    _print_lines(io, vals[1:nhead], indent_level)
+    print(io, "\n", _indent(indent_level), "⋮\n")
+    return _print_lines(io, vals[(end-ntail+1):end], indent_level)
 end
 
 _indent(n) = " "^(n * 2)
 _length(p::TimeProfile) = "$(length(p.vals))-element "
 _length(p::FixedProfile) = ""
 
-function _profile_name(p::TimeProfile{T}, indent_level) where {T}
-    profile_name = _length(p) * "$(typeof(p).name.name)"
-    if indent_level == 0
-        profile_name = profile_name * " with eltype $(T): "
+_profile_name(p::TimeProfile) = _length(p) * "$(typeof(p).name.name)"
+_profile_name(v::Vector) = "$(length(v))-element Vector"
+
+# Separator between the summary and the values in the multi-line display
+_summary_sep(p::TimeProfile) = ":"
+_summary_sep(p::Union{FixedProfile,OperationalProfile}) = ": "
+
+function _print_profile(io::IO, p, indent_level)
+    print(io, _indent(indent_level), _profile_name(p))
+    return _print_body(io, p, indent_level)
+end
+
+_print_body(io::IO, p::TimeProfile, indent_level) = _print_body(io, p.vals, indent_level)
+function _print_body(io::IO, vals::Vector, indent_level)
+    print(io, "\n", _indent(indent_level), "[\n")
+    _print_values_indent(io, vals, indent_level + 1)
+    return print(io, "\n", _indent(indent_level), "]")
+end
+_print_body(io::IO, fp::FixedProfile, indent_level) = print(io, "[", fp.val, "]")
+function _print_body(io::IO, op::OperationalProfile, indent_level)
+    print(io, "[")
+    _print_values(io, op.vals)
+    return print(io, "]")
+end
+
+# Single-line representation used by the two-argument `show`
+_show_inline(io::IO, val) = show(io, val)
+function _show_inline(io::IO, fp::FixedProfile)
+    print(io, "FixedProfile(")
+    show(io, fp.val)
+    return print(io, ")")
+end
+function _show_inline(io::IO, p::TimeProfile)
+    print(io, typeof(p).name.name, "(")
+    _show_inline(io, p.vals)
+    return print(io, ")")
+end
+function _show_inline(io::IO, vals::Vector; max_elems = 10)
+    n = length(vals)
+    print(io, "[")
+    if _truncate(io, n, max_elems)
+        nshow = round(Int, max_elems / 2)
+        _join_inline(io, vals[1:nshow])
+        print(io, "  …  ")
+        _join_inline(io, vals[(end-nshow+1):end])
+    else
+        _join_inline(io, vals)
     end
-    return profile_name
+    return print(io, "]")
 end
 
-function _print_profile(p::TimeProfile, indent_level = 0)
-    return _indent(indent_level) *
-           _profile_name(p, indent_level) *
-           "\n" *
-           _indent(indent_level) *
-           "[\n" *
-           _print_values_indent(p.vals, indent_level + 1) *
-           "\n" *
-           _indent(indent_level) *
-           "]"
-end
-
-function _print_profile(fp::FixedProfile, indent_level = 0)
-    return _indent(indent_level) *
-           _profile_name(fp, indent_level) *
-           "[" *
-           string(fp.val) *
-           "]"
-end
-
-function _print_profile(op::OperationalProfile, indent_level = 0)
-    return _indent(indent_level) *
-           _profile_name(op, indent_level) *
-           "[" *
-           _print_values(op.vals) *
-           "]"
+function _join_inline(io::IO, vals)
+    for (i, v) in enumerate(vals)
+        i > 1 && print(io, ", ")
+        _show_inline(io, v)
+    end
 end
 
 function Base.summary(io::IO, p::TimeProfile{T}) where {T}
@@ -495,8 +520,14 @@ end
 
 function Base.show(io::IO, p::TimeProfile)
     if get(io, :compact, false)
-        summary(io, p)
-    else
-        print(io, _print_profile(p))
+        return summary(io, p)
     end
+    return _show_inline(io, p)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", p::TimeProfile)
+    summary(io, p)
+    print(io, _summary_sep(p))
+    # Show values with reduced precision, as Base does for array elements
+    return _print_body(IOContext(io, :compact => true), p, 0)
 end
