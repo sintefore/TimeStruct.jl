@@ -82,6 +82,9 @@ function _multiple_adj(itr::TwoLevelTree, n::Int)
 end
 strat_nodes(ts::TwoLevelTree) = ts.nodes
 
+has_opscenarios(ts::TwoLevelTree) = any(has_opscenarios, ts.nodes)
+has_repr_periods(ts::TwoLevelTree) = any(has_repr_periods, ts.nodes)
+
 """
     n_strat_per(ts::TwoLevelTree)
 

@@ -14,6 +14,9 @@ function probability(scen::AbstractOperationalScenario)
     return error("probabilty not implemented for type $(typeof(scen))")
 end
 
+has_opscenarios(::AbstractOperationalScenario) = false
+has_repr_periods(::AbstractOperationalScenario) = false
+
 """
     probability_scen(scen)
 

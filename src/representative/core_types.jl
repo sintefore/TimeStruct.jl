@@ -131,6 +131,9 @@ function _multiple_adj(rpers::RepresentativePeriods, rp)
     return stripunit(mult)
 end
 
+has_opscenarios(ts::RepresentativePeriods) = any(has_opscenarios, ts.rep_periods)
+has_repr_periods(::RepresentativePeriods) = true
+
 # Add basic functions of iterators
 function Base.length(rpers::RepresentativePeriods)
     return sum(length(rp) for rp in rpers.rep_periods)

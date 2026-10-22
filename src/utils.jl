@@ -316,20 +316,7 @@ Returns `true` if any operational structure within the `TimeStructure` includes
 An [`AbstractOperationalScenario`](@ref) corresponds to an individual scenario, and hence,
 cannot contain `OperationalScenarios`.
 """
-has_opscenarios(ts::TwoLevelTree) = any(has_opscenarios, ts.nodes)
-has_opscenarios(ts::TwoLevel) = any(has_opscenarios, ts.operational)
-has_opscenarios(ts::RepresentativePeriods) = any(has_opscenarios, ts.rep_periods)
-has_opscenarios(::OperationalScenarios) = true
-has_opscenarios(::SimpleTimes) = false
-has_opscenarios(::CalendarTimes) = false
-
-has_opscenarios(ts::StrategicScenario) = any(has_opscenarios, ts.nodes)
-has_opscenarios(ts::SingleStrategicScenario) = has_opscenarios(ts.ts)
-has_opscenarios(ts::AbstractStrategicPeriod) = has_opscenarios(ts.operational)
-has_opscenarios(ts::SingleStrategicPeriod) = has_opscenarios(ts.ts)
-has_opscenarios(ts::AbstractRepresentativePeriod) = has_opscenarios(ts.operational)
-has_opscenarios(ts::SingleReprPeriod) = has_opscenarios(ts.ts)
-has_opscenarios(::AbstractOperationalScenario) = false
+function has_opscenarios end
 
 """
     has_repr_periods(ts::TimeStructure)
@@ -341,30 +328,17 @@ Returns `true` if any operational structure within the `TimeStructure` includes
 An [`AbstractRepresentativePeriod`](@ref) corresponds to an individual representative period,
 and hence, cannot contain `RepresentativePeriods`.
 """
-has_repr_periods(ts::TwoLevelTree) = any(has_repr_periods, ts.nodes)
-has_repr_periods(ts::TwoLevel) = any(has_repr_periods, ts.operational)
-has_repr_periods(::RepresentativePeriods) = true
-has_repr_periods(::OperationalScenarios) = false
-has_repr_periods(::SimpleTimes) = false
-has_repr_periods(::CalendarTimes) = false
-
-has_repr_periods(ts::StrategicScenario) = any(has_repr_periods, ts.nodes)
-has_repr_periods(ts::SingleStrategicScenario) = has_repr_periods(ts.ts)
-has_repr_periods(ts::AbstractStrategicPeriod) = has_repr_periods(ts.operational)
-has_repr_periods(ts::SingleStrategicPeriod) = has_repr_periods(ts.ts)
-has_repr_periods(ts::AbstractRepresentativePeriod) = false
-has_repr_periods(::AbstractOperationalScenario) = false
+function has_repr_periods end
 
 """
     operational_type(ts::TimeStructurePeriod)
 
 Returns the type of the operational time structure of the `TimeStructurePeriod` `ts`,
 *e.g.*, `SimpleTimes{Int64}`, `OperationalScenarios{...}`, or `RepresentativePeriods{...}`.
+These types then can be utilized for creating new methods.
 
 The method is implemented for [`AbstractStrategicPeriod`](@ref),
-[`AbstractRepresentativePeriod`](@ref), and [`AbstractOperationalScenario`](@ref). For nested
-periods (*e.g.*, a representative period of a strategic period), the type of the innermost
-operational time structure is returned.
+[`AbstractRepresentativePeriod`](@ref), and [`AbstractOperationalScenario`](@ref).
 
 !!! note
     The method is not implemented for strategic scenarios as these scenarios include multiple

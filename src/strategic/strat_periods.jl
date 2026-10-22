@@ -20,6 +20,9 @@ end
 
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
 
+has_opscenarios(ts::AbstractStrategicPeriod) = has_opscenarios(ts.operational)
+has_repr_periods(ts::AbstractStrategicPeriod) = has_repr_periods(ts.operational)
+
 """
     mult_strat(sp)
 
@@ -75,6 +78,9 @@ mult_strat(sp::SingleStrategicPeriod) = 1.0
 duration_strat(sp::SingleStrategicPeriod) = _total_duration(sp.ts)
 
 operational_type(sp::SingleStrategicPeriod) = typeof(sp.ts)
+
+has_opscenarios(ts::SingleStrategicPeriod) = has_opscenarios(ts.ts)
+has_repr_periods(ts::SingleStrategicPeriod) = has_repr_periods(ts.ts)
 
 # Add basic functions of iterators
 Base.length(sp::SingleStrategicPeriod) = length(sp.ts)

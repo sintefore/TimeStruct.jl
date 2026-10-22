@@ -25,6 +25,9 @@ struct SingleStrategicScenario{T,SC<:TimeStructure{T}} <: AbstractStrategicScena
     ts::SC
 end
 
+has_opscenarios(ts::SingleStrategicScenario) = has_opscenarios(ts.ts)
+has_repr_periods(ts::SingleStrategicScenario) = has_repr_periods(ts.ts)
+
 # Add basic functions of iterators
 Base.length(sc::SingleStrategicScenario) = length(sc.ts)
 Base.eltype(::Type{SingleStrategicScenario{T,SC}}) where {T,SC} = eltype(SC)
@@ -90,6 +93,9 @@ struct StrategicScenario{S,T,N,OP<:AbstractTreeNode{S,T}} <: AbstractStrategicSc
     op_per_strat::Float64
 end
 Base.show(io::IO, scen::StrategicScenario) = print(io, "scen$(scen.scen)")
+
+has_opscenarios(ts::StrategicScenario) = any(has_opscenarios, ts.nodes)
+has_repr_periods(ts::StrategicScenario) = any(has_repr_periods, ts.nodes)
 
 # Add basic functions of iterators
 Base.length(scen::StrategicScenario) = sum(length(sn) for sn in scen.nodes)
