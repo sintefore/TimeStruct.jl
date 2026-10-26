@@ -97,7 +97,7 @@ function ReprOpScenario(oscs::RepOpScens, scen::Int, per)
 end
 
 # Add basic functions of iterators
-Base.length(oscs::RepOpScens) = length(_oper_struct(_oper_struct(oscs)).scenarios)
+Base.length(oscs::RepOpScens) = length(_oper_struct(oscs))
 function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
     return ReprOpScenario{T,eltype(SC)}
 end

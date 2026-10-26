@@ -287,6 +287,14 @@ end
     @test [multiple(t) for t in pers] == [multiple(t) for t in pers_rep]
     @test [multiple(t) for t in pers] == [multiple(t) for t in pers_scen]
 
+    # The number of scenarios is given by `len`, not by the length of the vectors
+    # FIXME: `len` smaller than the vectors is unintended; replace this test with a
+    #        `@test_throws ArgumentError` once the constructor rejects it
+    scen_len = OperationalScenarios(2, [day, week, day], [0.1, 0.9, 0.0])
+    rp_len = first(repr_periods(RepresentativePeriods(1, 28, [1.0], [scen_len])))
+    @test length(opscenarios(rp_len)) == 2
+    @test length(opscenarios(rp_len)) == length(collect(opscenarios(rp_len)))
+
     # Without operational scenarios
     rep_simple = RepresentativePeriods(2, 28, [0.7, 0.3], [day, week])
 
@@ -703,6 +711,19 @@ end
 
         for scen in opscenarios(periods)
             @test last(scen) == last(collect(scen))
+        end
+
+        # `last` of the scenario iterators, only defined with operational scenarios
+        if has_opscenarios(periods)
+            for sp in strategic_periods(periods)
+                @test last(opscenarios(sp)) == last(collect(opscenarios(sp)))
+                for rp in repr_periods(sp)
+                    @test last(opscenarios(rp)) == last(collect(opscenarios(rp)))
+                end
+            end
+            for rp in repr_periods(periods)
+                @test last(opscenarios(rp)) == last(collect(opscenarios(rp)))
+            end
         end
     end
 
@@ -1926,6 +1947,8 @@ end
 end
 
 @testitem "Iteration utilities" begin
+    using Dates
+
     uniform_day = SimpleTimes(24, 1)
     uniform_week = TwoLevel(7, 24, uniform_day)
     uw_col = collect(uniform_week)
@@ -1986,6 +2009,18 @@ end
     sdur = collect(collect(ts) for ts in chunk_duration(periods, 5))
     for s in sdur
         @test (sum(duration(t) for t in s) >= 5) || (last(periods) in s)
+    end
+    @test length(collect(chunk_duration(periods, 5))) == length(periods)
+    @test Base.IteratorEltype(chunk_duration(periods, 5)) == Base.EltypeUnknown()
+
+    # Iterators with tuples as state
+    rep_day = RepresentativePeriods(2, 24, [0.5, 0.5], [uniform_day, uniform_day])
+    sp_rep = first(strat_periods(TwoLevel(2, 24, rep_day)))
+    for ts in [uniform_week, sp_rep], cyclic in [false, true]
+        chunks = collect(collect(c) for c in chunk_duration(ts, 5; cyclic))
+        @test length(chunks) == length(ts)
+        @test all(first(c) == t for (c, t) in zip(chunks, ts))
+        @test all(sum(duration(t) for t in c) >= 5 for c in chunks[1:(end-5)])
     end
 
     @testset "Partitions" begin
@@ -2524,6 +2559,17 @@ end
             @test all(pds_sp[k] == pds_tl[k+12] for k in 1:3)
             @test all(pds_rp[k] == pds_tl[k+12] for k in 1:3)
             @test all(pds_osc[k] == pds_tl[k+12] for k in 1:3)
+        end
+
+        # Structures without a partition type throw an `ArgumentError`, also when their
+        # `iterate` does not accept `nothing` as state
+        @testset "Partitions - unsupported structures" begin
+            cal = CalendarTimes(Dates.DateTime(2024, 1, 1), 4, Dates.Hour(1))
+            tree = TwoLevelTree(TreeNode(1, ts_ops, [1.0], TreeNode(1, ts_ops)))
+            scen = first(strategic_scenarios(tree))
+            @test_throws ArgumentError collect(partition_duration(ts_ops, 6))
+            @test_throws ArgumentError collect(partition_duration(cal, 2))
+            @test_throws ArgumentError collect(partition_duration(scen, 6))
         end
     end
 end

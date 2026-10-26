@@ -151,8 +151,7 @@ the following time periods until at least `dur` time is covered or the end is re
 """
 chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
 
-eltype(::Type{ChunkDuration{I}}) where {I} = eltype(I)
-IteratorEltype(::Type{ChunkDuration{I}}) where {I} = IteratorEltype(I)
+IteratorEltype(::Type{<:ChunkDuration}) = Base.EltypeUnknown()
 length(w::ChunkDuration) = length(w.itr)
 
 function Base.iterate(w::ChunkDuration, state = nothing)
@@ -162,7 +161,7 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     if w.cyclic
         itr = Iterators.cycle(w.itr)
     end
-    next = take_duration(isnothing(state) ? itr : Iterators.rest(itr, state...), w.duration)
+    next = take_duration(isnothing(state) ? itr : Iterators.rest(itr, state), w.duration)
     return next, n[2]
 end
 
@@ -205,7 +204,7 @@ function Base.iterate(
     state = (nothing, 1),
 ) where {I,T,D}
     isa(state[1], Iterators.IterationCutShort) && return nothing
-    y = iterate(w.itr, state[1])
+    y = isnothing(state[1]) ? iterate(w.itr) : iterate(w.itr, state[1])
     isnothing(y) && return nothing
     part = state[2]
     dur_part = w.duration[PeriodPartition(w.itr, part, (y[1],))]

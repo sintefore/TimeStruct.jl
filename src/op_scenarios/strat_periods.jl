@@ -115,7 +115,7 @@ function Base.eachindex(oscs::StratOpScens)
     return eachindex(_oper_struct(oscs))
 end
 function Base.last(oscs::StratOpScens)
-    per = last(oscs.repr)
+    per = last(_oper_struct(oscs))
     return StratOpScenario(oscs, _opscen(per), per)
 end
 
