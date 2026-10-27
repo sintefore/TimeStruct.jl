@@ -823,7 +823,8 @@ end
     _iterator_functions(::TS.AbstractOperationalScenario) = ()
     _iterator_functions(_) = ()
 
-    # Indexing of the `TimeStructIter` `x`; scenarios have no order, hence no `x[end]`
+    # Indexing of the `TimeStructIter` `x`; scenarios have no order and the nodes of a tree
+    # no unique last node, hence no `x[end]`
     function test_time_struct_iter(x)
         elems = collect(x)
         n = length(x)
@@ -834,16 +835,45 @@ end
         @test_throws BoundsError x[0]
         @test_throws BoundsError x[n+1]
         ordered = Union{TS.AbstractStrategicPeriod,TS.AbstractRepresentativePeriod}
-        if eltype(typeof(x)) <: ordered
+        if x isa TS.StratTreeNodes
+            @test_throws MethodError x[end]
+            @test_throws MethodError last(x)
+            @test [t for (_, t) in withprev(x)] == elems
+        elseif eltype(typeof(x)) <: ordered
             @test x[end] == last(x) == elems[end]
             @test [t for (_, t) in withprev(x)] == elems
             @test isnothing(first(first(withprev(x))))
-            if !(x isa TS.StratTreeNodes)
-                @test [t for (t, _) in withnext(x)] == elems
-                @test isnothing(last(collect(withnext(x)))[2])
-            end
+            @test [t for (t, _) in withnext(x)] == elems
+            @test isnothing(last(collect(withnext(x)))[2])
         else
             @test_throws MethodError x[end]
+        end
+    end
+
+    # Structures and periods are indexable if they contain `SimpleTimes` or `CalendarTimes`
+    # directly (no linear indexing of nested structures)
+    _indexable(::Union{SimpleTimes,CalendarTimes}) = true
+    _indexable(sc::TS.SingleStrategicScenario) = _indexable(sc.ts)
+    _indexable(::TS.StrategicScenario) = false
+    function _indexable(x::TS.TimeStructurePeriod)
+        return operational_type(x) <: Union{SimpleTimes,CalendarTimes}
+    end
+    _indexable(_) = false
+
+    # `last` and indexing of the structure or period `x`; a tree has no unique last period
+    function test_time_structure(x)
+        elems = collect(x)
+        if x isa TwoLevelTree
+            @test_throws MethodError last(x)
+        else
+            @test last(x) == elems[end]
+        end
+        if _indexable(x)
+            n = length(x)
+            @test eachindex(x) == Base.OneTo(n)
+            @test [x[i] for i in eachindex(x)] == elems
+            @test_throws BoundsError x[0]
+            @test_throws BoundsError x[n+1]
         end
     end
 end
@@ -868,7 +898,11 @@ end
 @testitem "Indexing of iterators" setup = [IterationInterface] begin
     structures = [IterationInterface.structures(); IterationInterface.mixed_structures()]
     for ts in structures, x in IterationInterface.iterators(ts)
-        x isa TimeStruct.TimeStructIter && IterationInterface.test_time_struct_iter(x)
+        if x isa TimeStruct.TimeStructIter
+            IterationInterface.test_time_struct_iter(x)
+        else
+            IterationInterface.test_time_structure(x)
+        end
     end
     # Bounds errors of tree iterators refer to the iterator, not to the vector of nodes
     tree = TwoLevelTree(1, [2], SimpleTimes(3, 1))
@@ -876,6 +910,8 @@ end
     for x in (strat_periods(tree), strategic_scenarios(tree), strat_periods(scen))
         @test_throws BoundsError(x, length(x) + 1) x[length(x)+1]
     end
+    # `len` smaller than the vector of durations
+    @test_throws BoundsError SimpleTimes(2, [1, 2, 3])[3]
 end
 
 @testitem "Multiple for time structures" begin

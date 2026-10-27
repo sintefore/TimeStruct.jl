@@ -64,6 +64,12 @@ function Base.iterate(rp::SingleReprPeriod, state = nothing)
 end
 Base.eltype(::Type{SingleReprPeriod{T,OP}}) where {T,OP} = eltype(OP)
 Base.last(rp::SingleReprPeriod) = last(rp.ts)
+function Base.getindex(rp::SingleReprPeriod, index)
+    return rp.ts[index]
+end
+function Base.eachindex(rp::SingleReprPeriod)
+    return eachindex(rp.ts)
+end
 
 """
     struct SingleReprPeriodWrapper{T,OP<:TimeStructure{T}} <: TimeStructInnerIter{T}

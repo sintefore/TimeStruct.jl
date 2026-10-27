@@ -77,6 +77,12 @@ function Base.iterate(n::StratNode, state = nothing)
 
     return TreePeriod(n, next[1]), next[2]
 end
+function Base.getindex(n::StratNode, index::Int)
+    return TreePeriod(n, n.operational[index])
+end
+function Base.eachindex(n::StratNode)
+    return eachindex(n.operational)
+end
 
 """
     struct TreeNode{S,T,OP<:TimeStructure{T},COP<:Union{Nothing, TimeStructure{T}}}

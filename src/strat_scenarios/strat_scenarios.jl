@@ -36,6 +36,12 @@ function Base.iterate(sc::SingleStrategicScenario, state = nothing)
     return next
 end
 Base.last(sc::SingleStrategicScenario) = last(sc.ts)
+function Base.getindex(sc::SingleStrategicScenario, index)
+    return sc.ts[index]
+end
+function Base.eachindex(sc::SingleStrategicScenario)
+    return eachindex(sc.ts)
+end
 
 """
     struct SingleStrategicScenarioWrapper{T,SC<:TimeStructure{T}} <: AbstractStratScens{T}
@@ -144,6 +150,7 @@ function Base.getindex(sps::ScenTreeNodes, index::Int)
     _check_index(sps, index)
     return sps.ts.nodes[index]
 end
+Base.lastindex(sps::ScenTreeNodes) = length(sps)
 
 """
 When the `TimeStructure` is a [`StrategicScenario`](@ref), `strat_periods` returns a
