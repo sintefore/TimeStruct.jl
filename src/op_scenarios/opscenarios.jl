@@ -124,6 +124,14 @@ function Base.iterate(oscs::SingleScenarioWrapper, state = nothing)
 end
 
 """
+When the `TimeStructure` is a [`SingleStrategicScenario`](@ref) or
+[`SingleStrategicScenarioWrapper`](@ref), `opscenarios` returns the value of its internal
+[`TimeStructure`](@ref).
+"""
+opscenarios(sc::SingleStrategicScenario) = opscenarios(sc.ts)
+opscenarios(sc::SingleStrategicScenarioWrapper) = opscenarios(sc.ts)
+
+"""
     struct OperationalScenario{T,OP<:TimeStructure{T}} <: AbstractOperationalScenario{T}
 
 A type representing a single operational scenario supporting iteration over its

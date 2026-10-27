@@ -1452,6 +1452,24 @@ end
     @test strat_periods(two_level) === strat_periods(scen)
     @test length(strat_periods(scens)) == 5
     @test length(strat_periods(scen)) == 5
+    @test repr_periods(two_level) == repr_periods(scens) == repr_periods(scen)
+    @test opscenarios(two_level) == opscenarios(scens) == opscenarios(scen)
+
+    # Test the iterators with representative periods and operational scenarios
+    osc = OperationalScenarios(2, SimpleTimes(3, 1))
+    rp = RepresentativePeriods(2, 6, [0.5, 0.5], [osc, osc])
+    two_level = TwoLevel(2, 6, rp)
+    scens = strategic_scenarios(two_level)
+    scen = first(scens)
+    @test length(repr_periods(scens)) == length(repr_periods(scen)) == 4
+    @test repr_periods(two_level) == repr_periods(scens) == repr_periods(scen)
+    @test length(opscenarios(scens)) == length(opscenarios(scen)) == 8
+    @test opscenarios(two_level) == opscenarios(scens) == opscenarios(scen)
+
+    # Test the iterators without strategic periods
+    scen = first(strategic_scenarios(rp))
+    @test repr_periods(scen) === repr_periods(rp)
+    @test opscenarios(scen) == opscenarios(rp)
 end
 
 @testitem "Profiles constructors" begin
