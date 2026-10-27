@@ -134,7 +134,10 @@ end
 function Base.length(itr::TwoLevelTree)
     return sum(length(n.operational) for n in itr.nodes)
 end
-Base.eltype(::Type{TwoLevelTree{S,T,OP}}) where {S,T,OP} = eltype(OP)
+# `OP` is abstract for nodes of different types
+function Base.eltype(::Type{TwoLevelTree{S,T,OP}}) where {S,T,OP}
+    return isconcretetype(OP) ? eltype(OP) : TreePeriod
+end
 function Base.iterate(itr::TwoLevelTree, state = (1, nothing))
     i = state[1]
     n = itr.nodes[i]

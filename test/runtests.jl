@@ -835,6 +835,7 @@ end
         T = eltype(typeof(x))
         @test all(e -> e isa T, x)
         @test eltype(collect(x)) == T
+        @test T != Any
     end
 end
 
