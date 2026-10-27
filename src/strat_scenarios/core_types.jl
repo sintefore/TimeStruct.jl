@@ -301,6 +301,7 @@ function Base.iterate(stps::StratTreeNodes, state = nothing)
     return stps.ts.nodes[next], next
 end
 function Base.getindex(sps::StratTreeNodes, index::Int)
+    _check_index(sps, index)
     return sps.ts.nodes[index]
 end
 

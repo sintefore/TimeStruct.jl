@@ -110,9 +110,6 @@ function Base.getindex(oscs::RepOpScens, index::Int)
     per = _oper_struct(oscs)[index]
     return ReprOpScenario(oscs, _opscen(per), per)
 end
-function Base.eachindex(oscs::RepOpScens)
-    return eachindex(_oper_struct(oscs))
-end
 function Base.last(oscs::RepOpScens)
     per = last(_oper_struct(oscs))
     return ReprOpScenario(oscs, _opscen(per), per)

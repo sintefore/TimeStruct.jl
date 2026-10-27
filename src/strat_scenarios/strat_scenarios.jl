@@ -58,6 +58,10 @@ function Base.eltype(::Type{SingleStrategicScenarioWrapper{T,SC}}) where {T,SC}
     return SingleStrategicScenario{T,SC}
 end
 Base.last(scs::SingleStrategicScenarioWrapper) = SingleStrategicScenario(scs.ts)
+function Base.getindex(scs::SingleStrategicScenarioWrapper, index::Int)
+    _check_index(scs, index)
+    return SingleStrategicScenario(scs.ts)
+end
 
 """
 When the `TimeStructure` is a [`SingleStrategicScenario`](@ref) or
@@ -137,10 +141,8 @@ function Base.iterate(sps::ScenTreeNodes, state = nothing)
     return sps.ts.nodes[next], next
 end
 function Base.getindex(sps::ScenTreeNodes, index::Int)
+    _check_index(sps, index)
     return sps.ts.nodes[index]
-end
-function Base.last(sps::ScenTreeNodes)
-    return last(sps.ts.nodes)
 end
 
 """
@@ -194,10 +196,8 @@ function Base.iterate(scs::StratScens, state = nothing)
     return StrategicScenario(scs, scen), scen
 end
 function Base.getindex(scs::StratScens, index::Int)
+    _check_index(scs, index)
     return StrategicScenario(scs, index)
-end
-function Base.eachindex(scs::StratScens)
-    return Base.OneTo(n_leaves(scs.ts))
 end
 function Base.last(scs::StratScens)
     return StrategicScenario(scs, length(scs))

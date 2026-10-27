@@ -52,6 +52,10 @@ will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
 """
 abstract type TimeStructOuterIter{T<:Duration} end
 
+# Iterators returned by `strat_periods`, `repr_periods`, `opscenarios`, and
+# `strategic_scenarios` are indexable sequences; each type only defines `getindex`
+const TimeStructIter = Union{TimeStructInnerIter,TimeStructOuterIter}
+
 """
     abstract type TimePeriod
 

@@ -20,6 +20,8 @@ end
 
 isfirst(sp::AbstractStrategicPeriod) = _strat_per(sp) == 1
 
+Base.lastindex(sps::AbstractStratPers) = length(sps)
+
 has_opscenarios(ts::AbstractStrategicPeriod) = has_opscenarios(ts.operational)
 has_repr_periods(ts::AbstractStrategicPeriod) = has_repr_periods(ts.operational)
 
@@ -132,7 +134,10 @@ end
 function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
     return SingleStrategicPeriod{T,SP}
 end
-Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(_oper_struct(sps))
+function Base.getindex(sps::SingleStrategicPeriodWrapper, index::Int)
+    _check_index(sps, index)
+    return SingleStrategicPeriod(_oper_struct(sps))
+end
 
 """
     struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
@@ -249,11 +254,6 @@ function Base.iterate(sps::StratPers, state = nothing)
     return StrategicPeriod(sps, sp), sp
 end
 function Base.getindex(sps::StratPers, index::Int)
+    _check_index(sps, index)
     return StrategicPeriod(sps, index)
-end
-function Base.eachindex(sps::StratPers)
-    return eachindex(_oper_struct(sps).operational)
-end
-function Base.last(sps::StratPers)
-    return StrategicPeriod(sps, length(sps))
 end

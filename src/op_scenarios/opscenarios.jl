@@ -122,6 +122,10 @@ function Base.iterate(oscs::SingleScenarioWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleScenario(_oper_struct(oscs)), 1
 end
+function Base.getindex(oscs::SingleScenarioWrapper, index::Int)
+    _check_index(oscs, index)
+    return SingleScenario(_oper_struct(oscs))
+end
 
 """
 When the `TimeStructure` is a [`SingleStrategicScenario`](@ref) or
@@ -221,9 +225,7 @@ function Base.iterate(oscs::OpScens, state = nothing)
     return OperationalScenario(oscs, per), per
 end
 function Base.getindex(oscs::OpScens, index::Int)
+    _check_index(oscs, index)
     return OperationalScenario(oscs, index)
-end
-function Base.eachindex(oscs::OpScens)
-    return eachindex(_oper_struct(oscs).scenarios)
 end
 Base.last(oscs::OpScens) = OperationalScenario(oscs, length(oscs))

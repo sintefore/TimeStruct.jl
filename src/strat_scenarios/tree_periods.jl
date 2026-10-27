@@ -21,6 +21,9 @@ function Base.iterate(ats::AbstractTreeStructure, state = (nothing, 1))
 
     return strat_node_period(ats, next[1], state[2]), (next[2], state[2] + 1)
 end
+function Base.getindex(ats::AbstractTreeStructure, index::Int)
+    return strat_node_period(ats, _oper_struct(ats)[index], index)
+end
 
 abstract type StrategicTreeIndexable end
 struct HasStratTreeIndex <: StrategicTreeIndexable end

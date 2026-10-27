@@ -294,6 +294,8 @@ end
     rp_len = first(repr_periods(RepresentativePeriods(1, 28, [1.0], [scen_len])))
     @test length(opscenarios(rp_len)) == 2
     @test length(opscenarios(rp_len)) == length(collect(opscenarios(rp_len)))
+    @test eachindex(opscenarios(scen_len)) == Base.OneTo(2)
+    @test_throws BoundsError opscenarios(scen_len)[3]
 
     # Without operational scenarios
     rep_simple = RepresentativePeriods(2, 28, [0.7, 0.3], [day, week])
@@ -754,10 +756,10 @@ end
 end
 
 @testmodule IterationInterface begin
-    using TimeStruct, Dates
+    using TimeStruct, Dates, Test
     const TS = TimeStruct
 
-    # Time structures covering all combinations of the levels
+    # Time structures covering all combinations of the nested structures
     function structures()
         st = SimpleTimes(3, 1)
         cal = CalendarTimes(DateTime(2024, 1, 1), 3, Hour(1))
@@ -790,8 +792,8 @@ end
         ]
     end
 
-    # All structures, `TimeStructurePeriod`s, and level iterators reachable from `ts`
-    # through iteration and the level functions
+    # All structures, `TimeStructurePeriod`s, and `TimeStructIter`s reachable from `ts`
+    # through iteration and the iterator functions
     function iterators(ts)
         found = Any[]
         _iterators!(found, ts)
@@ -804,22 +806,46 @@ end
         end
         push!(found, x)
         foreach(e -> _iterators!(found, e), x)
-        for f in _level_functions(x)
+        for f in _iterator_functions(x)
             _iterators!(found, f(x))
         end
     end
 
-    # Level functions below the level of `x`
-    function _level_functions(::TimeStructure)
+    # Iterator functions for the structures nested in `x`
+    function _iterator_functions(::TimeStructure)
         return (strat_periods, repr_periods, opscenarios, strategic_scenarios)
     end
-    function _level_functions(::TS.AbstractStrategicScenario)
+    function _iterator_functions(::TS.AbstractStrategicScenario)
         return (strat_periods, repr_periods, opscenarios)
     end
-    _level_functions(::TS.AbstractStrategicPeriod) = (repr_periods, opscenarios)
-    _level_functions(::TS.AbstractRepresentativePeriod) = (opscenarios,)
-    _level_functions(::TS.AbstractOperationalScenario) = ()
-    _level_functions(_) = ()
+    _iterator_functions(::TS.AbstractStrategicPeriod) = (repr_periods, opscenarios)
+    _iterator_functions(::TS.AbstractRepresentativePeriod) = (opscenarios,)
+    _iterator_functions(::TS.AbstractOperationalScenario) = ()
+    _iterator_functions(_) = ()
+
+    # Indexing of the `TimeStructIter` `x`; scenarios have no order, hence no `x[end]`
+    function test_time_struct_iter(x)
+        elems = collect(x)
+        n = length(x)
+        @test count(_ -> true, x) == n
+        @test eachindex(x) == keys(x) == Base.OneTo(n)
+        @test [x[i] for i in eachindex(x)] == elems
+        @test x[begin] == first(x) == elems[1]
+        @test_throws BoundsError x[0]
+        @test_throws BoundsError x[n+1]
+        ordered = Union{TS.AbstractStrategicPeriod,TS.AbstractRepresentativePeriod}
+        if eltype(typeof(x)) <: ordered
+            @test x[end] == last(x) == elems[end]
+            @test [t for (_, t) in withprev(x)] == elems
+            @test isnothing(first(first(withprev(x))))
+            if !(x isa TS.StratTreeNodes)
+                @test [t for (t, _) in withnext(x)] == elems
+                @test isnothing(last(collect(withnext(x)))[2])
+            end
+        else
+            @test_throws MethodError x[end]
+        end
+    end
 end
 
 @testitem "Element types of iterators" setup = [IterationInterface] begin
@@ -836,6 +862,19 @@ end
         @test all(e -> e isa T, x)
         @test eltype(collect(x)) == T
         @test T != Any
+    end
+end
+
+@testitem "Indexing of iterators" setup = [IterationInterface] begin
+    structures = [IterationInterface.structures(); IterationInterface.mixed_structures()]
+    for ts in structures, x in IterationInterface.iterators(ts)
+        x isa TimeStruct.TimeStructIter && IterationInterface.test_time_struct_iter(x)
+    end
+    # Bounds errors of tree iterators refer to the iterator, not to the vector of nodes
+    tree = TwoLevelTree(1, [2], SimpleTimes(3, 1))
+    scen = first(strategic_scenarios(tree))
+    for x in (strat_periods(tree), strategic_scenarios(tree), strat_periods(scen))
+        @test_throws BoundsError(x, length(x) + 1) x[length(x)+1]
     end
 end
 

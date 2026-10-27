@@ -97,6 +97,7 @@ end
 function Base.eltype(::Type{StratNodeReprPers{T,OP}}) where {T,OP}
     return _eltype(StratNodeReprPeriod{T}, eltype(OP))
 end
+Base.lastindex(rps::StratNodeReprPers) = length(rps)
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a

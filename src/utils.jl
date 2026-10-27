@@ -305,6 +305,18 @@ function Base.iterate(ts::TreeStructure, state = nothing)
     return TreePeriod(ts, next[1]), next[2]
 end
 
+# Index functions of `TimeStructIter`s. Scenarios have no order: `lastindex`, and hence
+# `x[end]` and the `last` fallback of Base, is only defined for the iterators of strategic
+# and representative periods.
+Base.firstindex(::TimeStructIter) = 1
+Base.eachindex(itr::TimeStructIter) = Base.OneTo(length(itr))
+Base.keys(itr::TimeStructIter) = eachindex(itr)
+
+# Throws a `BoundsError` if `index` is not an index of the iterator `itr`
+function _check_index(itr, index)
+    return 1 <= index <= length(itr) || throw(BoundsError(itr, index))
+end
+
 """
     has_opscenarios(ts::TimeStructure)
     has_opscenarios(ts::TimeStructurePeriod)

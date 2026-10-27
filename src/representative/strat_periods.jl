@@ -104,13 +104,7 @@ function Base.getindex(rpers::StratReprPers, index::Int)
     per = _oper_struct(rpers)[index]
     return StratReprPeriod(rpers, index, per)
 end
-function Base.eachindex(rpers::StratReprPers)
-    return eachindex(_oper_struct(rpers))
-end
-function Base.last(rpers::StratReprPers)
-    per = last(_oper_struct(rpers))
-    return StratReprPeriod(rpers, _rper(per), per)
-end
+Base.lastindex(rpers::StratReprPers) = length(rpers)
 
 """
 When the `TimeStructure` is a [`SingleStrategicPeriod`](@ref), `repr_periods` returns the
