@@ -914,6 +914,41 @@ end
     @test_throws BoundsError SimpleTimes(2, [1, 2, 3])[3]
 end
 
+@testitem "Ordering of strategic and representative periods" begin
+    # Representative periods of strategic periods compare `(sp, rp)` lexicographically
+    day = SimpleTimes(3, 1)
+    rp = RepresentativePeriods(2, 6, [0.5, 0.5], [day, day])
+    rps = repr_periods(TwoLevel(2, 6, rp))
+    @test issorted(rps)
+    @test sort(reverse(rps)) == rps
+    nodes = strat_periods(TwoLevelTree(6, [2], rp))
+    @test all(issorted(repr_periods(n)) for n in nodes)
+    @test last(repr_periods(nodes[1])) < first(repr_periods(nodes[2]))
+
+    # Strategic nodes: `n1 < n2` only if `n1` is an ancestor of `n2`
+    tree = TwoLevelTree(2, [2, 2], day)
+    nodes = collect(strat_periods(tree))
+    function ancestors(n)
+        anc = []
+        while !isnothing(TimeStruct._parent(n))
+            n = TimeStruct._parent(n)
+            push!(anc, n)
+        end
+        return anc
+    end
+    for n1 in nodes, n2 in nodes
+        @test (n1 < n2) == (n1 in ancestors(n2))
+        @test (n1 <= n2) == (n1 == n2 || n1 in ancestors(n2))
+    end
+    # `sort` uses `isless`, which compares the strategic periods, so ancestors come first
+    @test issorted([TimeStruct._strat_per(n) for n in sort(reverse(nodes))])
+    # Start and end times only include the durations of the ancestors
+    for n in nodes
+        @test start_time(n, tree) == 2 * (TimeStruct._strat_per(n) - 1)
+        @test end_time(n, tree) == 2 * TimeStruct._strat_per(n)
+    end
+end
+
 @testitem "Multiple for time structures" begin
     function test_multiple(periods)
         m_scen = [mult_scen(osc) for osc in opscenarios(periods)]

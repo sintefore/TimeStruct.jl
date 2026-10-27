@@ -31,6 +31,10 @@ end
 function Base.show(io::IO, rp::StratReprPeriod)
     return print(io, "sp$(_strat_per(rp))-rp$(_rper(rp))")
 end
+function Base.isless(rp1::StratReprPeriod, rp2::StratReprPeriod)
+    return _strat_per(rp1) < _strat_per(rp2) ||
+           (_strat_per(rp1) == _strat_per(rp2) && _rper(rp1) < _rper(rp2))
+end
 
 # Add basic functions of iterators
 Base.length(rp::StratReprPeriod) = length(rp.operational)

@@ -68,6 +68,16 @@ isfirst(n::StratNode) = n.sp == 1
 
 # Adding methods to existing Julia functions
 Base.show(io::IO, n::StratNode) = print(io, "sp$(n.sp)-br$(n.branch)")
+# `n1 < n2` only if `n1` is an ancestor of `n2`; nodes not on one path from the root are
+# not ordered. `isless` compares the strategic periods, so `sort` puts ancestors first.
+function Base.:<(n1::StratNode, n2::StratNode)
+    node = _parent(n2)
+    while !isnothing(node) && _strat_per(node) >= _strat_per(n1)
+        node == n1 && return true
+        node = _parent(node)
+    end
+    return false
+end
 Base.length(n::StratNode) = length(n.operational)
 Base.last(n::StratNode) = TreePeriod(n, last(n.operational))
 Base.eltype(::Type{StratNode{S,T,OP}}) where {S,T,OP} = _eltype(TreePeriod, eltype(OP))
