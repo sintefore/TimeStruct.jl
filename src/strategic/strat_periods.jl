@@ -164,7 +164,7 @@ end
 # Add basic functions of iterators
 Base.length(sp::StrategicPeriod) = length(sp.operational)
 function Base.eltype(_::Type{StrategicPeriod{S,T,OP}}) where {S,T,OP}
-    return OperationalPeriod{eltype(OP)}
+    return _eltype(OperationalPeriod, eltype(OP))
 end
 function Base.iterate(sp::StrategicPeriod, state = nothing)
     next = isnothing(state) ? iterate(sp.operational) : iterate(sp.operational, state)
@@ -241,9 +241,7 @@ end
 
 # Add basic functions of iterators
 Base.length(sps::StratPers) = _oper_struct(sps).len
-function Base.eltype(::Type{StratPers{S,T,OP}}) where {S,T,OP}
-    return StrategicPeriod{S,T,OP}
-end
+Base.eltype(::Type{StratPers{S,T,OP}}) where {S,T,OP} = _eltype(StrategicPeriod{S,T}, OP)
 function Base.iterate(sps::StratPers, state = nothing)
     sp = isnothing(state) ? 1 : state + 1
     sp > length(sps) && return nothing

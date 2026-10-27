@@ -49,7 +49,7 @@ function Base.show(io::IO, osc::StratNodeOpScenario)
     return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-sc$(_opscen(osc))")
 end
 function Base.eltype(::Type{StratNodeOpScenario{T,OP}}) where {T,OP}
-    return TreePeriod{eltype(OP)}
+    return _eltype(TreePeriod, eltype(OP))
 end
 
 """
@@ -102,7 +102,7 @@ function strat_node_period(oscs::StratNodeOpScens, next, state)
 end
 
 function Base.eltype(::Type{StratNodeOpScens{T,OP}}) where {T,OP}
-    return StratNodeOpScenario{T,eltype(OP)}
+    return _eltype(StratNodeOpScenario{T}, eltype(OP))
 end
 
 """
@@ -162,7 +162,7 @@ function Base.show(io::IO, osc::StratNodeReprOpScenario)
     )
 end
 function Base.eltype(::Type{StratNodeReprOpScenario{T,OP}}) where {T,OP}
-    return TreePeriod{ReprPeriod{eltype(OP)}}
+    return _eltype(TreePeriod, _eltype(ReprPeriod, eltype(OP)))
 end
 
 """
@@ -239,7 +239,7 @@ function strat_node_period(oscs::StratNodeReprOpScens, next, state)
 end
 
 function Base.eltype(::Type{StratNodeReprOpScens{T,OP}}) where {T,OP}
-    return StratNodeReprOpScenario{T,eltype(OP)}
+    return _eltype(StratNodeReprOpScenario{T}, eltype(OP))
 end
 
 """

@@ -771,6 +771,25 @@ end
         return ts
     end
 
+    # Time structures with sub-structures of different types
+    function mixed_structures()
+        st = SimpleTimes(3, 1)
+        cal = CalendarTimes(DateTime(2024, 1, 1), 3, Hour(1))
+        osc = OperationalScenarios(2, st)
+        rp = RepresentativePeriods(2, 6, [0.5, 0.5], [st, st])
+        rp_osc = RepresentativePeriods(2, 6, [0.5, 0.5], [osc, osc])
+        rp_mix = RepresentativePeriods(2, 6, [0.5, 0.5], [st, osc])
+        return Any[
+            OperationalScenarios([SimpleTimes(3, 1.0), cal]),
+            rp_mix,
+            TwoLevel(6, [st, osc]),
+            TwoLevel(6, [rp, rp_osc]),
+            TwoLevel(2, 6, rp_mix),
+            TwoLevelTree(6, [2], rp_mix),
+            TwoLevelTree(TreeNode(6, st, 2, TreeNode(6, osc))),
+        ]
+    end
+
     # All structures, `TimeStructurePeriod`s, and level iterators reachable from `ts`
     # through iteration and the level functions
     function iterators(ts)
@@ -810,6 +829,12 @@ end
         @test eltype(collect(x)) == T
         # The number of nodes of a strategic scenario is a type parameter
         x isa TimeStruct.StratScens || @test isconcretetype(T)
+    end
+    # Sub-structures of different types give abstract element types
+    for ts in IterationInterface.mixed_structures(), x in IterationInterface.iterators(ts)
+        T = eltype(typeof(x))
+        @test all(e -> e isa T, x)
+        @test eltype(collect(x)) == T
     end
 end
 

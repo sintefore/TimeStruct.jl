@@ -139,7 +139,7 @@ function Base.length(rpers::RepresentativePeriods)
     return sum(length(rp) for rp in rpers.rep_periods)
 end
 function Base.eltype(::Type{RepresentativePeriods{S,T,OP}}) where {S,T,OP}
-    return ReprPeriod{eltype(OP)}
+    return _eltype(ReprPeriod, eltype(OP))
 end
 function Base.iterate(rpers::RepresentativePeriods, state = (nothing, 1))
     rp = state[2]

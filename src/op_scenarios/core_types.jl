@@ -94,7 +94,7 @@ function Base.length(oscs::OperationalScenarios)
     return sum(length(oscs.scenarios[osc]) for osc in 1:oscs.len)
 end
 function Base.eltype(::Type{OperationalScenarios{T,OP}}) where {T,OP}
-    return ScenarioPeriod{eltype(OP)}
+    return _eltype(ScenarioPeriod, eltype(OP))
 end
 function Base.iterate(oscs::OperationalScenarios, state = (nothing, 1))
     osc = state[2]

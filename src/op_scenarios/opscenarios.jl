@@ -117,9 +117,7 @@ opscenarios(ts::TimeStructure) = SingleScenarioWrapper(ts)
 
 # Add basic functions of iterators
 Base.length(oscs::SingleScenarioWrapper) = 1
-function Base.eltype(::Type{SingleScenarioWrapper{T,SC}}) where {T,SC}
-    return SingleScenario{T,SC}
-end
+Base.eltype(::Type{SingleScenarioWrapper{T,SC}}) where {T,SC} = SingleScenario{T,SC}
 function Base.iterate(oscs::SingleScenarioWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleScenario(_oper_struct(oscs)), 1
@@ -156,7 +154,7 @@ end
 # Add basic functions of iterators
 Base.length(osc::OperationalScenario) = length(osc.operational)
 function Base.eltype(_::Type{OperationalScenario{T,OP}}) where {T,OP}
-    return ScenarioPeriod{eltype(OP)}
+    return _eltype(ScenarioPeriod, eltype(OP))
 end
 function Base.iterate(osc::OperationalScenario, state = nothing)
     next = isnothing(state) ? iterate(osc.operational) : iterate(osc.operational, state)
@@ -206,7 +204,7 @@ end
 # Add basic functions of iterators
 Base.length(oscs::OpScens) = _oper_struct(oscs).len
 function Base.eltype(_::Type{OpScens{T,OP}}) where {T,OP<:TimeStructure{T}}
-    return OperationalScenario{T,OP}
+    return _eltype(OperationalScenario{T}, OP)
 end
 function Base.iterate(oscs::OpScens, state = nothing)
     per = isnothing(state) ? 1 : state + 1

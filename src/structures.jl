@@ -109,6 +109,9 @@ _branch(t::TimePeriod) = 1
 # The default implementation is to return the time period itself.
 _period(t) = t
 
+# Element type `X{P}`, or `X{<:P}` if `P` is abstract (sub-structures of different types)
+_eltype(X, P) = isconcretetype(P) ? X{P} : X{<:P}
+
 _total_duration(tss::Vector) = sum(duration(ts) for ts in tss)
 
 _multiple_adj(ts::TimeStructure, per) = 1.0

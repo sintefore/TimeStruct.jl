@@ -80,9 +80,7 @@ _oper_struct(rpers::SingleReprPeriodWrapper) = rpers.ts
 
 # Add basic functions of iterators
 Base.length(rpers::SingleReprPeriodWrapper) = 1
-function Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP}
-    return SingleReprPeriod{T,OP}
-end
+Base.eltype(::Type{SingleReprPeriodWrapper{T,OP}}) where {T,OP} = SingleReprPeriod{T,OP}
 function Base.iterate(rpers::SingleReprPeriodWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleReprPeriod(_oper_struct(rpers)), 1
@@ -130,7 +128,7 @@ end
 # Add basic functions of iterators
 Base.length(rp::RepresentativePeriod) = length(rp.operational)
 function Base.eltype(_::Type{RepresentativePeriod{T,OP}}) where {T,OP}
-    return ReprPeriod{eltype(OP)}
+    return _eltype(ReprPeriod, eltype(OP))
 end
 function Base.iterate(rp::RepresentativePeriod, state = nothing)
     next = isnothing(state) ? iterate(rp.operational) : iterate(rp.operational, state)
@@ -180,9 +178,7 @@ end
 
 # Add basic functions of iterators
 Base.length(rpers::ReprPers) = _oper_struct(rpers).len
-function Base.eltype(::Type{ReprPers{S,T,OP}}) where {S,T,OP}
-    return RepresentativePeriod{T,OP}
-end
+Base.eltype(::Type{ReprPers{S,T,OP}}) where {S,T,OP} = _eltype(RepresentativePeriod{T}, OP)
 function Base.iterate(rpers::ReprPers, state = nothing)
     per = isnothing(state) ? 1 : state + 1
     per > length(rpers) && return nothing

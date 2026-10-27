@@ -43,7 +43,7 @@ function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(_strat_per(rp))-br$(_branch(rp))-rp$(_rper(rp))")
 end
 function Base.eltype(::Type{StratNodeReprPeriod{T,OP}}) where {T,OP}
-    return TreePeriod{eltype(OP)}
+    return _eltype(TreePeriod, eltype(OP))
 end
 
 """
@@ -95,7 +95,7 @@ function strat_node_period(rps::StratNodeReprPers, next, state)
 end
 
 function Base.eltype(::Type{StratNodeReprPers{T,OP}}) where {T,OP}
-    return StratNodeReprPeriod{T,eltype(OP)}
+    return _eltype(StratNodeReprPeriod{T}, eltype(OP))
 end
 
 """
