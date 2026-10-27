@@ -36,7 +36,7 @@ end
 
 # Add basic functions of iterators
 Base.length(osc::ReprOpScenario) = length(osc.operational)
-function Base.eltype(_::ReprOpScenario{T,OP}) where {T,OP}
+function Base.eltype(::Type{ReprOpScenario{T,OP}}) where {T,OP}
     return ReprPeriod{eltype(OP)}
 end
 function Base.iterate(osc::ReprOpScenario, state = nothing)
@@ -98,8 +98,8 @@ end
 
 # Add basic functions of iterators
 Base.length(oscs::RepOpScens) = length(_oper_struct(oscs))
-function Base.eltype(_::Type{RepOpScens{SC}}) where {T,OP,SC<:OpScens{T,OP}}
-    return ReprOpScenario{T,eltype(SC)}
+function Base.eltype(::Type{RepOpScens{T,OP}}) where {T,OP}
+    return ReprOpScenario{T,eltype(OP)}
 end
 function Base.iterate(oscs::RepOpScens, state = (nothing, 1))
     next =

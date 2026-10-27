@@ -181,8 +181,8 @@ end
 
 # Add basic functions of iterators
 Base.length(scens::StratScens) = n_leaves(scens.ts)
-function Base.eltype(_::StratScens{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StrategicScenario
+function Base.eltype(::Type{StratScens{S,T,OP}}) where {S,T,OP}
+    return StrategicScenario{S,T,N,OP} where {N}
 end
 function Base.iterate(scs::StratScens, state = nothing)
     scen = isnothing(state) ? 1 : state + 1

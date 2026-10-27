@@ -241,7 +241,7 @@ end
 
 # Add basic functions of iterators
 Base.length(sps::StratPers) = _oper_struct(sps).len
-function Base.eltype(_::StratPers{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+function Base.eltype(::Type{StratPers{S,T,OP}}) where {S,T,OP}
     return StrategicPeriod{S,T,OP}
 end
 function Base.iterate(sps::StratPers, state = nothing)

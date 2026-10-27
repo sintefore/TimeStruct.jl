@@ -180,7 +180,7 @@ end
 
 # Add basic functions of iterators
 Base.length(rpers::ReprPers) = _oper_struct(rpers).len
-function Base.eltype(_::ReprPers{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
+function Base.eltype(::Type{ReprPers{S,T,OP}}) where {S,T,OP}
     return RepresentativePeriod{T,OP}
 end
 function Base.iterate(rpers::ReprPers, state = nothing)

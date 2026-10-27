@@ -42,7 +42,9 @@ end
 function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(_strat_per(rp))-br$(_branch(rp))-rp$(_rper(rp))")
 end
-Base.eltype(_::StratNodeReprPeriod{T,OP}) where {T,OP} = TreePeriod{eltype(OP)}
+function Base.eltype(::Type{StratNodeReprPeriod{T,OP}}) where {T,OP}
+    return TreePeriod{eltype(OP)}
+end
 
 """
     struct StratNodeReprPers{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
@@ -92,7 +94,9 @@ function strat_node_period(rps::StratNodeReprPers, next, state)
     )
 end
 
-Base.eltype(_::StratNodeReprPers) = StratNodeReprPeriod
+function Base.eltype(::Type{StratNodeReprPers{T,OP}}) where {T,OP}
+    return StratNodeReprPeriod{T,eltype(OP)}
+end
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a

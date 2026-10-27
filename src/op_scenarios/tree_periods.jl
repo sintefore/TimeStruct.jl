@@ -48,7 +48,9 @@ StrategicIndexable(::Type{<:StratNodeOpScenario}) = HasStratIndex()
 function Base.show(io::IO, osc::StratNodeOpScenario)
     return print(io, "sp$(_strat_per(osc))-br$(_branch(osc))-sc$(_opscen(osc))")
 end
-Base.eltype(_::StratNodeOpScenario{T,OP}) where {T,OP} = TreePeriod{eltype(OP)}
+function Base.eltype(::Type{StratNodeOpScenario{T,OP}}) where {T,OP}
+    return TreePeriod{eltype(OP)}
+end
 
 """
     struct StratNodeOpScens{T,OP<:TimeStructInnerIter{T}} <: AbstractTreeStructure{T}
@@ -99,7 +101,9 @@ function strat_node_period(oscs::StratNodeOpScens, next, state)
     )
 end
 
-Base.eltype(_::StratNodeOpScens) = StratNodeOpScenario
+function Base.eltype(::Type{StratNodeOpScens{T,OP}}) where {T,OP}
+    return StratNodeOpScenario{T,eltype(OP)}
+end
 
 """
     struct StratNodeReprOpScenario{T} <: AbstractOperationalScenario{T}
@@ -157,7 +161,7 @@ function Base.show(io::IO, osc::StratNodeReprOpScenario)
         "sp$(_strat_per(osc))-br$(_branch(osc))-rp$(_rper(osc))-sc$(_opscen(osc))",
     )
 end
-function Base.eltype(_::StratNodeReprOpScenario{T,OP}) where {T,OP}
+function Base.eltype(::Type{StratNodeReprOpScenario{T,OP}}) where {T,OP}
     return TreePeriod{ReprPeriod{eltype(OP)}}
 end
 
@@ -234,7 +238,9 @@ function strat_node_period(oscs::StratNodeReprOpScens, next, state)
     )
 end
 
-Base.eltype(_::StratNodeReprOpScens) = StratNodeReprOpScenario
+function Base.eltype(::Type{StratNodeReprOpScens{T,OP}}) where {T,OP}
+    return StratNodeReprOpScenario{T,eltype(OP)}
+end
 
 """
 When the `TimeStructure` is a [`StratNode`](@ref) with [`RepresentativePeriods`](@ref),

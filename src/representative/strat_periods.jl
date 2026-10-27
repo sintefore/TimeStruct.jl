@@ -87,6 +87,9 @@ end
 
 # Add basic functions of iterators
 Base.length(rpers::StratReprPers) = length(_oper_struct(rpers))
+function Base.eltype(::Type{StratReprPers{T,OP}}) where {T,OP}
+    return StratReprPeriod{T,eltype(OP)}
+end
 function Base.iterate(rpers::StratReprPers, state = (nothing, 1))
     next =
         isnothing(state[1]) ? iterate(_oper_struct(rpers)) :

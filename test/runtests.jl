@@ -753,6 +753,66 @@ end
     test_last(periods)
 end
 
+@testmodule IterationInterface begin
+    using TimeStruct, Dates
+    const TS = TimeStruct
+
+    # Time structures covering all combinations of the levels
+    function structures()
+        st = SimpleTimes(3, 1)
+        cal = CalendarTimes(DateTime(2024, 1, 1), 3, Hour(1))
+        osc = OperationalScenarios(2, st)
+        rp = RepresentativePeriods(2, 6, [0.5, 0.5], [st, st])
+        rp_osc = RepresentativePeriods(2, 6, [0.5, 0.5], [osc, osc])
+        ts = Any[st, cal, osc, rp, rp_osc, TwoLevel(2, 3, cal)]
+        for op in [st, osc, rp, rp_osc]
+            push!(ts, TwoLevel(2, 6, op), TwoLevelTree(6, [2], op))
+        end
+        return ts
+    end
+
+    # All structures, `TimeStructurePeriod`s, and level iterators reachable from `ts`
+    # through iteration and the level functions
+    function iterators(ts)
+        found = Any[]
+        _iterators!(found, ts)
+        return found
+    end
+    function _iterators!(found, x)
+        x isa TS.TimePeriod && return
+        if x isa AbstractVector
+            return foreach(e -> _iterators!(found, e), x)
+        end
+        push!(found, x)
+        foreach(e -> _iterators!(found, e), x)
+        for f in _level_functions(x)
+            _iterators!(found, f(x))
+        end
+    end
+
+    # Level functions below the level of `x`
+    function _level_functions(::TimeStructure)
+        return (strat_periods, repr_periods, opscenarios, strategic_scenarios)
+    end
+    function _level_functions(::TS.AbstractStrategicScenario)
+        return (strat_periods, repr_periods, opscenarios)
+    end
+    _level_functions(::TS.AbstractStrategicPeriod) = (repr_periods, opscenarios)
+    _level_functions(::TS.AbstractRepresentativePeriod) = (opscenarios,)
+    _level_functions(::TS.AbstractOperationalScenario) = ()
+    _level_functions(_) = ()
+end
+
+@testitem "Element types of iterators" setup = [IterationInterface] begin
+    for ts in IterationInterface.structures(), x in IterationInterface.iterators(ts)
+        T = eltype(typeof(x))
+        @test all(e -> e isa T, x)
+        @test eltype(collect(x)) == T
+        # The number of nodes of a strategic scenario is a type parameter
+        x isa TimeStruct.StratScens || @test isconcretetype(T)
+    end
+end
+
 @testitem "Multiple for time structures" begin
     function test_multiple(periods)
         m_scen = [mult_scen(osc) for osc in opscenarios(periods)]
@@ -1236,7 +1296,7 @@ end
     scens = strategic_scenarios(regtree)
 
     # Test general functionality
-    @test eltype(scens) == TS.StrategicScenario
+    @test eltype(scens) <: TS.StrategicScenario
     @test length(scens) == 6
     @test last(scens) == scens[6]
     @test eachindex(scens) == Base.OneTo(6)
