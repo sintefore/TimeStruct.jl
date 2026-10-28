@@ -25,30 +25,27 @@ abstract type TimeStructurePeriod{T} <: TimeStructure{T} end
 """
     abstract type TimeStructInnerIter{T<:Duration}
 
-Abstract type representing different iterators for individual time structures.
-The difference to [`TimeStructure`](@ref) is that iterating through a `TimeStructInnerIter`
-will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
+Supertype of the iterators returned by [`strat_periods`](@ref), [`repr_periods`](@ref),
+[`opscenarios`](@ref), and [`strategic_scenarios`](@ref) when called on the time structure
+they iterate, *e.g.*, `opscenarios(OperationalScenarios())`. Iterating them yields
+[`TimeStructurePeriod`](@ref)s instead of [`TimePeriod`](@ref)s.
 
-!!! note
-    `TimeStructInnerIter` and [`TimeStructOuterIter`](@ref) are comparable. The
-    former is implemented for the inner level, that is if you want to use, _e.g._,
-    `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
-    _e.g._, `opscenarios(StrategicPeriod())`.
+Subtypes implement `iterate`, `length`, `Base.eltype` on the type, and
+`getindex(itr, i::Int)` with a bounds check; `firstindex`, `eachindex`, and `keys` are
+defined for all subtypes.
+Iterators of strategic and representative periods also define `lastindex`, and hence
+`itr[end]` and `last`, except for the nodes of a [`TwoLevelTree`](@ref) as there is no
+unique last node. Iterators of scenarios have no `lastindex` as scenarios are not ordered.
 """
 abstract type TimeStructInnerIter{T<:Duration} end
 
 """
     abstract type TimeStructOuterIter{T<:Duration}
 
-Abstract type representing different iterators for individual time structures.
-The difference to [`TimeStructure`](@ref) is that iterating through a `TimeStructOuterIter`
-will not provide a [`TimePeriod`](@ref), but a [`TimeStructure`](@ref).
-
-!!! note
-    [`TimeStructInnerIter`](@ref) and `TimeStructOuterIter` are comparable. The
-    former is implemented for the inner level, that is if you want to use, _e.g._,
-    `opscenarios(OperationalScenarios())` while the latter is used for the outer level,
-    _e.g._, `opscenarios(StrategicPeriod())`.
+Supertype of the iterators returned by [`repr_periods`](@ref) and [`opscenarios`](@ref)
+when called on a [`TimeStructurePeriod`](@ref) containing the time structure they iterate,
+*e.g.*, `opscenarios(StrategicPeriod())`. They wrap the corresponding
+[`TimeStructInnerIter`](@ref) and provide the same interface.
 """
 abstract type TimeStructOuterIter{T<:Duration} end
 
@@ -74,7 +71,10 @@ duration(t::TimePeriod) = error("duration() not implemented for $(typeof(t))")
 """
     isfirst(t::TimePeriod)
 
-Returns true if the time period is the first in a sequence and has no previous time period
+Returns true if the time period is the first in a sequence and has no previous time period.
+
+It is also defined for strategic periods, representative periods, and the partitions of
+[`partition_duration`](@ref), as required by [`withprev`](@ref) and [`withnext`](@ref).
 """
 isfirst(t::TimePeriod) = error("isfirst() not implemented for $(typeof(t))")
 
