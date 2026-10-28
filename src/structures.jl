@@ -146,6 +146,7 @@ Base.first(pd::PeriodPartition) = first(pd.chunk)
 Base.last(pd::PeriodPartition) = last(pd.chunk)
 
 _part(pd::PeriodPartition) = pd.part
+isfirst(pd::PeriodPartition) = _part(pd) == 1
 
 abstract type PartitionIndexable end
 

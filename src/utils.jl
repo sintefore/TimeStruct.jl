@@ -10,6 +10,7 @@ is the previous time period or `nothing` for the first
 time period.
 """
 withprev(iter) = WithPrev(iter)
+Base.IteratorSize(::Type{WithPrev{I}}) where {I} = Base.IteratorSize(I)
 Base.length(w::WithPrev) = length(w.itr)
 Base.size(w::WithPrev) = size(w.itr)
 
@@ -53,6 +54,7 @@ nodes of a strategic tree structure, as the next
 node is not uniquely defined in that case.
 """
 withnext(iter) = WithNext(iter)
+Base.IteratorSize(::Type{WithNext{I}}) where {I} = Base.IteratorSize(I)
 Base.length(w::WithNext) = length(w.itr)
 Base.size(w::WithNext) = size(w.itr)
 
@@ -94,6 +96,7 @@ It is possible to get the `n` consecutive time periods in a cyclic fashion, by s
     structure results in an error.
 """
 chunk(iter, n; cyclic = false) = Chunk(iter, n, cyclic)
+Base.IteratorSize(::Type{Chunk{I}}) where {I} = Base.IteratorSize(I)
 Base.length(w::Chunk) = length(w.itr)
 Base.size(w::Chunk) = size(w.itr)
 
@@ -108,7 +111,7 @@ function Base.iterate(w::Chunk, state = nothing)
     return next, n[2]
 end
 
-function chunk(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+function chunk(::StratTreeNodes{S,T,OP}, n; cyclic = false) where {S,T,OP}
     return error(
         "`chunk` can not be used when iterating nodes of a strategic tree structure.",
     )
@@ -151,8 +154,10 @@ the following time periods until at least `dur` time is covered or the end is re
 """
 chunk_duration(iter, dur; cyclic = false) = ChunkDuration(iter, dur, cyclic)
 
+IteratorSize(::Type{ChunkDuration{I}}) where {I} = IteratorSize(I)
 IteratorEltype(::Type{<:ChunkDuration}) = Base.EltypeUnknown()
 length(w::ChunkDuration) = length(w.itr)
+size(w::ChunkDuration) = size(w.itr)
 
 function Base.iterate(w::ChunkDuration, state = nothing)
     n = isnothing(state) ? iterate(w.itr) : iterate(w.itr, state)
@@ -165,7 +170,7 @@ function Base.iterate(w::ChunkDuration, state = nothing)
     return next, n[2]
 end
 
-function chunk_duration(_::StratTreeNodes{S,T,OP}, _) where {S,T,OP}
+function chunk_duration(::StratTreeNodes{S,T,OP}, dur; cyclic = false) where {S,T,OP}
     return error(
         "`chunk_duration` can not be used when iterating nodes of a strategic tree structure.",
     )

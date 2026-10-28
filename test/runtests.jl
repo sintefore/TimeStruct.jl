@@ -2196,6 +2196,12 @@ end
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
     @test_throws ErrorException chunk(strat_periods(two_level_tree), 2)
     @test_throws ErrorException chunk_duration(strat_periods(two_level_tree), 2)
+    @test_throws ErrorException chunk(strat_periods(two_level_tree), 2; cyclic = true)
+    @test_throws ErrorException chunk_duration(
+        strat_periods(two_level_tree),
+        2;
+        cyclic = true,
+    )
 
     periods = SimpleTimes(10, 1)
 
@@ -2226,6 +2232,32 @@ end
     end
     @test length(collect(chunk_duration(periods, 5))) == length(periods)
     @test Base.IteratorEltype(chunk_duration(periods, 5)) == Base.EltypeUnknown()
+
+    # The wrappers have the size of the wrapped iterator
+    filtered = Iterators.filter(t -> duration(t) > 1, periods)
+    pers_vec = collect(periods)
+    for w in [withprev, withnext, x -> chunk(x, 2), x -> chunk_duration(x, 2)]
+        @test Base.IteratorSize(w(filtered)) == Base.SizeUnknown()
+        @test length(collect(w(filtered))) == count(_ -> true, filtered)
+        @test Base.IteratorSize(w(pers_vec)) == Base.HasShape{1}()
+        @test size(collect(w(pers_vec))) == size(pers_vec)
+        @test Base.IteratorSize(w(periods)) == Base.HasLength()
+    end
+    @test [t for (_, t) in collect(withprev(filtered))] == collect(filtered)
+    @test [t for (t, _) in collect(withnext(filtered))] == collect(filtered)
+
+    # `withprev` and `withnext` over partitions restart in each strategic period
+    ts_parts = TwoLevel(2, 24, SimpleTimes(6, 1))
+    parts = partition_duration(ts_parts, 2)
+    @test [isfirst(p) for p in parts] == [true, false, false, true, false, false]
+    p = collect(parts)
+    @test [t for (_, t) in withprev(parts)] == p
+    prevs = [prev for (prev, _) in withprev(parts)]
+    @test prevs == [nothing, p[1], p[2], nothing, p[4], p[5]]
+    nexts = [next for (_, next) in withnext(parts)]
+    @test nexts == [p[2], p[3], nothing, p[5], p[6], nothing]
+    sp_parts = partition_duration(first(strat_periods(ts_parts)), 2)
+    @test length(collect(withprev(sp_parts))) == 3
 
     # Iterators with tuples as state
     rep_day = RepresentativePeriods(2, 24, [0.5, 0.5], [uniform_day, uniform_day])
