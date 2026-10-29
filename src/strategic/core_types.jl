@@ -175,7 +175,9 @@ has_repr_periods(ts::TwoLevel) = any(has_repr_periods, ts.operational)
 function Base.length(ts::TwoLevel)
     return sum(length(op) for op in ts.operational)
 end
-Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP} = OperationalPeriod{eltype(OP)}
+function Base.eltype(::Type{TwoLevel{S,T,OP}}) where {S,T,OP}
+    return _eltype(OperationalPeriod, eltype(OP))
+end
 function Base.iterate(ts::TwoLevel, state = (nothing, 1))
     sp = state[2]
     next =

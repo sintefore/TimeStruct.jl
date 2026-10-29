@@ -100,7 +100,10 @@ has_repr_periods(ts::StrategicScenario) = any(has_repr_periods, ts.nodes)
 # Add basic functions of iterators
 Base.length(scen::StrategicScenario) = sum(length(sn) for sn in scen.nodes)
 Base.last(scen::StrategicScenario) = last(last(scen.nodes))
-Base.eltype(_::Type{StrategicScenario{S,T,N,OP}}) where {S,T,N,OP} = eltype(OP)
+# `OP` is abstract for nodes of different types
+function Base.eltype(_::Type{StrategicScenario{S,T,N,OP}}) where {S,T,N,OP}
+    return isconcretetype(OP) ? eltype(OP) : TreePeriod
+end
 function Base.iterate(scs::StrategicScenario, state = (nothing, 1))
     sp = state[2]
     next = isnothing(state[1]) ? iterate(scs.nodes[sp]) : iterate(scs.nodes[sp], state[1])
@@ -181,8 +184,8 @@ end
 
 # Add basic functions of iterators
 Base.length(scens::StratScens) = n_leaves(scens.ts)
-function Base.eltype(_::StratScens{S,T,OP}) where {S,T,OP<:TimeStructure{T}}
-    return StrategicScenario
+function Base.eltype(::Type{StratScens{S,T,OP}}) where {S,T,OP}
+    return StrategicScenario{S,T,N,OP} where {N}
 end
 function Base.iterate(scs::StratScens, state = nothing)
     scen = isnothing(state) ? 1 : state + 1
