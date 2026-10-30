@@ -114,9 +114,6 @@ function Base.getindex(oscs::StratOpScens, index::Int)
     per = _oper_struct(oscs)[index]
     return StratOpScenario(oscs, index, per)
 end
-function Base.eachindex(oscs::StratOpScens)
-    return eachindex(_oper_struct(oscs))
-end
 function Base.last(oscs::StratOpScens)
     per = last(_oper_struct(oscs))
     return StratOpScenario(oscs, _opscen(per), per)
@@ -266,9 +263,6 @@ end
 function Base.getindex(oscs::StratReprOpScens, index::Int)
     per = _oper_struct(oscs)[index]
     return StratReprOpScenario(oscs, _opscen(per), per)
-end
-function Base.eachindex(oscs::StratReprOpScens)
-    return eachindex(_oper_struct(oscs))
 end
 function Base.last(oscs::StratReprOpScens)
     per = last(_oper_struct(oscs))

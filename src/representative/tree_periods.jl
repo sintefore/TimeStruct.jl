@@ -42,6 +42,10 @@ end
 function Base.show(io::IO, rp::StratNodeReprPeriod)
     return print(io, "sp$(_strat_per(rp))-br$(_branch(rp))-rp$(_rper(rp))")
 end
+function Base.isless(rp1::StratNodeReprPeriod, rp2::StratNodeReprPeriod)
+    return _strat_per(rp1) < _strat_per(rp2) ||
+           (_strat_per(rp1) == _strat_per(rp2) && _rper(rp1) < _rper(rp2))
+end
 function Base.eltype(::Type{StratNodeReprPeriod{T,OP}}) where {T,OP}
     return _eltype(TreePeriod, eltype(OP))
 end
@@ -97,6 +101,7 @@ end
 function Base.eltype(::Type{StratNodeReprPers{T,OP}}) where {T,OP}
     return _eltype(StratNodeReprPeriod{T}, eltype(OP))
 end
+Base.lastindex(rps::StratNodeReprPers) = length(rps)
 
 """
 When the `TimeStructure` is a [`TwoLevelTree`](@ref), [`StratScens`](@ref), or a

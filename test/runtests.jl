@@ -294,6 +294,8 @@ end
     rp_len = first(repr_periods(RepresentativePeriods(1, 28, [1.0], [scen_len])))
     @test length(opscenarios(rp_len)) == 2
     @test length(opscenarios(rp_len)) == length(collect(opscenarios(rp_len)))
+    @test eachindex(opscenarios(scen_len)) == Base.OneTo(2)
+    @test_throws BoundsError opscenarios(scen_len)[3]
 
     # Without operational scenarios
     rep_simple = RepresentativePeriods(2, 28, [0.7, 0.3], [day, week])
@@ -754,10 +756,10 @@ end
 end
 
 @testmodule IterationInterface begin
-    using TimeStruct, Dates
+    using TimeStruct, Dates, Test
     const TS = TimeStruct
 
-    # Time structures covering all combinations of the levels
+    # Time structures covering all combinations of the nested structures
     function structures()
         st = SimpleTimes(3, 1)
         cal = CalendarTimes(DateTime(2024, 1, 1), 3, Hour(1))
@@ -790,8 +792,8 @@ end
         ]
     end
 
-    # All structures, `TimeStructurePeriod`s, and level iterators reachable from `ts`
-    # through iteration and the level functions
+    # All structures, `TimeStructurePeriod`s, and `TimeStructIter`s reachable from `ts`
+    # through iteration and the iterator functions
     function iterators(ts)
         found = Any[]
         _iterators!(found, ts)
@@ -804,22 +806,76 @@ end
         end
         push!(found, x)
         foreach(e -> _iterators!(found, e), x)
-        for f in _level_functions(x)
+        for f in _iterator_functions(x)
             _iterators!(found, f(x))
         end
     end
 
-    # Level functions below the level of `x`
-    function _level_functions(::TimeStructure)
+    # Iterator functions for the structures nested in `x`
+    function _iterator_functions(::TimeStructure)
         return (strat_periods, repr_periods, opscenarios, strategic_scenarios)
     end
-    function _level_functions(::TS.AbstractStrategicScenario)
+    function _iterator_functions(::TS.AbstractStrategicScenario)
         return (strat_periods, repr_periods, opscenarios)
     end
-    _level_functions(::TS.AbstractStrategicPeriod) = (repr_periods, opscenarios)
-    _level_functions(::TS.AbstractRepresentativePeriod) = (opscenarios,)
-    _level_functions(::TS.AbstractOperationalScenario) = ()
-    _level_functions(_) = ()
+    _iterator_functions(::TS.AbstractStrategicPeriod) = (repr_periods, opscenarios)
+    _iterator_functions(::TS.AbstractRepresentativePeriod) = (opscenarios,)
+    _iterator_functions(::TS.AbstractOperationalScenario) = ()
+    _iterator_functions(_) = ()
+
+    # Indexing of the `TimeStructIter` `x`; scenarios have no order and the nodes of a tree
+    # no unique last node, hence no `x[end]`
+    function test_time_struct_iter(x)
+        elems = collect(x)
+        n = length(x)
+        @test count(_ -> true, x) == n
+        @test eachindex(x) == keys(x) == Base.OneTo(n)
+        @test [x[i] for i in eachindex(x)] == elems
+        @test x[begin] == first(x) == elems[1]
+        @test_throws BoundsError x[0]
+        @test_throws BoundsError x[n+1]
+        ordered = Union{TS.AbstractStrategicPeriod,TS.AbstractRepresentativePeriod}
+        if x isa TS.StratTreeNodes
+            @test_throws MethodError x[end]
+            @test_throws MethodError last(x)
+            @test [t for (_, t) in withprev(x)] == elems
+        elseif eltype(typeof(x)) <: ordered
+            @test x[end] == last(x) == elems[end]
+            @test [t for (_, t) in withprev(x)] == elems
+            @test isnothing(first(first(withprev(x))))
+            @test [t for (t, _) in withnext(x)] == elems
+            @test isnothing(last(collect(withnext(x)))[2])
+        else
+            @test_throws MethodError x[end]
+        end
+    end
+
+    # Structures and periods are indexable if they contain `SimpleTimes` or `CalendarTimes`
+    # directly (no linear indexing of nested structures)
+    _indexable(::Union{SimpleTimes,CalendarTimes}) = true
+    _indexable(sc::TS.SingleStrategicScenario) = _indexable(sc.ts)
+    _indexable(::TS.StrategicScenario) = false
+    function _indexable(x::TS.TimeStructurePeriod)
+        return operational_type(x) <: Union{SimpleTimes,CalendarTimes}
+    end
+    _indexable(_) = false
+
+    # `last` and indexing of the structure or period `x`; a tree has no unique last period
+    function test_time_structure(x)
+        elems = collect(x)
+        if x isa TwoLevelTree
+            @test_throws MethodError last(x)
+        else
+            @test last(x) == elems[end]
+        end
+        if _indexable(x)
+            n = length(x)
+            @test eachindex(x) == Base.OneTo(n)
+            @test [x[i] for i in eachindex(x)] == elems
+            @test_throws BoundsError x[0]
+            @test_throws BoundsError x[n+1]
+        end
+    end
 end
 
 @testitem "Element types of iterators" setup = [IterationInterface] begin
@@ -836,6 +892,60 @@ end
         @test all(e -> e isa T, x)
         @test eltype(collect(x)) == T
         @test T != Any
+    end
+end
+
+@testitem "Indexing of iterators" setup = [IterationInterface] begin
+    structures = [IterationInterface.structures(); IterationInterface.mixed_structures()]
+    for ts in structures, x in IterationInterface.iterators(ts)
+        if x isa TimeStruct.TimeStructIter
+            IterationInterface.test_time_struct_iter(x)
+        else
+            IterationInterface.test_time_structure(x)
+        end
+    end
+    # Bounds errors of tree iterators refer to the iterator, not to the vector of nodes
+    tree = TwoLevelTree(1, [2], SimpleTimes(3, 1))
+    scen = first(strategic_scenarios(tree))
+    for x in (strat_periods(tree), strategic_scenarios(tree), strat_periods(scen))
+        @test_throws BoundsError(x, length(x) + 1) x[length(x)+1]
+    end
+    # `len` smaller than the vector of durations
+    @test_throws BoundsError SimpleTimes(2, [1, 2, 3])[3]
+end
+
+@testitem "Ordering of strategic and representative periods" begin
+    # Representative periods of strategic periods compare `(sp, rp)` lexicographically
+    day = SimpleTimes(3, 1)
+    rp = RepresentativePeriods(2, 6, [0.5, 0.5], [day, day])
+    rps = repr_periods(TwoLevel(2, 6, rp))
+    @test issorted(rps)
+    @test sort(reverse(rps)) == rps
+    nodes = strat_periods(TwoLevelTree(6, [2], rp))
+    @test all(issorted(repr_periods(n)) for n in nodes)
+    @test last(repr_periods(nodes[1])) < first(repr_periods(nodes[2]))
+
+    # Strategic nodes: `n1 < n2` only if `n1` is an ancestor of `n2`
+    tree = TwoLevelTree(2, [2, 2], day)
+    nodes = collect(strat_periods(tree))
+    function ancestors(n)
+        anc = []
+        while !isnothing(TimeStruct._parent(n))
+            n = TimeStruct._parent(n)
+            push!(anc, n)
+        end
+        return anc
+    end
+    for n1 in nodes, n2 in nodes
+        @test (n1 < n2) == (n1 in ancestors(n2))
+        @test (n1 <= n2) == (n1 == n2 || n1 in ancestors(n2))
+    end
+    # `sort` uses `isless`, which compares the strategic periods, so ancestors come first
+    @test issorted([TimeStruct._strat_per(n) for n in sort(reverse(nodes))])
+    # Start and end times only include the durations of the ancestors
+    for n in nodes
+        @test start_time(n, tree) == 2 * (TimeStruct._strat_per(n) - 1)
+        @test end_time(n, tree) == 2 * TimeStruct._strat_per(n)
     end
 end
 
@@ -2086,6 +2196,12 @@ end
     @test_throws ErrorException withnext(strat_periods(two_level_tree))
     @test_throws ErrorException chunk(strat_periods(two_level_tree), 2)
     @test_throws ErrorException chunk_duration(strat_periods(two_level_tree), 2)
+    @test_throws ErrorException chunk(strat_periods(two_level_tree), 2; cyclic = true)
+    @test_throws ErrorException chunk_duration(
+        strat_periods(two_level_tree),
+        2;
+        cyclic = true,
+    )
 
     periods = SimpleTimes(10, 1)
 
@@ -2116,6 +2232,32 @@ end
     end
     @test length(collect(chunk_duration(periods, 5))) == length(periods)
     @test Base.IteratorEltype(chunk_duration(periods, 5)) == Base.EltypeUnknown()
+
+    # The wrappers have the size of the wrapped iterator
+    filtered = Iterators.filter(t -> duration(t) > 1, periods)
+    pers_vec = collect(periods)
+    for w in [withprev, withnext, x -> chunk(x, 2), x -> chunk_duration(x, 2)]
+        @test Base.IteratorSize(w(filtered)) == Base.SizeUnknown()
+        @test length(collect(w(filtered))) == count(_ -> true, filtered)
+        @test Base.IteratorSize(w(pers_vec)) == Base.HasShape{1}()
+        @test size(collect(w(pers_vec))) == size(pers_vec)
+        @test Base.IteratorSize(w(periods)) == Base.HasLength()
+    end
+    @test [t for (_, t) in collect(withprev(filtered))] == collect(filtered)
+    @test [t for (t, _) in collect(withnext(filtered))] == collect(filtered)
+
+    # `withprev` and `withnext` over partitions restart in each strategic period
+    ts_parts = TwoLevel(2, 24, SimpleTimes(6, 1))
+    parts = partition_duration(ts_parts, 2)
+    @test [isfirst(p) for p in parts] == [true, false, false, true, false, false]
+    p = collect(parts)
+    @test [t for (_, t) in withprev(parts)] == p
+    prevs = [prev for (prev, _) in withprev(parts)]
+    @test prevs == [nothing, p[1], p[2], nothing, p[4], p[5]]
+    nexts = [next for (_, next) in withnext(parts)]
+    @test nexts == [p[2], p[3], nothing, p[5], p[6], nothing]
+    sp_parts = partition_duration(first(strat_periods(ts_parts)), 2)
+    @test length(collect(withprev(sp_parts))) == 3
 
     # Iterators with tuples as state
     rep_day = RepresentativePeriods(2, 24, [0.5, 0.5], [uniform_day, uniform_day])

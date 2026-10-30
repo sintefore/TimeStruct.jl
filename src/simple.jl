@@ -52,6 +52,7 @@ function Base.iterate(itr::SimpleTimes{T}, state = nothing) where {T}
     return SimplePeriod{T}(next, itr.duration[next]), next
 end
 function Base.getindex(itr::SimpleTimes{T}, index) where {T}
+    _check_index(itr, index)
     return SimplePeriod{T}(index, itr.duration[index])
 end
 function Base.eachindex(itr::SimpleTimes{T}) where {T}
