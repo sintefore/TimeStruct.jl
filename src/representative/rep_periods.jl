@@ -100,6 +100,14 @@ When the `TimeStructure` is a `TimeStructure`, `repr_periods` returns a
 repr_periods(ts::TimeStructure) = SingleReprPeriodWrapper(ts)
 
 """
+When the `TimeStructure` is a [`SingleStrategicScenario`](@ref) or
+[`SingleStrategicScenarioWrapper`](@ref), `repr_periods` returns the value of its internal
+[`TimeStructure`](@ref).
+"""
+repr_periods(sc::SingleStrategicScenario) = repr_periods(sc.ts)
+repr_periods(sc::SingleStrategicScenarioWrapper) = repr_periods(sc.ts)
+
+"""
     struct RepresentativePeriod{T,OP<:TimeStructure{T}} <: AbstractRepresentativePeriod{T}
 
 A type representing a single representative period supporting iteration over its
