@@ -90,6 +90,12 @@ function Base.iterate(sp::SingleStrategicPeriod, state = nothing)
     return next
 end
 Base.last(sp::SingleStrategicPeriod) = last(sp.ts)
+function Base.getindex(sp::SingleStrategicPeriod, index)
+    return sp.ts[index]
+end
+function Base.eachindex(sp::SingleStrategicPeriod)
+    return eachindex(sp.ts)
+end
 
 """
     struct SingleStrategicPeriodWrapper{T,SP<:TimeStructure{T}} <: AbstractStratPers{T}
@@ -132,7 +138,11 @@ end
 function Base.eltype(::Type{SingleStrategicPeriodWrapper{T,SP}}) where {T,SP}
     return SingleStrategicPeriod{T,SP}
 end
-Base.last(sps::SingleStrategicPeriodWrapper) = SingleStrategicPeriod(_oper_struct(sps))
+function Base.getindex(sps::SingleStrategicPeriodWrapper, index::Int)
+    _check_index(sps, index)
+    return SingleStrategicPeriod(_oper_struct(sps))
+end
+Base.lastindex(sps::SingleStrategicPeriodWrapper) = length(sps)
 
 """
     struct StrategicPeriod{S,T,OP<:TimeStructure{T}} <: AbstractStrategicPeriod{S,T}
@@ -249,11 +259,7 @@ function Base.iterate(sps::StratPers, state = nothing)
     return StrategicPeriod(sps, sp), sp
 end
 function Base.getindex(sps::StratPers, index::Int)
+    _check_index(sps, index)
     return StrategicPeriod(sps, index)
 end
-function Base.eachindex(sps::StratPers)
-    return eachindex(_oper_struct(sps).operational)
-end
-function Base.last(sps::StratPers)
-    return StrategicPeriod(sps, length(sps))
-end
+Base.lastindex(sps::StratPers) = length(sps)

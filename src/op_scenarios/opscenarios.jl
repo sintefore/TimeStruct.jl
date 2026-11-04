@@ -83,12 +83,6 @@ function Base.eachindex(osc::SingleScenario)
     return eachindex(osc.ts)
 end
 Base.last(osc::SingleScenario) = last(osc.ts)
-function Base.last( # TODO: Considering removing the function as the structure is opposite
-    osc::SingleScenario{T,RepresentativePeriod{T,OP}},
-) where {T,OP}
-    period = last(osc.ts.operational)
-    return ReprPeriod(_rper(osc.ts), period, mult_repr(osc.ts) * multiple(period))
-end
 
 """
     struct SingleScenarioWrapper{T,OP<:TimeStructure{T}} <: TimeStructInnerIter{T}
@@ -121,6 +115,10 @@ Base.eltype(::Type{SingleScenarioWrapper{T,SC}}) where {T,SC} = SingleScenario{T
 function Base.iterate(oscs::SingleScenarioWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleScenario(_oper_struct(oscs)), 1
+end
+function Base.getindex(oscs::SingleScenarioWrapper, index::Int)
+    _check_index(oscs, index)
+    return SingleScenario(_oper_struct(oscs))
 end
 
 """
@@ -221,9 +219,7 @@ function Base.iterate(oscs::OpScens, state = nothing)
     return OperationalScenario(oscs, per), per
 end
 function Base.getindex(oscs::OpScens, index::Int)
+    _check_index(oscs, index)
     return OperationalScenario(oscs, index)
-end
-function Base.eachindex(oscs::OpScens)
-    return eachindex(_oper_struct(oscs).scenarios)
 end
 Base.last(oscs::OpScens) = OperationalScenario(oscs, length(oscs))

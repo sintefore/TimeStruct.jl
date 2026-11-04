@@ -64,6 +64,12 @@ function Base.iterate(rp::SingleReprPeriod, state = nothing)
 end
 Base.eltype(::Type{SingleReprPeriod{T,OP}}) where {T,OP} = eltype(OP)
 Base.last(rp::SingleReprPeriod) = last(rp.ts)
+function Base.getindex(rp::SingleReprPeriod, index)
+    return rp.ts[index]
+end
+function Base.eachindex(rp::SingleReprPeriod)
+    return eachindex(rp.ts)
+end
 
 """
     struct SingleReprPeriodWrapper{T,OP<:TimeStructure{T}} <: TimeStructInnerIter{T}
@@ -85,7 +91,11 @@ function Base.iterate(rpers::SingleReprPeriodWrapper, state = nothing)
     !isnothing(state) && return nothing
     return SingleReprPeriod(_oper_struct(rpers)), 1
 end
-Base.last(rpers::SingleReprPeriodWrapper) = SingleReprPeriod(_oper_struct(rpers))
+function Base.getindex(rpers::SingleReprPeriodWrapper, index::Int)
+    _check_index(rpers, index)
+    return SingleReprPeriod(_oper_struct(rpers))
+end
+Base.lastindex(rpers::SingleReprPeriodWrapper) = length(rpers)
 
 """
     repr_periods(ts::TimeStructure)
@@ -194,9 +204,7 @@ function Base.iterate(rpers::ReprPers, state = nothing)
     return RepresentativePeriod(rpers, per), per
 end
 function Base.getindex(rpers::ReprPers, index::Int)
+    _check_index(rpers, index)
     return RepresentativePeriod(rpers, index)
 end
-function Base.eachindex(rpers::ReprPers)
-    return eachindex(_oper_struct(rpers).rep_periods)
-end
-Base.last(rpers::ReprPers) = RepresentativePeriod(rpers, length(rpers))
+Base.lastindex(rpers::ReprPers) = length(rpers)

@@ -89,6 +89,7 @@ function Base.iterate(ts::CalendarTimes, state)
     (state[1] + 1, start_time)
 end
 function Base.getindex(ts::CalendarTimes, index)
+    _check_index(ts, index)
     start_time = ts.start_date + (index - 1) * ts.period
     return CalendarPeriod(start_time, start_time + ts.period, index)
 end

@@ -21,6 +21,9 @@ function Base.iterate(ats::AbstractTreeStructure, state = (nothing, 1))
 
     return strat_node_period(ats, next[1], state[2]), (next[2], state[2] + 1)
 end
+function Base.getindex(ats::AbstractTreeStructure, index::Int)
+    return strat_node_period(ats, _oper_struct(ats)[index], index)
+end
 
 abstract type StrategicTreeIndexable end
 struct HasStratTreeIndex <: StrategicTreeIndexable end
@@ -65,6 +68,16 @@ isfirst(n::StratNode) = n.sp == 1
 
 # Adding methods to existing Julia functions
 Base.show(io::IO, n::StratNode) = print(io, "sp$(n.sp)-br$(n.branch)")
+# `n1 < n2` only if `n1` is an ancestor of `n2`; nodes not on one path from the root are
+# not ordered. `isless` compares the strategic periods, so `sort` puts ancestors first.
+function Base.:<(n1::StratNode, n2::StratNode)
+    node = _parent(n2)
+    while !isnothing(node) && _strat_per(node) >= _strat_per(n1)
+        node == n1 && return true
+        node = _parent(node)
+    end
+    return false
+end
 Base.length(n::StratNode) = length(n.operational)
 Base.last(n::StratNode) = TreePeriod(n, last(n.operational))
 Base.eltype(::Type{StratNode{S,T,OP}}) where {S,T,OP} = _eltype(TreePeriod, eltype(OP))
@@ -73,6 +86,12 @@ function Base.iterate(n::StratNode, state = nothing)
     next === nothing && return nothing
 
     return TreePeriod(n, next[1]), next[2]
+end
+function Base.getindex(n::StratNode, index::Int)
+    return TreePeriod(n, n.operational[index])
+end
+function Base.eachindex(n::StratNode)
+    return eachindex(n.operational)
 end
 
 """
